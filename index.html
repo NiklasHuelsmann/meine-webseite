@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RADIO ENGINE V314</title>
+    <title>RADIO ENGINE V315</title>
     <style>
         :root { 
             --main-bg: #2a3441; 
@@ -26,24 +26,16 @@
             border-bottom: 2px solid var(--accent);
         }
 
-        /* MANUELLER INPUT IM HEADER */
-        #headerTitleInput {
-            background: transparent;
-            border: 1px dashed rgba(0, 251, 255, 0.3);
+        #headerTitleDisplay {
             color: var(--accent);
             font-size: 20px;
             font-weight: bold;
             letter-spacing: 1px;
             text-transform: uppercase;
-            width: 350px;
-            outline: none;
-            padding: 2px 10px;
-            font-family: 'Segoe UI', sans-serif;
         }
-        #headerTitleInput:focus { border: 1px solid var(--accent); }
         
         .search-container { display: flex; align-items: center; background: #fff; padding: 4px 12px; border-radius: 4px; }
-        .search-container input { border: none; color: #000; outline: none; width: 150px; font-weight: bold; }
+        .search-container input { border: none; color: #000; outline: none; width: 180px; font-weight: bold; }
 
         .content-grid { 
             display: grid; grid-template-columns: 300px 1fr 320px; 
@@ -79,7 +71,6 @@
         .center-display { text-align: center; }
         #stLogo { width: 170px; height: 170px; border-radius: 12px; border: 2px solid white; margin-bottom: 15px; }
         
-        /* SYNCHRONISIERTER NAME IN DER MITTE */
         #stDisplayNameCenter {
             font-size: 22px;
             font-weight: bold;
@@ -108,10 +99,9 @@
 <body onload="init()">
 
 <header>
-    <input type="text" id="headerTitleInput" value="DEIN SENDER" oninput="syncManualName(this.value)">
-    
+    <div id="headerTitleDisplay">SENDERNAME</div>
     <div class="search-container">
-        <input type="text" id="sIn" placeholder="Stream-ID..." onkeypress="if(event.key==='Enter') changeSt(this.value)">
+        <input type="text" id="sIn" placeholder="Sender suchen..." onkeypress="if(event.key==='Enter') changeSt(this.value)">
         <span onclick="changeSt(document.getElementById('sIn').value)" style="cursor:pointer">🔍</span>
     </div>
 </header>
@@ -138,7 +128,7 @@
 
         <div class="now-playing-box">
             <div class="marquee-container">
-                <div id="track">BEREIT...</div>
+                <div id="track">BEREIT FÜR SUCHE...</div>
             </div>
         </div>
         
@@ -156,7 +146,7 @@
 </div>
 
 <footer>
-    <div>V314.FULL-MANUAL</div>
+    <div>V315.CLEAN-START</div>
     <div id="dateFooter">--.--.----</div>
     <div style="color: var(--accent); font-weight: bold; font-size: 15px;" id="footerClock">00:00:00</div>
 </footer>
@@ -166,55 +156,49 @@
 <script>
     const audio = document.getElementById('audio');
     let playing = false;
-    let station = "niklasfm-radio";
-    let currentSong = "KEIN SENDER";
+    let station = "";
+    let currentSong = "KEIN SENDER GEWÄHLT";
 
     function updateTime() {
         const now = new Date();
         const tFull = now.toLocaleTimeString('de-DE');
-        const tShort = now.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
         document.getElementById('mainClock').innerText = tFull;
         document.getElementById('footerClock').innerText = tFull;
-        document.getElementById('track').innerText = currentSong + " | " + tShort;
+        
         const day = String(now.getDate()).padStart(2, '0');
         const month = String(now.getMonth() + 1).padStart(2, '0');
-        document.getElementById('dateFooter').innerText = `${day}.${month}.${now.getFullYear()}`;
-        document.getElementById('sideDate').innerText = `${day}.${month}.${now.getFullYear()}`;
+        const dStr = `${day}.${month}.${now.getFullYear()}`;
+        document.getElementById('dateFooter').innerText = dStr;
+        document.getElementById('sideDate').innerText = dStr;
     }
     setInterval(updateTime, 1000);
 
     function init() {
-        const savedSt = localStorage.getItem('nikLast');
-        if(savedSt) { station = savedSt; document.getElementById('sIn').value = savedSt; }
-        
-        const savedName = localStorage.getItem('nikManualName');
-        if(savedName) {
-            document.getElementById('headerTitleInput').value = savedName;
-            document.getElementById('stDisplayNameCenter').innerText = savedName;
-        }
-
+        // Suchfeld explizit leeren beim Start
+        document.getElementById('sIn').value = "";
         audio.volume = 0.9;
         updateTime();
-        updateData();
-    }
-
-    // Funktion zum manuellen Synchronisieren der Namen
-    function syncManualName(val) {
-        const clean = val.toUpperCase();
-        document.getElementById('stDisplayNameCenter').innerText = clean;
-        localStorage.setItem('nikManualName', clean);
     }
 
     function changeSt(v) {
         if(!v) return;
+        
+        // Anzeigen aktualisieren
+        const displayName = v.toUpperCase();
+        document.getElementById('headerTitleDisplay').innerText = displayName;
+        document.getElementById('stDisplayNameCenter').innerText = displayName;
+        
         station = v.toLowerCase().trim().replace(/\s+/g, '-');
-        localStorage.setItem('nikLast', station);
+        
+        // Suchfeld nach der Eingabe wieder leeren für neue manuelle Suchen
+        document.getElementById('sIn').value = "";
+        
         if(playing) { stop(); start(); }
         updateData();
     }
 
     function setV(v) { audio.volume = v; document.getElementById('vLab').innerText = "LAUTSTÄRKE: " + Math.round(v*100) + "%"; }
-    function togglePlay() { if(!playing) start(); else stop(); }
+    function togglePlay() { if(!station) return; if(!playing) start(); else stop(); }
 
     function start() {
         audio.src = "https://stream.laut.fm/" + station + "?cache=" + Math.random();
@@ -232,7 +216,6 @@
             const r = await fetch(`https://api.laut.fm/station/${station}?nocache=${Math.random()}`);
             const d = await r.json();
             if (d) {
-                // NUR LOGO UND WERTE - DER NAME WIRD NICHT ÜBERSCHRIEBEN
                 document.getElementById('stLogo').src = d.images ? d.images.station_120x120 : "";
                 document.getElementById('stDesc').innerText = d.description || "";
                 document.getElementById('listenerCount').innerText = (d.listeners !== undefined) ? d.listeners : "0";
@@ -242,6 +225,8 @@
             const s = await rH.json();
             if(s && s.length > 0) {
                 currentSong = s[0].artist.name + " - " + s[0].title;
+                document.getElementById('track').innerText = currentSong;
+                
                 let html = "";
                 s.slice(1).forEach(x => {
                     const serverTime = new Date(x.started_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
@@ -249,7 +234,7 @@
                 });
                 document.getElementById('hist').innerHTML = html;
             }
-        } catch(e) { console.warn("API Offline"); }
+        } catch(e) { console.warn("API Error"); }
     }
     setInterval(updateData, 7000);
 </script>
