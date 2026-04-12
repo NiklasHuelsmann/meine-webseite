@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RADIO ENGINE V313</title>
+    <title>RADIO ENGINE V314</title>
     <style>
         :root { 
             --main-bg: #2a3441; 
@@ -26,13 +26,21 @@
             border-bottom: 2px solid var(--accent);
         }
 
-        #dynamicHeaderTitle {
+        /* MANUELLER INPUT IM HEADER */
+        #headerTitleInput {
+            background: transparent;
+            border: 1px dashed rgba(0, 251, 255, 0.3);
             color: var(--accent);
             font-size: 20px;
             font-weight: bold;
             letter-spacing: 1px;
             text-transform: uppercase;
+            width: 350px;
+            outline: none;
+            padding: 2px 10px;
+            font-family: 'Segoe UI', sans-serif;
         }
+        #headerTitleInput:focus { border: 1px solid var(--accent); }
         
         .search-container { display: flex; align-items: center; background: #fff; padding: 4px 12px; border-radius: 4px; }
         .search-container input { border: none; color: #000; outline: none; width: 150px; font-weight: bold; }
@@ -47,7 +55,6 @@
             padding: 15px; display: flex; flex-direction: column; overflow: hidden;
         }
 
-        /* TITEL-BOX-STYLING */
         .now-playing-box {
             max-width: 500px;
             width: 100%; background: var(--on-air-bg);
@@ -72,7 +79,7 @@
         .center-display { text-align: center; }
         #stLogo { width: 170px; height: 170px; border-radius: 12px; border: 2px solid white; margin-bottom: 15px; }
         
-        /* DER NAME ÜBER DEM BALKEN */
+        /* SYNCHRONISIERTER NAME IN DER MITTE */
         #stDisplayNameCenter {
             font-size: 22px;
             font-weight: bold;
@@ -101,9 +108,10 @@
 <body onload="init()">
 
 <header>
-    <div id="dynamicHeaderTitle">SENDER WÄHLEN...</div>
+    <input type="text" id="headerTitleInput" value="DEIN SENDER" oninput="syncManualName(this.value)">
+    
     <div class="search-container">
-        <input type="text" id="sIn" placeholder="Sendername eingeben..." onkeypress="if(event.key==='Enter') changeSt(this.value)">
+        <input type="text" id="sIn" placeholder="Stream-ID..." onkeypress="if(event.key==='Enter') changeSt(this.value)">
         <span onclick="changeSt(document.getElementById('sIn').value)" style="cursor:pointer">🔍</span>
     </div>
 </header>
@@ -126,11 +134,11 @@
     <div class="panel center-display">
         <img id="stLogo" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7">
         
-        <div id="stDisplayNameCenter"></div>
+        <div id="stDisplayNameCenter">DEIN SENDER</div>
 
         <div class="now-playing-box">
             <div class="marquee-container">
-                <div id="track">BEREIT FÜR SUCHE...</div>
+                <div id="track">BEREIT...</div>
             </div>
         </div>
         
@@ -148,7 +156,7 @@
 </div>
 
 <footer>
-    <div>V313.DUAL-SYNC</div>
+    <div>V314.FULL-MANUAL</div>
     <div id="dateFooter">--.--.----</div>
     <div style="color: var(--accent); font-weight: bold; font-size: 15px;" id="footerClock">00:00:00</div>
 </footer>
@@ -158,7 +166,7 @@
 <script>
     const audio = document.getElementById('audio');
     let playing = false;
-    let station = "";
+    let station = "niklasfm-radio";
     let currentSong = "KEIN SENDER";
 
     function updateTime() {
@@ -176,31 +184,37 @@
     setInterval(updateTime, 1000);
 
     function init() {
-        const saved = localStorage.getItem('nikLast');
-        if(saved) { 
-            changeSt(saved); 
+        const savedSt = localStorage.getItem('nikLast');
+        if(savedSt) { station = savedSt; document.getElementById('sIn').value = savedSt; }
+        
+        const savedName = localStorage.getItem('nikManualName');
+        if(savedName) {
+            document.getElementById('headerTitleInput').value = savedName;
+            document.getElementById('stDisplayNameCenter').innerText = savedName;
         }
+
         audio.volume = 0.9;
         updateTime();
+        updateData();
+    }
+
+    // Funktion zum manuellen Synchronisieren der Namen
+    function syncManualName(val) {
+        const clean = val.toUpperCase();
+        document.getElementById('stDisplayNameCenter').innerText = clean;
+        localStorage.setItem('nikManualName', clean);
     }
 
     function changeSt(v) {
         if(!v) return;
-        const cleanName = v.toUpperCase().trim();
-        
-        // Beide Namensfelder synchronisieren
-        document.getElementById('dynamicHeaderTitle').innerText = cleanName;
-        document.getElementById('stDisplayNameCenter').innerText = cleanName;
-        
         station = v.toLowerCase().trim().replace(/\s+/g, '-');
         localStorage.setItem('nikLast', station);
-        
         if(playing) { stop(); start(); }
         updateData();
     }
 
     function setV(v) { audio.volume = v; document.getElementById('vLab').innerText = "LAUTSTÄRKE: " + Math.round(v*100) + "%"; }
-    function togglePlay() { if(!station) return; if(!playing) start(); else stop(); }
+    function togglePlay() { if(!playing) start(); else stop(); }
 
     function start() {
         audio.src = "https://stream.laut.fm/" + station + "?cache=" + Math.random();
@@ -218,6 +232,7 @@
             const r = await fetch(`https://api.laut.fm/station/${station}?nocache=${Math.random()}`);
             const d = await r.json();
             if (d) {
+                // NUR LOGO UND WERTE - DER NAME WIRD NICHT ÜBERSCHRIEBEN
                 document.getElementById('stLogo').src = d.images ? d.images.station_120x120 : "";
                 document.getElementById('stDesc').innerText = d.description || "";
                 document.getElementById('listenerCount').innerText = (d.listeners !== undefined) ? d.listeners : "0";
@@ -234,7 +249,7 @@
                 });
                 document.getElementById('hist').innerHTML = html;
             }
-        } catch(e) { console.warn("Sync-Fehler"); }
+        } catch(e) { console.warn("API Offline"); }
     }
     setInterval(updateData, 7000);
 </script>
