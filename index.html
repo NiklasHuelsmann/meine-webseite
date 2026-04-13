@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Radio Pro v5.17 | Firefox Sound Fix</title>
+    <title>Radio Pro v6.0 | Full Release</title>
     <style>
         :root {
             --bg: #02040a;
@@ -43,7 +43,7 @@
             border-radius: 10px; font-weight: 900; font-size: 1.1rem; cursor: pointer;
             display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 25px;
         }
-        .btn-main.is-playing { background: #ff3366; color: white; }
+        .btn-main.is-playing { background: #ff3366 !important; color: white !important; }
 
         .vol-control { text-align: left; background: rgba(255,255,255,0.05); padding: 15px; border-radius: 12px; }
         .vol-top { display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 12px; font-weight: bold; color: var(--accent); }
@@ -85,17 +85,24 @@
             z-index: 5; background: #000;
         }
         .bar { width: 3px; background: var(--accent); height: 5px; }
-        .active .bar { animation: wave 0.6s infinite ease-in-out; }
-        .active .bar:nth-child(2) { animation-delay: 0.1s; }
-        .active .bar:nth-child(3) { animation-delay: 0.2s; }
+        .vis-circle.active .bar { animation: wave 0.6s infinite ease-in-out; }
+        .vis-circle.active .bar:nth-child(2) { animation-delay: 0.1s; }
+        .vis-circle.active .bar:nth-child(3) { animation-delay: 0.2s; }
         @keyframes wave { 0%, 100% { height: 5px; } 50% { height: 25px; } }
 
-        .footer-marquee-container { flex: 1; overflow: hidden; white-space: nowrap; margin-right: 100px; }
-        .footer-songtext { display: inline-block; animation: slide-smooth 4s linear infinite alternate; }
-        .footer-songtext b { font-size: 16px; color: #fff; margin-right: 5px; }
-        .footer-songtext span { font-size: 16px; color: var(--accent); font-weight: bold; }
+        .footer-marquee-container { flex: 1; overflow: hidden; white-space: nowrap; margin-right: 150px; }
+        .footer-songtext { 
+            display: inline-block; 
+            animation: slide-wide 6s linear infinite alternate; 
+            text-shadow: 0 0 10px rgba(0, 210, 255, 0.5);
+        }
+        .footer-songtext b { font-size: 19px; color: #fff; margin-right: 10px; }
+        .footer-songtext span { font-size: 19px; color: var(--accent); font-weight: bold; }
 
-        @keyframes slide-smooth { 0% { transform: translateX(0); } 100% { transform: translateX(-60px); } }
+        @keyframes slide-wide { 
+            0% { transform: translateX(0); } 
+            100% { transform: translateX(-150px); } 
+        }
         
         .v-tag { position: absolute; right: 20px; bottom: 5px; font-size: 12px; font-weight: bold; color: var(--accent); opacity: 0.9; }
     </style>
@@ -119,11 +126,11 @@
 <div class="container">
     <div class="left-panel">
         <div id="mainStationName">SENDER WÄHLEN</div>
-        <div id="stationDesc">Suche oben nach einem Sender</div>
+        <div id="stationDesc">Bitte einen Namen eingeben</div>
         <img id="stationDisplay" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=">
         <div id="hoerer" class="hoerer-box">AKTUELL HÖRER: 0</div>
         
-        <button id="pBtn" class="btn-main" onclick="handlePlay()">
+        <button id="pBtn" class="btn-main" onclick="playClick()">
             <span id="pIcon">▶</span> <span id="pText">SENDER STARTEN</span>
         </button>
 
@@ -147,7 +154,7 @@
         <span class="section-title">Gleich</span>
         <div class="preview-card">
             <span class="preview-header">Gleich</span>
-            <div class="preview-text" id="previewContent">Lade Sendedaten...</div>
+            <div class="preview-text" id="previewContent">Warte auf Daten...</div>
         </div>
         <span class="section-title" style="text-transform: none;">Letzte Songs</span>
         <div id="hList" class="history-list"></div>
@@ -159,16 +166,16 @@
         <div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div>
     </div>
     <div class="footer-marquee-container">
-        <div class="footer-songtext" id="fSong"><b>Bereit...</b><span>Wähle einen Sender</span></div>
+        <div class="footer-songtext" id="fSong"><b>Bereit...</b><span>Sender suchen</span></div>
     </div>
-    <span class="v-tag">v5.17</span>
+    <span class="v-tag">v6.0 Full Release</span>
 </footer>
 
-<audio id="audioEngine" preload="auto" crossorigin="anonymous"></audio>
+<audio id="audioEngine" crossorigin="anonymous"></audio>
 
 <script>
     const audio = document.getElementById('audioEngine');
-    let playing = false, slug = "", poll = null, lastVol = 0.9;
+    let isPlaying = false, slug = "", poll = null;
 
     function boot() {
         setInterval(() => { document.getElementById('uhr').innerText = new Date().toLocaleTimeString('de-DE'); }, 1000);
@@ -176,14 +183,13 @@
     }
 
     function setV(v) {
-        audio.volume = v; lastVol = v;
+        audio.volume = v;
         document.getElementById('vNum').innerText = Math.round(v * 100) + "%";
-        document.getElementById('muteBtn').innerText = v == 0 ? "🔇" : "🔊";
     }
 
     function toggleMute() {
-        if (audio.volume > 0) { lastVol = audio.volume; setV(0); document.getElementById('volRange').value = 0; }
-        else { setV(lastVol > 0 ? lastVol : 0.9); document.getElementById('volRange').value = audio.volume; }
+        if (audio.volume > 0) { audio.dataset.old = audio.volume; setV(0); document.getElementById('volRange').value = 0; }
+        else { setV(audio.dataset.old || 0.9); document.getElementById('volRange').value = audio.volume; }
     }
 
     function startSync(val) {
@@ -192,68 +198,54 @@
         updateAPI();
         if(poll) clearInterval(poll);
         poll = setInterval(updateAPI, 8000); 
-        if(playing) stopRadio();
     }
 
-    function handlePlay() {
-        if(!slug) return alert("Such dir erst einen Sender aus!");
-        playing ? stopRadio() : playRadio();
-    }
-
-    function playRadio() {
-        // Firefox Fix: URL wird direkt zugewiesen und geladen
-        audio.src = `https://stream.laut.fm/${slug}`;
-        audio.load();
-        audio.play().then(() => {
-            playing = true;
+    function playClick() {
+        if(!slug) return alert("Sender fehlt!");
+        if(!isPlaying) {
+            audio.src = `https://stream.laut.fm/${slug}`;
+            audio.play();
+            isPlaying = true;
             document.getElementById('pBtn').classList.add('is-playing');
             document.getElementById('pIcon').innerText = "■";
             document.getElementById('pText').innerText = "STOPP";
-            document.getElementById('fVis').classList.add('active'); // Kreis startet
-        }).catch(err => console.log("Play blocked: ", err));
-    }
-
-    function stopRadio() {
-        audio.pause();
-        audio.removeAttribute('src'); 
-        audio.load(); 
-        playing = false;
-        document.getElementById('pBtn').classList.remove('is-playing');
-        document.getElementById('pIcon').innerText = "▶";
-        document.getElementById('pText').innerText = "SENDER STARTEN";
-        document.getElementById('fVis').classList.remove('active'); // Kreis stoppt
+            document.getElementById('fVis').classList.add('active');
+        } else {
+            audio.pause();
+            audio.src = "";
+            isPlaying = false;
+            document.getElementById('pBtn').classList.remove('is-playing');
+            document.getElementById('pIcon').innerText = "▶";
+            document.getElementById('pText').innerText = "SENDER STARTEN";
+            document.getElementById('fVis').classList.remove('active');
+        }
     }
 
     async function updateAPI() {
         if(!slug) return;
         try {
-            const [station, songs, listeners] = await Promise.all([
+            const [i, s, l] = await Promise.all([
                 fetch(`https://api.laut.fm/station/${slug}`).then(r => r.json()),
                 fetch(`https://api.laut.fm/station/${slug}/last_songs`).then(r => r.json()),
                 fetch(`https://api.laut.fm/station/${slug}/listeners`).then(r => r.text())
             ]);
-            
-            document.getElementById('headerStationName').innerText = station.display_name;
-            document.getElementById('miniLogo').src = station.images.station_120x120;
+            document.getElementById('headerStationName').innerText = i.display_name;
+            document.getElementById('miniLogo').src = i.images.station_120x120;
             document.getElementById('miniLogo').style.display = 'block';
-            document.getElementById('mainStationName').innerText = station.display_name;
-            document.getElementById('stationDesc').innerText = station.description.substring(0, 70) + "...";
-            document.getElementById('stationDisplay').src = station.images.station_640x640;
-            document.getElementById('hoerer').innerText = "AKTUELL HÖRER: " + listeners;
-            
-            const now = songs[0];
+            document.getElementById('mainStationName').innerText = i.display_name;
+            document.getElementById('stationDesc').innerText = i.description.substring(0, 75) + "...";
+            document.getElementById('stationDisplay').src = i.images.station_640x640;
+            document.getElementById('hoerer').innerText = "AKTUELL HÖRER: " + l;
+            const now = s[0];
             document.getElementById('curT').innerText = new Date(now.started_at).toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'});
             document.getElementById('curA').innerText = now.artist.name;
             document.getElementById('curS').innerText = now.title;
-            
-            if(songs.length > 2) {
-                document.getElementById('previewContent').innerHTML = `Weiter geht's in der Sendung »${station.display_name}« mit <b>${songs[1].artist.name}</b>, <b>${songs[2].artist.name}</b> und weiteren.`;
+            if(s.length > 2) {
+                document.getElementById('previewContent').innerHTML = `Weiter geht's in der Sendung »${i.display_name}« mit <b>${s[1].artist.name}</b>, <b>${s[2].artist.name}</b> und weiteren.`;
             }
-
             document.getElementById('fSong').innerHTML = `<b>${now.artist.name}</b><span> - ${now.title}</span>`;
-            
             let h = "";
-            songs.slice(1, 10).forEach(song => {
+            s.slice(1, 10).forEach(song => {
                 const st = new Date(song.started_at).toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'});
                 h += `<div class="history-item"><div class="history-time">${st}</div><div class="history-song"><b>${song.artist.name}</b> - ${song.title}</div></div>`;
             });
