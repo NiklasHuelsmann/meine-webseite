@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>v3.2.5</title>
+    <title>v3.2.1 Stable</title>
     <style>
         :root { 
             --main-bg: #0f172a; --panel-bg: #1e293b; --accent: #00fbff; 
             --text-main: #f8fafc; --border: #334155; --ad-color: #fbbf24;
         }
         
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        * { box-sizing: border-box; } /* Verhindert Layout-Fehler auf Handys */
 
         body { 
             font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; 
@@ -19,93 +19,110 @@
             overflow-x: hidden;
         }
 
-        #mainContent { padding: 0 15px; flex-grow: 1; }
+        #loginOverlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: #020617; z-index: 9999; display: flex; justify-content: center; align-items: center;
+        }
+        .login-box {
+            background: var(--panel-bg); padding: 30px; border-radius: 15px;
+            border: 1px solid var(--accent); width: 85%; max-width: 320px; text-align: center;
+        }
+
+        #mainContent { display: none; padding: 0 15px; flex-grow: 1; }
 
         header { 
-            padding: 15px 0; display: flex; justify-content: flex-end; align-items: center; 
-            border-bottom: 1px solid var(--border); margin-bottom: 20px;
-            min-height: 65px;
+            padding: 12px 0; display: flex; justify-content: space-between; align-items: center; 
+            border-bottom: 1px solid var(--border); margin-bottom: 15px;
         }
-        
-        .header-right-zone { display: flex; align-items: center; gap: 12px; }
-        .header-display-name { font-weight: 800; color: var(--accent); font-size: 13px; text-transform: uppercase; }
-        .header-logo { width: 35px; height: 35px; border-radius: 8px; border: 1px solid var(--border); object-fit: cover; display: none; }
-        
-        .reset-btn { background: #334155; color: white; border: none; padding: 6px 14px; border-radius: 8px; font-size: 11px; cursor: pointer; font-weight: 900; }
+        .header-right-zone { display: flex; align-items: center; gap: 10px; }
+        .header-logo { width: 32px; height: 32px; border-radius: 6px; border: 1px solid var(--accent); object-fit: cover; display: none; }
+        .header-display-name { font-weight: 900; color: var(--accent); font-size: 13px; text-transform: uppercase; }
+        .logout-btn { background: #ef4444; color: white; border: none; padding: 5px 12px; border-radius: 6px; font-size: 11px; cursor: pointer; font-weight: bold; }
 
         .app-container { width: 100%; max-width: 1150px; margin: 0 auto; }
         .content-grid { display: grid; grid-template-columns: 280px 1fr 300px; gap: 20px; }
         
-        @media (max-width: 950px) { .content-grid { grid-template-columns: 1fr; } }
+        @media (max-width: 950px) { 
+            .content-grid { grid-template-columns: 1fr; }
+        }
 
         .panel { 
-            background: var(--panel-bg); border-radius: 18px; padding: 25px; 
+            background: var(--panel-bg); border-radius: 15px; padding: 20px; 
             border: 1px solid var(--border); display: flex; flex-direction: column; 
             align-items: center; position: relative;
         }
         
         .now-playing-box { 
-            width: 100%; background: var(--accent); border-radius: 12px; 
+            width: 100%; background: var(--accent); border-radius: 10px; 
             padding: 15px; text-align: center; margin: 15px 0; color: #000; 
-            font-weight: 900; font-size: 14px;
+            font-weight: 800; font-size: 15px;
         }
         
         .play-btn { 
-            width: 75px; height: 75px; border-radius: 50%; background: #fff; 
+            width: 70px; height: 70px; border-radius: 50%; background: #fff; 
             border: none; cursor: pointer; display: flex; align-items: center; 
-            justify-content: center;
+            justify-content: center; box-shadow: 0 0 20px rgba(0,251,255,0.4);
         }
 
-        #stLogoMain { width: 160px; height: 160px; border-radius: 15px; margin-bottom: 12px; border: 1px solid var(--border); object-fit: cover; background: #070b14; }
+        #stLogoMain { width: 150px; height: 150px; border-radius: 15px; margin-bottom: 10px; border: 1px solid var(--border); object-fit: cover; background: #000; }
         
-        #sIn { 
-            width: 100%; padding: 15px; border-radius: 12px; border: 1px solid var(--border); 
+        input[type="password"], #sIn { 
+            width: 100%; padding: 14px; border-radius: 10px; border: 1px solid var(--border); 
             background: #0f172a; color: #fff; font-size: 16px;
         }
 
         footer { 
-            padding: 20px; border-top: 1px solid var(--border); 
-            display: flex; justify-content: center; font-size: 11px; 
-            opacity: 0.5; margin-top: 30px;
+            padding: 15px; border-top: 1px solid var(--border); 
+            display: flex; justify-content: space-between; font-size: 11px; 
+            opacity: 0.6; margin-top: 20px;
         }
 
         .ad-info { font-size: 11px; color: var(--ad-color); margin-bottom: 10px; font-weight: 900; display: none; text-transform: uppercase; }
-        .date-display { font-size: 12px; color: var(--accent); margin-bottom: 5px; font-weight: bold; text-transform: uppercase; }
+        .date-display { font-size: 13px; color: var(--accent); margin-bottom: 8px; font-weight: bold; }
     </style>
 </head>
 <body onload="init()">
 
+<div id="loginOverlay">
+    <div class="login-box">
+        <h2 style="color:var(--accent); margin:0 0 25px 0; letter-spacing: 1px;">v3.2.1</h2>
+        <input type="password" id="sysPass" placeholder="Passwort">
+        <button onclick="validateLogin()" style="background:var(--accent); color:#000; border:none; padding:15px; width:100%; font-weight:900; border-radius:10px; cursor:pointer; margin-top:15px;">STARTEN</button>
+    </div>
+</div>
+
 <div id="mainContent">
     <header>
+        <div style="font-weight: 900; color: #64748b; font-size: 14px;">v3.2.1</div>
         <div class="header-right-zone">
-            <span class="header-display-name" id="headName"></span>
+            <span class="header-display-name" id="headName">STANDBY</span>
             <img class="header-logo" id="headLogo" src="">
-            <button class="reset-btn" onclick="location.reload()">RESET</button>
+            <button class="logout-btn" onclick="location.reload()">OFF</button>
         </div>
     </header>
 
     <div class="app-container">
-        <div style="display:flex; gap:12px; margin-bottom: 25px;">
+        <div style="display:flex; gap:10px; margin-bottom: 20px;">
             <input type="text" id="sIn" placeholder="Sender suchen..." onkeypress="if(event.key==='Enter') changeSt(this.value)">
-            <button onclick="changeSt(document.getElementById('sIn').value)" style="background:var(--accent); border:none; border-radius:12px; padding:0 30px; font-weight:900; cursor:pointer; color:#000;">GO</button>
+            <button onclick="changeSt(document.getElementById('sIn').value)" style="background:var(--accent); border:none; border-radius:10px; padding:0 25px; font-weight:bold; cursor:pointer;">GO</button>
         </div>
 
         <div class="content-grid">
             <div class="panel">
                 <div class="date-display" id="dateDisp">--.--.----</div>
-                <div id="clockTop" style="font-size: 36px; font-weight: 900; color: var(--accent); font-family: monospace;">00:00:00</div>
-                <div id="listenerCount" style="font-size: 18px; margin: 15px 0; font-weight: bold; color: #94a3b8;">0 HÖRER</div>
-                <div style="width:100%; text-align:center; border-top: 1px solid var(--border); padding-top: 15px;">
-                    <div id="volLabel" style="font-size:10px; margin-bottom:8px; font-weight:bold; color:var(--accent);">VOL: 90%</div>
+                <div id="clockTop" style="font-size: 34px; font-weight: 900; color: var(--accent); font-family: monospace;">00:00:00</div>
+                <div id="listenerCount" style="font-size: 20px; margin: 12px 0; font-weight: bold; color: #94a3b8;">0 HÖRER</div>
+                <div style="width:100%; text-align:center;">
+                    <div id="volLabel" style="font-size:11px; margin-bottom:5px; font-weight:bold; color:var(--accent);">VOL: 90%</div>
                     <input type="range" style="width:100%; accent-color:var(--accent);" min="0" max="1" step="0.01" value="0.9" oninput="setV(this.value)">
                 </div>
             </div>
 
             <div class="panel">
                 <img id="stLogoMain" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=">
-                <div id="mainStName" style="font-weight: 900; font-size: 22px; color: var(--accent);">STATION</div>
+                <div id="mainStName" style="font-weight: 900; font-size: 22px; color: var(--accent);">BEREIT</div>
                 <div class="now-playing-box">
-                    <div id="trackDisplay">SENDER EINGEBEN</div>
+                    <div id="trackDisplay">SENDER WÄHLEN</div>
                 </div>
                 <div id="adLabel" class="ad-info">⚠️ WERBUNG</div>
                 <button class="play-btn" onclick="togglePlay()" id="pBtn">
@@ -114,14 +131,15 @@
             </div>
 
             <div class="panel" style="align-items: flex-start;">
-                <h4 style="font-size: 11px; color: var(--accent); margin: 0 0 15px 0; text-transform: uppercase; border-bottom: 1px solid var(--border); width: 100%; padding-bottom: 5px;">Zuletzt gelaufen</h4>
-                <div id="hist" style="width: 100%; font-size: 12px; line-height: 1.6;"></div>
+                <h4 style="font-size: 12px; color: var(--accent); margin: 0 0 15px 0; text-transform: uppercase;">Zuletzt gehört</h4>
+                <div id="hist" style="width: 100%; font-size: 12px;"></div>
             </div>
         </div>
     </div>
 
     <footer>
-        <div>v3.2.5</div>
+        <div>v3.2.1 | STABLE</div>
+        <div id="clockBottom" style="font-weight: bold; color: var(--accent);">00:00:00</div>
     </footer>
 </div>
 
@@ -133,16 +151,20 @@
     let station = "";
     let updateTimer = null;
 
-    function init() {
-        audio.volume = 0.9;
-        startClock();
+    function validateLogin() {
+        if(document.getElementById('sysPass').value.length > 0) {
+            document.getElementById('loginOverlay').style.display = 'none';
+            document.getElementById('mainContent').style.display = 'block';
+            startSystem();
+        }
     }
 
-    function startClock() {
+    function startSystem() {
         setInterval(() => {
             const now = new Date();
             const timeStr = now.toLocaleTimeString('de-DE');
             document.getElementById('clockTop').innerText = timeStr;
+            document.getElementById('clockBottom').innerText = timeStr;
             document.getElementById('dateDisp').innerText = now.toLocaleDateString('de-DE', { weekday: 'long', day: '2-digit', month: '2-digit', year: 'numeric' });
         }, 1000);
     }
@@ -164,11 +186,12 @@
     function togglePlay() { if(!station) return; playing ? stop() : start(); }
 
     function start() {
+        // Cache-Busting Fix für alle Geräte
         audio.src = "https://stream.laut.fm/" + station + "?nocache=" + Date.now();
         audio.play().then(() => {
             playing = true;
             document.getElementById('pBtn').innerHTML = '<svg width="35" height="35" viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" fill="#000"/></svg>';
-        }).catch(e => console.log("Start Error"));
+        }).catch(e => console.log("User Interaction Required"));
     }
 
     function stop() { 
@@ -186,9 +209,9 @@
             ]);
 
             const img = rInfo.images.station_120x120;
-            document.getElementById('headName').innerText = rInfo.display_name;
             document.getElementById('headLogo').src = img;
             document.getElementById('headLogo').style.display = "block";
+            document.getElementById('headName').innerText = rInfo.display_name;
             document.getElementById('stLogoMain').src = img;
             document.getElementById('mainStName').innerText = rInfo.display_name.toUpperCase();
             document.getElementById('listenerCount').innerText = rL + " HÖRER";
@@ -198,18 +221,18 @@
             document.getElementById('trackDisplay').innerText = currTime + " - " + current.artist.name + " - " + current.title;
             
             const isAd = current.type === "ad" || current.artist.name.toLowerCase().includes("werbung");
-            document.getElementById('adLabel').style.display = isAd ? "inline-block" : "none";
+            document.getElementById('adLabel').style.display = isAd ? "block" : "none";
 
             let html = "";
-            rHist.slice(1, 12).forEach(s => {
+            rHist.slice(1, 10).forEach(s => {
                 const time = new Date(s.started_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-                html += `<div style="border-bottom: 1px solid #334155; padding: 8px 0; color: #cbd5e1;">
-                            <b style="color:var(--accent); margin-right: 8px;">${time}</b> ${s.artist.name} - ${s.title}
-                         </div>`;
+                html += `<div style="border-bottom: 1px solid #334155; padding: 6px 0;"><b>${time}</b> ${s.artist.name} - ${s.title}</div>`;
             });
             document.getElementById('hist').innerHTML = html;
-        } catch(e) {}
+        } catch(e) { console.log("Sync..."); }
     }
+
+    function init() { audio.volume = 0.9; }
 </script>
 </body>
 </html>
