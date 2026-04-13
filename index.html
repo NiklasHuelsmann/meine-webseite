@@ -3,121 +3,102 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>v3.2.7</title>
+    <title>v3.2.8 - Fixed Displays</title>
     <style>
         :root { 
             --main-bg: #0f172a; --panel-bg: #1e293b; --accent: #00fbff; 
-            --text-main: #f8fafc; --border: #334155; --ad-color: #fbbf24;
+            --text-main: #f8fafc; --border: #334155;
         }
         
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-
-        body { 
-            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; 
-            margin: 0; background: var(--main-bg); color: var(--text-main); 
-            min-height: 100vh; display: flex; flex-direction: column;
-            overflow-x: hidden;
-        }
+        body { font-family: sans-serif; margin: 0; background: var(--main-bg); color: var(--text-main); display: flex; flex-direction: column; min-height: 100vh; }
 
         #mainContent { padding: 0 15px; flex-grow: 1; }
 
+        /* Header mit kleinem Logo rechts */
         header { 
             padding: 15px 0; display: flex; justify-content: flex-end; align-items: center; 
-            border-bottom: 1px solid var(--border); margin-bottom: 20px; min-height: 65px;
+            border-bottom: 1px solid var(--border); margin-bottom: 20px; min-height: 70px;
         }
-        
-        .header-right-zone { display: flex; align-items: center; gap: 12px; }
-        .header-display-name { font-weight: 800; color: var(--accent); font-size: 13px; text-transform: uppercase; }
-        .header-logo { width: 35px; height: 35px; border-radius: 8px; border: 1px solid var(--border); object-fit: cover; display: none; background: #000; }
-        
-        .reset-btn { background: #334155; color: white; border: none; padding: 6px 14px; border-radius: 8px; font-size: 11px; cursor: pointer; font-weight: 900; }
+        .header-info { display: flex; align-items: center; gap: 10px; }
+        #headName { font-weight: bold; color: var(--accent); text-transform: uppercase; font-size: 14px; }
+        #headLogo { width: 40px; height: 40px; border-radius: 5px; border: 1px solid var(--accent); display: none; object-fit: cover; }
 
-        .app-container { width: 100%; max-width: 1150px; margin: 0 auto; }
-        .content-grid { display: grid; grid-template-columns: 280px 1fr 300px; gap: 20px; }
+        .app-container { width: 100%; max-width: 1100px; margin: 0 auto; }
         
-        @media (max-width: 950px) { .content-grid { grid-template-columns: 1fr; } }
+        /* Suche */
+        .search-area { display: flex; gap: 10px; margin-bottom: 20px; }
+        #sIn { flex-grow: 1; padding: 15px; border-radius: 10px; border: 1px solid var(--border); background: #0f172a; color: #fff; font-size: 16px; }
+        .go-btn { background: var(--accent); color: #000; border: none; padding: 0 25px; border-radius: 10px; font-weight: 900; cursor: pointer; }
 
-        .panel { 
-            background: var(--panel-bg); border-radius: 18px; padding: 25px; 
-            border: 1px solid var(--border); display: flex; flex-direction: column; 
-            align-items: center; position: relative;
-        }
+        /* Layout der Panels */
+        .content-grid { display: grid; grid-template-columns: 300px 1fr; gap: 20px; }
+        @media (max-width: 850px) { .content-grid { grid-template-columns: 1fr; } }
+
+        .panel { background: var(--panel-bg); border-radius: 15px; border: 1px solid var(--border); padding: 20px; }
+
+        /* Display 1: Aktuell */
+        .display-main { background: var(--accent); color: #000; padding: 15px; border-radius: 10px; text-align: center; margin: 15px 0; font-weight: 900; }
         
-        .now-playing-box { 
-            width: 100%; background: var(--accent); border-radius: 12px; 
-            padding: 15px; text-align: center; margin: 15px 0; color: #000; 
-            font-weight: 900; font-size: 14px; min-height: 54px; display: flex; align-items: center; justify-content: center;
-        }
+        /* Display 2: Zuletzt / Historie */
+        .history-list { font-size: 13px; line-height: 1.6; }
+        .history-item { border-bottom: 1px solid var(--border); padding: 8px 0; }
+        .history-time { color: var(--accent); font-weight: bold; margin-right: 8px; }
+
+        .player-controls { display: flex; flex-direction: column; align-items: center; gap: 15px; }
+        #mainLogo { width: 180px; height: 180px; border-radius: 15px; object-fit: cover; background: #000; border: 1px solid var(--border); }
         
-        .play-btn { 
-            width: 75px; height: 75px; border-radius: 50%; background: #fff; 
-            border: none; cursor: pointer; display: flex; align-items: center; justify-content: center;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-        }
+        .play-btn { width: 70px; height: 70px; border-radius: 50%; border: none; background: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center; }
 
-        #stLogoMain { width: 160px; height: 160px; border-radius: 15px; margin-bottom: 12px; border: 1px solid var(--border); object-fit: cover; background: #070b14; }
-        
-        #sIn { 
-            width: 100%; padding: 15px; border-radius: 12px; border: 1px solid var(--border); 
-            background: #0f172a; color: #fff; font-size: 16px;
-        }
-
-        footer { padding: 20px; border-top: 1px solid var(--border); display: flex; justify-content: center; font-size: 11px; opacity: 0.5; margin-top: 30px; }
-
-        .ad-info { font-size: 11px; color: var(--ad-color); margin-bottom: 10px; font-weight: 900; display: none; text-transform: uppercase; border: 1px solid var(--ad-color); padding: 2px 8px; border-radius: 4px; }
-        .date-display { font-size: 12px; color: var(--accent); margin-bottom: 5px; font-weight: bold; text-transform: uppercase; }
+        footer { padding: 15px; text-align: center; opacity: 0.5; font-size: 12px; border-top: 1px solid var(--border); margin-top: 20px; }
     </style>
 </head>
 <body onload="init()">
 
 <div id="mainContent">
     <header>
-        <div class="header-right-zone">
-            <span class="header-display-name" id="headName"></span>
-            <img class="header-logo" id="headLogo" src="">
-            <button class="reset-btn" onclick="location.reload()">RESET</button>
+        <div class="header-info">
+            <span id="headName"></span>
+            <img id="headLogo" src="">
+            <button onclick="location.reload()" style="background:#ef4444; color:#fff; border:none; padding:5px 10px; border-radius:5px; cursor:pointer; font-weight:bold; font-size:10px;">RESET</button>
         </div>
     </header>
 
     <div class="app-container">
-        <div style="display:flex; gap:12px; margin-bottom: 25px;">
-            <input type="text" id="sIn" placeholder="Sendername (z.B. brian-radio)..." onkeypress="if(event.key==='Enter') changeSt(this.value)">
-            <button onclick="changeSt(document.getElementById('sIn').value)" style="background:var(--accent); border:none; border-radius:12px; padding:0 30px; font-weight:900; cursor:pointer; color:#000;">GO</button>
+        <div class="search-area">
+            <input type="text" id="sIn" placeholder="Sendername..." onkeypress="if(event.key==='Enter') changeSt(this.value)">
+            <button class="go-btn" onclick="changeSt(document.getElementById('sIn').value)">GO</button>
         </div>
 
         <div class="content-grid">
-            <div class="panel">
-                <div class="date-display" id="dateDisp">--.--.----</div>
-                <div id="clockTop" style="font-size: 36px; font-weight: 900; color: var(--accent); font-family: monospace;">00:00:00</div>
-                <div id="listenerCount" style="font-size: 18px; margin: 15px 0; font-weight: bold; color: #94a3b8;">0 HÖRER</div>
-                <div style="width:100%; text-align:center; border-top: 1px solid var(--border); padding-top: 15px;">
-                    <div id="volLabel" style="font-size:10px; margin-bottom:8px; font-weight:bold; color:var(--accent);">VOL: 90%</div>
-                    <input type="range" style="width:100%; accent-color:var(--accent);" min="0" max="1" step="0.01" value="0.9" oninput="setV(this.value)">
+            <div class="panel player-controls">
+                <div id="curDate" style="font-size: 12px; font-weight: bold; color: var(--accent);">--.--.----</div>
+                <div id="curTime" style="font-size: 32px; font-weight: 900; font-family: monospace;">00:00:00</div>
+                <div id="lCount" style="font-weight: bold; color: #94a3b8;">0 HÖRER</div>
+                
+                <img id="mainLogo" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=">
+                
+                <div style="width: 100%;">
+                    <div style="font-size: 10px; text-align: center; margin-bottom: 5px;">LAUTSTÄRKE</div>
+                    <input type="range" style="width: 100%; accent-color: var(--accent);" min="0" max="1" step="0.01" value="0.9" oninput="setV(this.value)">
                 </div>
-            </div>
 
-            <div class="panel">
-                <img id="stLogoMain" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=">
-                <div id="mainStName" style="font-weight: 900; font-size: 22px; color: var(--accent); text-align: center;">STATION</div>
-                <div class="now-playing-box">
-                    <div id="trackDisplay" style="text-align:center;">WÄHLE EINEN SENDER</div>
-                </div>
-                <div id="adLabel" class="ad-info">WERBUNG</div>
                 <button class="play-btn" onclick="togglePlay()" id="pBtn">
                     <svg width="35" height="35" viewBox="0 0 24 24"><path d="M8 5v14l11-7z" fill="#000"/></svg>
                 </button>
             </div>
 
-            <div class="panel" style="align-items: flex-start;">
-                <h4 style="font-size: 11px; color: var(--accent); margin: 0 0 15px 0; text-transform: uppercase; border-bottom: 1px solid var(--border); width: 100%; padding-bottom: 5px;">Zuletzt gelaufen</h4>
-                <div id="hist" style="width: 100%; font-size: 12px; line-height: 1.6;"></div>
+            <div class="panel">
+                <div style="font-size: 12px; font-weight: bold; text-transform: uppercase; color: var(--accent);">Aktueller Song</div>
+                <div class="display-main" id="trackDisplay">BITTE SENDER WÄHLEN</div>
+
+                <div style="font-size: 12px; font-weight: bold; text-transform: uppercase; color: var(--accent); margin-top: 20px; border-bottom: 1px solid var(--border); padding-bottom: 5px;">Zuletzt gehört</div>
+                <div id="hist" class="history-list"></div>
             </div>
         </div>
     </div>
 
-    <footer>
-        <div>v3.2.7 | STABLE</div>
-    </footer>
+    <footer>v3.2.8</footer>
 </div>
 
 <audio id="audio"></audio>
@@ -129,22 +110,14 @@
     let updateTimer = null;
 
     function init() {
-        audio.volume = 0.9;
-        startClock();
-    }
-
-    function startClock() {
         setInterval(() => {
             const now = new Date();
-            document.getElementById('clockTop').innerText = now.toLocaleTimeString('de-DE');
-            document.getElementById('dateDisp').innerText = now.toLocaleDateString('de-DE', { weekday: 'long', day: '2-digit', month: '2-digit', year: 'numeric' });
+            document.getElementById('curTime').innerText = now.toLocaleTimeString('de-DE');
+            document.getElementById('curDate').innerText = now.toLocaleDateString('de-DE', { weekday: 'long', day: '2-digit', month: '2-digit', year: 'numeric' });
         }, 1000);
     }
 
-    function setV(v) {
-        audio.volume = v;
-        document.getElementById('volLabel').innerText = "VOL: " + Math.round(v * 100) + "%";
-    }
+    function setV(v) { audio.volume = v; }
 
     function changeSt(v) {
         if(!v) return;
@@ -158,11 +131,11 @@
     function togglePlay() { if(!station) return; playing ? stop() : start(); }
 
     function start() {
-        audio.src = "https://stream.laut.fm/" + station + "?nocache=" + Date.now();
+        audio.src = "https://stream.laut.fm/" + station;
         audio.play().then(() => {
             playing = true;
             document.getElementById('pBtn').innerHTML = '<svg width="35" height="35" viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" fill="#000"/></svg>';
-        }).catch(e => console.log("Abspielschutz"));
+        });
     }
 
     function stop() { 
@@ -179,38 +152,30 @@
                 fetch(`https://api.laut.fm/station/${station}/listeners`).then(r => r.text())
             ]);
 
-            // Bild-Fix: Prüfen welche Größe verfügbar ist
-            const img = rInfo.images.station_120x120 || rInfo.images.station_80x80 || "";
+            const img = rInfo.images.station_120x120 || rInfo.images.station_80x80;
             
+            // Header Info (Oben Rechts)
             document.getElementById('headName').innerText = rInfo.display_name;
-            if(img) {
-                document.getElementById('headLogo').src = img;
-                document.getElementById('headLogo').style.display = "block";
-                document.getElementById('stLogoMain').src = img;
-            }
+            document.getElementById('headLogo').src = img;
+            document.getElementById('headLogo').style.display = "block";
             
-            document.getElementById('mainStName').innerText = rInfo.display_name.toUpperCase();
-            document.getElementById('listenerCount').innerText = rL + " HÖRER";
+            // Player Info
+            document.getElementById('mainLogo').src = img;
+            document.getElementById('lCount').innerText = rL + " HÖRER";
 
+            // Haupt Display (Aktueller Song)
             const current = rHist[0];
             const currTime = new Date(current.started_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-            document.getElementById('trackDisplay').innerText = currTime + " - " + current.artist.name + " - " + current.title;
+            document.getElementById('trackDisplay').innerText = currTime + " | " + current.artist.name + " - " + current.title;
             
-            const isAd = current.type === "ad" || current.artist.name.toLowerCase().includes("werbung");
-            document.getElementById('adLabel').style.display = isAd ? "inline-block" : "none";
-
-            // Historie mit korrekten Uhrzeiten
+            // Historie Display
             let html = "";
-            rHist.slice(1, 13).forEach(s => {
+            rHist.slice(1, 10).forEach(s => {
                 const sTime = new Date(s.started_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-                html += `<div style="border-bottom: 1px solid #334155; padding: 8px 0; color: #cbd5e1;">
-                            <b style="color:var(--accent); margin-right: 8px;">${sTime}</b> ${s.artist.name} - ${s.title}
-                         </div>`;
+                html += `<div class="history-item"><span class="history-time">${sTime}</span> ${s.artist.name} - ${s.title}</div>`;
             });
             document.getElementById('hist').innerHTML = html;
-        } catch(e) { 
-            console.log("Warte auf API..."); 
-        }
+        } catch(e) { console.log("Fehler beim Laden"); }
     }
 </script>
 </body>
