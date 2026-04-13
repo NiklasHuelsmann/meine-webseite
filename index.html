@@ -3,221 +3,264 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Radio Dashboard v5.00</title>
+    <title>Radio Pro v5.15 | FINAL MASTER</title>
     <style>
-        :root { 
-            --bg: #05080f; 
-            --karte: rgba(15, 23, 42, 0.95); 
-            --akzent: #0088ff; 
-            --text: #f8fafc; 
-            --rand: rgba(0, 136, 255, 0.35);
-            --glow: 0 0 25px rgba(0, 136, 255, 0.5);
-            --glass: blur(25px);
-            --lautfm-gruen: #1db954;
+        :root {
+            --bg: #02040a;
+            --card: rgba(15, 23, 42, 0.98);
+            --accent: #00d2ff;
+            --text: #ffffff;
+            --border: rgba(0, 210, 255, 0.3);
+            --glow: 0 0 30px rgba(0, 210, 255, 0.15);
         }
 
-        html, body { 
-            margin: 0; padding: 0; min-height: 100vh;
-            background-color: var(--bg); color: var(--text); 
-            font-family: 'Inter', sans-serif;
-            display: flex; flex-direction: column; overflow: hidden;
-        }
+        * { box-sizing: border-box; font-family: 'Segoe UI', Roboto, sans-serif; outline: none; }
+        body { margin: 0; background: var(--bg); color: var(--text); display: flex; flex-direction: column; min-height: 100vh; overflow: hidden; }
 
-        header { 
-            padding: 10px 5%; display: flex; align-items: center; justify-content: space-between; 
-            background: var(--karte); backdrop-filter: var(--glass); border-bottom: 2px solid var(--akzent); 
-            z-index: 1000;
+        header {
+            padding: 10px 5%; display: flex; align-items: center; justify-content: space-between;
+            background: #000; border-bottom: 2px solid var(--accent); position: sticky; top: 0; z-index: 1000;
         }
-
         .header-left { display: flex; align-items: center; gap: 15px; }
-        #miniLogo { width: 35px; height: 35px; border-radius: 8px; border: 2px solid var(--akzent); display: none; object-fit: cover; }
-        #senderOben { font-weight: 900; text-transform: uppercase; font-size: 0.9rem; letter-spacing: 1px; }
+        .search-area { display: flex; background: #1a2235; border-radius: 8px; padding: 5px 12px; border: 1px solid var(--border); }
+        #sIn { background: transparent; border: none; color: white; width: 150px; }
+        
+        .header-right { display: flex; align-items: center; gap: 12px; }
+        #miniLogo { width: 45px; height: 45px; border-radius: 5px; border: 1px solid var(--accent); display: none; object-fit: cover; }
+        #headerStationName { font-weight: bold; font-size: 18px; color: var(--accent); }
 
-        .container { 
-            flex-grow: 1; padding: 20px 5%; max-width: 1400px; margin: 0 auto; width: 100%;
-            display: grid; grid-template-columns: 380px 1fr; gap: 25px; align-items: start;
+        .container { flex: 1; padding: 20px 5%; display: grid; grid-template-columns: 380px 1fr; gap: 30px; max-width: 1400px; margin: 0 auto; width: 100%; overflow-y: auto; }
+        @media (max-width: 1000px) { .container { grid-template-columns: 1fr; } }
+
+        .left-panel { background: var(--card); border-radius: 20px; padding: 25px; border: 1px solid var(--border); box-shadow: var(--glow); height: fit-content; text-align: center; }
+        #mainStationName { font-size: 22px; font-weight: 800; margin-bottom: 5px; color: var(--accent); }
+        #stationDesc { font-size: 13px; opacity: 0.7; margin-bottom: 15px; height: 40px; overflow: hidden; line-height: 1.3; }
+        #stationDisplay { width: 100%; max-width: 280px; aspect-ratio: 1/1; border-radius: 15px; border: 3px solid var(--accent); margin-bottom: 15px; }
+        .hoerer-box { background: rgba(0, 210, 255, 0.1); padding: 8px; border-radius: 10px; font-weight: bold; margin-bottom: 20px; color: var(--accent); font-size: 14px; }
+
+        .btn-main {
+            background: var(--accent); color: #000; border: none; width: 100%; padding: 15px;
+            border-radius: 10px; font-weight: 900; font-size: 1.1rem; cursor: pointer;
+            display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 25px;
         }
+        .btn-main.is-playing { background: #ff3366; color: white; }
 
-        @media (max-width: 950px) { .container { grid-template-columns: 1fr; overflow-y: auto; } }
+        .vol-control { text-align: left; background: rgba(255,255,255,0.05); padding: 15px; border-radius: 12px; }
+        .vol-top { display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 12px; font-weight: bold; color: var(--accent); }
+        .vol-row { display: flex; align-items: center; gap: 10px; }
+        #muteBtn { background: none; border: none; font-size: 20px; cursor: pointer; color: white; }
+        input[type=range] { flex: 1; accent-color: var(--accent); cursor: pointer; }
 
-        .card { 
-            background: var(--karte); border: 1px solid var(--rand); border-radius: 28px; 
-            padding: 25px; box-shadow: var(--glow); backdrop-filter: var(--glass);
+        .right-panel { background: var(--card); border-radius: 20px; padding: 30px; border: 1px solid var(--border); }
+        .section-title { font-size: 13px; font-weight: 900; letter-spacing: 1px; color: var(--accent); text-transform: uppercase; margin-bottom: 15px; display: block; }
+        
+        .now-playing-card { 
+            background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 15px; 
+            padding: 20px; display: flex; align-items: center; gap: 20px; margin-bottom: 20px;
         }
+        .now-time { font-family: monospace; font-size: 22px; color: var(--accent); font-weight: bold; }
+        .now-info { display: flex; flex-direction: column; }
+        .now-artist { font-size: 13px; opacity: 0.6; text-transform: uppercase; font-weight: bold; }
+        .now-title { font-size: 18px; font-weight: 800; }
 
-        /* START KNOPF LOGIK */
-        .start-btn { 
-            background: var(--lautfm-gruen); color: white; border: none; 
-            padding: 15px 30px; border-radius: 50px; font-weight: 800; font-size: 1.1rem;
-            cursor: pointer; display: flex; align-items: center; gap: 10px; margin: 0 auto 20px;
-            transition: 0.3s; box-shadow: 0 4px 15px rgba(29, 185, 84, 0.4);
+        .preview-card {
+            background: rgba(255,255,255,0.02); border-radius: 12px; padding: 15px; margin-bottom: 25px; border-left: 3px solid var(--accent);
         }
-        .start-btn.is-playing { background: #ff4444; }
+        .preview-header { font-style: italic; font-size: 18px; color: #fff; margin-bottom: 8px; display: block; }
+        .preview-text { font-size: 14px; color: rgba(255,255,255,0.7); line-height: 1.4; }
+        .preview-text b { color: #fff; }
 
-        /* VISUALIZER BEWEGUNG UNTEN */
-        .visualizer { display: flex; justify-content: center; align-items: flex-end; gap: 4px; height: 40px; margin: 15px 0; }
-        .bar { width: 6px; background: var(--akzent); height: 5px; border-radius: 3px; }
-        .playing .bar { animation: wave 0.7s infinite ease-in-out; }
-        .bar:nth-child(1) { animation-delay: 0.1s; } .bar:nth-child(2) { animation-delay: 0.3s; }
-        .bar:nth-child(3) { animation-delay: 0.2s; } .bar:nth-child(4) { animation-delay: 0.4s; }
-        .bar:nth-child(5) { animation-delay: 0.2s; }
-        @keyframes wave { 0%, 100% { height: 5px; } 50% { height: 35px; } }
+        .history-list { display: flex; flex-direction: column; }
+        .history-item { display: flex; align-items: center; gap: 15px; padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        .history-time { font-family: monospace; font-size: 14px; color: var(--accent); min-width: 50px; }
 
-        #hauptLogo { width: 100%; max-width: 250px; aspect-ratio: 1/1; border-radius: 22px; border: 4px solid var(--akzent); margin-bottom: 20px; display: block; margin-left: auto; margin-right: auto;}
-
-        /* SONG DISPLAY */
-        .akt-song-row { display: flex; align-items: center; gap: 20px; padding: 20px; background: rgba(255,255,255,0.03); border-radius: 20px; border-left: 8px solid var(--akzent); margin-bottom: 25px; }
-        .zeit-stempel { font-family: monospace; font-size: 1.2rem; color: var(--akzent); font-weight: bold; }
-        .song-text { font-size: 1.4rem; font-weight: 800; }
-
-        .history-item { padding: 12px 0; border-bottom: 1px solid rgba(255,255,255,0.05); display: flex; gap: 15px; align-items: center; }
-        .h-time { color: var(--akzent); font-weight: bold; min-width: 55px; font-family: monospace; }
-
-        /* FOOTER MIT TITEL UND VERSION */
-        footer { 
-            padding: 15px 5%; background: rgba(0,0,0,0.8); border-top: 2px solid var(--akzent);
-            display: flex; justify-content: space-between; align-items: center;
+        footer {
+            background: #000; padding: 10px 5%; border-top: 2px solid var(--accent);
+            display: flex; align-items: center; justify-content: flex-start; gap: 20px; min-height: 85px; position: relative;
+            overflow: hidden;
         }
-        #footerTitle { font-size: 1rem; color: var(--text); flex-grow: 1; text-align: center; }
-        #footerTitle span { color: var(--akzent); font-weight: 900; }
-        .version-label { font-size: 12px; font-weight: bold; color: var(--akzent); opacity: 0.8; }
+        .vis-circle { 
+            width: 50px; height: 50px; border-radius: 50%; border: 2px solid white; 
+            display: flex; align-items: center; justify-content: center; gap: 3px; flex-shrink: 0;
+            z-index: 5; background: #000;
+        }
+        .bar { width: 3px; background: var(--accent); height: 5px; }
+        .active .bar { animation: wave 0.6s infinite ease-in-out; }
+        @keyframes wave { 0%, 100% { height: 5px; } 50% { height: 20px; } }
 
-        .suche-box { display: flex; background: var(--karte); border: 1px solid var(--rand); border-radius: 12px; padding: 5px 15px; width: 250px; }
-        #sIn { background: transparent; border: none; color: white; outline: none; width: 100%; }
+        .footer-marquee-container { flex: 1; overflow: hidden; white-space: nowrap; }
+        .footer-songtext { display: inline-block; animation: mini-slide 8s ease-in-out infinite alternate; }
+        .footer-songtext b { font-size: 16px; color: #fff; margin-right: 5px; }
+        .footer-songtext span { font-size: 16px; color: var(--accent); font-weight: bold; }
+
+        @keyframes mini-slide { 0% { transform: translateX(0); } 100% { transform: translateX(-30px); } }
+        
+        .v-tag { 
+            position: absolute; right: 20px; bottom: 5px; font-size: 12px; font-weight: bold;
+            color: var(--accent); text-shadow: 0 0 5px var(--accent); opacity: 0.9; 
+        }
     </style>
 </head>
-<body onload="startApp()">
+<body onload="boot()">
 
 <header>
     <div class="header-left">
+        <div class="search-area">
+            <input type="text" id="sIn" placeholder="Sender..." onkeypress="if(event.key==='Enter') startSync(this.value)">
+            <button onclick="startSync(document.getElementById('sIn').value)" style="background:none; border:none; color:var(--accent); cursor:pointer;">🔍</button>
+        </div>
+        <div id="uhr" style="font-family: monospace; font-weight: bold;">00:00:00</div>
+    </div>
+    <div class="header-right">
+        <div id="headerStationName">RADIO PRO DASHBOARD</div>
         <img id="miniLogo" src="">
-        <span id="senderOben">WÄHLE SENDER</span>
     </div>
-    <div class="suche-box">
-        <input type="text" id="sIn" placeholder="Sender..." onkeypress="if(event.key==='Enter') waehleSender(this.value)">
-    </div>
-    <div id="uhr" style="font-family: monospace; font-size: 18px; color: var(--akzent); font-weight: bold;">00:00:00</div>
 </header>
 
 <div class="container">
-    <div class="card" style="text-align: center;">
-        <img id="hauptLogo" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=">
-        
-        <button id="pBtn" class="start-btn" onclick="togglePlay()">
-            <svg id="pIcon" width="24" height="24" viewBox="0 0 24 24" fill="white"><path d="M8 5v14l11-7z"/></svg>
-            <span id="btnText">Sender starten</span>
+    <div class="left-panel">
+        <div id="mainStationName">SENDER WÄHLEN</div>
+        <div id="stationDesc">Bitte einen Namen oben eingeben</div>
+        <img id="stationDisplay" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=">
+        <div id="hoerer" class="hoerer-box">AKTUELL HÖRER: 0</div>
+        <button id="pBtn" class="btn-main" onclick="toggle()">
+            <span id="pIcon">▶</span> <span id="pText">SENDER STARTEN</span>
         </button>
-
-        <div id="visWrap" class="visualizer">
-            <div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div>
-        </div>
-
-        <div style="width: 100%; max-width: 250px; margin: 0 auto;">
-            <span id="volLabel" style="font-size: 10px; font-weight: 900; color: var(--akzent); display: block; margin-bottom: 5px;">LAUTSTÄRKE: 90%</span>
-            <input type="range" min="0" max="1" step="0.01" value="0.9" oninput="setVol(this.value)" style="width: 100%; accent-color: var(--akzent);">
-        </div>
-        
-        <div style="margin-top: 20px;">
-            <span id="hoerer" style="font-size: 11px; font-weight: 900; border: 1px solid var(--akzent); padding: 4px 12px; border-radius: 20px;">BEREIT</span>
+        <div class="vol-control">
+            <div class="vol-top"><span>LAUTSTÄRKE</span><span id="vNum">90%</span></div>
+            <div class="vol-row">
+                <button id="muteBtn" onclick="toggleMute()">🔊</button>
+                <input type="range" id="volRange" min="0" max="1" step="0.01" value="0.9" oninput="setV(this.value)">
+            </div>
         </div>
     </div>
-
-    <div class="card">
-        <div style="font-size: 11px; color: var(--akzent); font-weight: 900; margin-bottom: 10px; text-transform: uppercase;">Jetzt läuft</div>
-        <div class="akt-song-row">
-            <div id="aktZeit" class="zeit-stempel">--:--</div>
-            <div id="aktSong" class="song-text">Warte auf Auswahl...</div>
+    <div class="right-panel">
+        <span class="section-title">JETZT LÄUFT</span>
+        <div class="now-playing-card">
+            <div id="curT" class="now-time">--:--</div>
+            <div class="now-info">
+                <div id="curA" class="now-artist">INTERPRET</div>
+                <div id="curS" class="now-title">Titel / Werbung</div>
+            </div>
         </div>
-        
-        <div style="font-size: 11px; color: var(--akzent); font-weight: 900; margin-bottom: 10px; text-transform: uppercase;">Zuletzt Songs</div>
-        <div id="verlaufListe"></div>
+
+        <span class="section-title">Gleich</span>
+        <div class="preview-card" id="previewBox">
+            <span class="preview-header">Gleich</span>
+            <div class="preview-text" id="previewContent">Warte auf Sendedaten...</div>
+        </div>
+
+        <span class="section-title" style="text-transform: none;">Letzte Songs</span>
+        <div id="hList" class="history-list"></div>
     </div>
 </div>
 
 <footer>
-    <div class="version-label">v5.00</div>
-    <div id="footerTitle">Bereit zum Abspielen</div>
-    <div style="width: 50px;"></div> </footer>
+    <div class="vis-circle" id="fVis">
+        <div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div>
+    </div>
+    <div class="footer-marquee-container">
+        <div class="footer-songtext" id="fSong"><b>Warte auf Auswahl...</b><span>Bitte einen Sender suchen</span></div>
+    </div>
+    <span class="v-tag">v5.15</span>
+</footer>
 
-<audio id="audio" preload="none"></audio>
+<audio id="audioEngine" crossorigin="anonymous"></audio>
 
 <script>
-    const player = document.getElementById('audio');
-    let playing = false, station = "", timer = null;
+    const audio = document.getElementById('audioEngine');
+    const volRange = document.getElementById('volRange');
+    let playing = false, slug = "", poll = null, lastVol = 0.9;
 
-    function startApp() {
+    function boot() {
         setInterval(() => { document.getElementById('uhr').innerText = new Date().toLocaleTimeString('de-DE'); }, 1000);
+        audio.volume = 0.9;
     }
 
-    function setVol(v) {
-        player.volume = v;
-        document.getElementById('volLabel').innerText = "LAUTSTÄRKE: " + Math.round(v * 100) + "%";
+    function setV(v) {
+        audio.volume = v; lastVol = v;
+        document.getElementById('vNum').innerText = Math.round(v * 100) + "%";
+        document.getElementById('muteBtn').innerText = v == 0 ? "🔇" : "🔊";
     }
 
-    function waehleSender(val) {
+    function toggleMute() {
+        if (audio.volume > 0) { lastVol = audio.volume; setV(0); volRange.value = 0; }
+        else { setV(lastVol > 0 ? lastVol : 0.9); volRange.value = audio.volume; }
+    }
+
+    function startSync(val) {
         if(!val) return;
-        station = val.toLowerCase().trim().replace(/\s+/g, '-');
-        fetchData();
-        if(timer) clearInterval(timer);
-        timer = setInterval(fetchData, 10000);
+        slug = val.toLowerCase().trim().replace(/\s+/g, '-');
+        updateAPI();
+        if(poll) clearInterval(poll);
+        poll = setInterval(updateAPI, 8000); 
         if(playing) { stop(); play(); }
     }
 
-    function togglePlay() { 
-        if(!station) { alert("Bitte erst einen Sender eingeben!"); return; }
-        playing ? stop() : play(); 
+    function toggle() {
+        if(!slug) return alert("Sender fehlt!");
+        playing ? stop() : play();
     }
 
     function play() {
-        player.src = "https://stream.laut.fm/" + station;
-        player.play().then(() => {
+        audio.src = `https://stream.laut.fm/${slug}?ref=pro_dash`;
+        audio.play().then(() => {
             playing = true;
             document.getElementById('pBtn').classList.add('is-playing');
-            document.getElementById('pIcon').innerHTML = '<rect x="6" y="6" width="12" height="12" fill="white"/>';
-            document.getElementById('btnText').innerText = "Sender stoppen";
-            document.getElementById('visWrap').classList.add('playing');
+            document.getElementById('pIcon').innerText = "■";
+            document.getElementById('pText').innerText = "STOPP";
+            document.getElementById('fVis').classList.add('active');
         });
     }
 
     function stop() {
-        player.pause(); player.src = ""; playing = false;
+        audio.pause(); audio.src = ""; playing = false;
         document.getElementById('pBtn').classList.remove('is-playing');
-        document.getElementById('pIcon').innerHTML = '<path d="M8 5v14l11-7z" fill="white"/>';
-        document.getElementById('btnText').innerText = "Sender starten";
-        document.getElementById('visWrap').classList.remove('playing');
+        document.getElementById('pIcon').innerText = "▶";
+        document.getElementById('pText').innerText = "SENDER STARTEN";
+        document.getElementById('fVis').classList.remove('active');
     }
 
-    async function fetchData() {
-        if(!station) return;
+    async function updateAPI() {
+        if(!slug) return;
         try {
-            const [info, songs, listeners] = await Promise.all([
-                fetch(`https://api.laut.fm/station/${station}`).then(r => r.json()),
-                fetch(`https://api.laut.fm/station/${station}/last_songs`).then(r => r.json()),
-                fetch(`https://api.laut.fm/station/${station}/listeners`).then(r => r.text())
+            const [i, s, l] = await Promise.all([
+                fetch(`https://api.laut.fm/station/${slug}`).then(r => r.json()),
+                fetch(`https://api.laut.fm/station/${slug}/last_songs`).then(r => r.json()),
+                fetch(`https://api.laut.fm/station/${slug}/listeners`).then(r => r.text())
             ]);
+            
+            document.getElementById('headerStationName').innerText = i.display_name;
+            document.getElementById('miniLogo').src = i.images.station_120x120;
+            document.getElementById('miniLogo').style.display = 'block';
+            document.getElementById('mainStationName').innerText = i.display_name;
+            document.getElementById('stationDesc').innerText = i.description.substring(0, 100) + "...";
+            document.getElementById('stationDisplay').src = i.images.station_640x640;
+            document.getElementById('hoerer').innerText = "AKTUELL HÖRER: " + l;
+            
+            const now = s[0];
+            const t = new Date(now.started_at).toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'});
+            document.getElementById('curT').innerText = t;
+            document.getElementById('curA').innerText = now.artist.name;
+            document.getElementById('curS').innerText = now.title;
+            
+            if(s.length > 2) {
+                const next1 = s[1].artist.name;
+                const next2 = s[2].artist.name;
+                document.getElementById('previewContent').innerHTML = `Weiter geht's in der Sendung »${i.display_name}« mit <b>${next1}</b>, <b>${next2}</b> und weiteren.`;
+            }
 
-            document.getElementById('senderOben').innerText = info.display_name;
-            document.getElementById('miniLogo').src = info.images.station_120x120;
-            document.getElementById('miniLogo').style.display = "block";
-            document.getElementById('hauptLogo').src = info.images.station_120x120;
-            document.getElementById('hoerer').innerText = "AKTUELL HÖRER: " + listeners;
-
-            // Song Daten von laut.fm nutzen
-            const now = songs[0];
-            const nowTime = new Date(now.started_at).toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'});
-            document.getElementById('aktZeit').innerText = nowTime;
-            document.getElementById('aktSong').innerText = now.artist.name + " - " + now.title;
-
-            // Footer Titel-Sync (wie im Bild)
-            document.getElementById('footerTitle').innerHTML = `<span>${info.display_name}</span> spielt <b>${now.artist.name}</b> mit "<i>${now.title}</i>"`;
-
-            let hHtml = "";
-            songs.slice(1, 10).forEach(s => {
-                const t = new Date(s.started_at).toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'});
-                hHtml += `<div class="history-item"><span class="h-time">${t}</span><span>${s.artist.name} - ${s.title}</span></div>`;
+            const fullText = `<b>${now.artist.name}</b><span> - ${now.title}</span>`;
+            const fElem = document.getElementById('fSong');
+            if(fElem.innerHTML !== fullText) { fElem.innerHTML = fullText; }
+            
+            let h = "";
+            s.slice(1, 10).forEach(song => {
+                const st = new Date(song.started_at).toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'});
+                h += `<div class="history-item"><div class="history-time">${st}</div><div class="history-song"><b>${song.artist.name}</b> - ${song.title}</div></div>`;
             });
-            document.getElementById('verlaufListe').innerHTML = hHtml;
-        } catch (e) {}
+            document.getElementById('hList').innerHTML = h;
+        } catch(e) {}
     }
 </script>
 </body>
