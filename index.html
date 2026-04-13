@@ -3,12 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>v322</title>
+    <title>v331 - Background Support</title>
     <style>
         :root { 
             --main-bg: #2a3441; 
             --panel-bg: #364150;
             --accent: #00fbff; 
+            --success: #00ff88;
             --on-air-bg: #00fbff; 
             --text-dark: #000000;
             --border: #4a5568;
@@ -18,151 +19,138 @@
             font-family: 'Segoe UI', Roboto, Helvetica, sans-serif; 
             margin: 0; background: var(--main-bg); 
             color: #fff; min-height: 100vh; display: flex; flex-direction: column;
+            overflow-x: hidden;
         }
 
-        header { 
-            padding: 10px 15px; background: #1a202c; display: flex; 
-            justify-content: space-between; align-items: center; 
-            border-bottom: 2px solid var(--accent);
-            flex-wrap: wrap; gap: 10px;
+        /* Login Screen Overlay */
+        #loginOverlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: var(--main-bg); z-index: 9999;
+            display: flex; justify-content: center; align-items: center; flex-direction: column;
         }
-
-        #headerTitleDisplay {
-            color: var(--accent);
-            font-size: 18px;
-            font-weight: bold;
-            text-transform: uppercase;
+        .login-box {
+            background: var(--panel-bg); padding: 30px; border-radius: 12px;
+            border: 2px solid var(--accent); width: 90%; max-width: 350px; text-align: center;
         }
         
-        .search-container { 
-            display: flex; align-items: center; background: #fff; 
-            padding: 6px 12px; border-radius: 4px; flex: 1; max-width: 250px;
+        #helpModal {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.9); z-index: 10000; justify-content: center; align-items: center;
         }
-        .search-container input { 
-            border: none; color: #000; outline: none; width: 100%; font-weight: bold; font-size: 16px; 
-        }
-
-        .content-grid { 
-            display: grid; 
-            grid-template-columns: 300px 1fr 320px; 
-            flex: 1; padding: 15px; gap: 15px;
+        .help-content {
+            background: var(--panel-bg); padding: 25px; border-radius: 12px;
+            width: 90%; max-width: 450px; max-height: 80vh; overflow-y: auto; border: 1px solid var(--accent);
         }
 
-        @media (max-width: 900px) {
-            .content-grid { grid-template-columns: 1fr; overflow-y: auto; }
-            header { justify-content: center; text-align: center; }
-            .search-container { max-width: 100%; order: 2; }
-            #headerTitleDisplay { width: 100%; order: 1; }
+        .login-box input {
+            width: 100%; padding: 12px; margin: 8px 0; border-radius: 6px;
+            border: 1px solid var(--border); background: #1a202c; color: #fff; box-sizing: border-box;
         }
+        .login-btn { background: var(--accent); color: var(--text-dark); border: none; padding: 14px; border-radius: 6px; font-weight: bold; cursor: pointer; width: 100%; margin-top: 10px; }
+        .info-btn { background: transparent; color: var(--accent); border: 1px solid var(--accent); padding: 8px; border-radius: 6px; cursor: pointer; margin-top: 15px; width: 100%; font-size: 12px; }
 
-        .panel { 
-            background: var(--panel-bg); border: 1px solid var(--border); border-radius: 8px; 
-            padding: 15px; display: flex; flex-direction: column;
-        }
+        /* Player Content */
+        #mainContent { display: none; }
 
-        .now-playing-box {
-            width: 100%; background: var(--on-air-bg);
-            border-radius: 5px; padding: 10px 0; margin: 10px auto;
-            position: relative; overflow: hidden;
-            height: 50px; display: flex; align-items: center;
-        }
+        header { padding: 10px 15px; background: #1a202c; display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--accent); flex-wrap: wrap; gap: 10px; }
+        .header-left { display: flex; align-items: center; gap: 10px; }
+        #headerLogo { width: 40px; height: 40px; border-radius: 4px; object-fit: cover; display: none; border: 1px solid var(--accent); }
+        .logout-btn { background: #e53e3e; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 11px; font-weight: bold; }
 
+        .search-container { display: flex; align-items: center; background: #fff; padding: 6px 12px; border-radius: 4px; flex: 1; max-width: 250px; }
+        .search-container input { border: none; color: #000; outline: none; width: 100%; font-weight: bold; font-size: 16px; }
+
+        .content-grid { display: grid; grid-template-columns: 300px 1fr 320px; flex: 1; padding: 15px; gap: 15px; }
+
+        @media (max-width: 900px) { .content-grid { grid-template-columns: 1fr; overflow-y: auto; } header { justify-content: center; } }
+
+        .panel { background: var(--panel-bg); border: 1px solid var(--border); border-radius: 8px; padding: 15px; display: flex; flex-direction: column; align-items: center; }
+
+        .now-playing-box { width: 100%; background: var(--on-air-bg); border-radius: 5px; height: 50px; display: flex; align-items: center; overflow: hidden; margin: 10px 0; }
         .marquee-container { width: 90%; margin: 0 auto; overflow: hidden; position: relative; height: 30px; }
-        #track { 
-            position: absolute; white-space: nowrap; font-size: 18px; font-weight: 600; 
-            color: var(--text-dark); animation: pendulum 12s ease-in-out infinite;
-        }
+        #track { position: absolute; white-space: nowrap; font-size: 18px; font-weight: 600; color: var(--text-dark); animation: pendulum 12s ease-in-out infinite; }
 
-        @keyframes pendulum {
-            0%, 20% { transform: translateX(0); } 
-            50% { transform: translateX(calc(-100% + 180px)); } 
-            80%, 100% { transform: translateX(0); }
-        }
+        @keyframes pendulum { 0%, 20% { transform: translateX(0); } 50% { transform: translateX(calc(-100% + 180px)); } 80%, 100% { transform: translateX(0); } }
 
-        .center-display { text-align: center; }
-        #stLogo { width: 150px; height: 150px; border-radius: 12px; border: 2px solid white; margin-bottom: 15px; object-fit: cover; }
-        
-        #stDisplayNameCenter {
-            font-size: 20px; font-weight: bold; color: #fff; margin-bottom: 5px; text-transform: uppercase;
-        }
+        #stLogo { width: 180px; height: 180px; border-radius: 12px; border: 2px solid white; margin-bottom: 15px; object-fit: cover; }
+        .play-btn { width: 90px; height: 90px; border-radius: 50%; background: #fff; border: 4px solid var(--accent); cursor: pointer; display: flex; align-items: center; justify-content: center; margin: 20px auto; }
 
-        .stat-box {
-            background: rgba(0,0,0,0.4); padding: 10px; border-radius: 6px; 
-            text-align: center; margin: 10px 0; border: 1px solid var(--border);
-        }
-        .stat-val { font-size: 24px; color: var(--accent); font-weight: bold; font-family: monospace; }
-        .stat-lab { font-size: 10px; text-transform: uppercase; opacity: 0.8; }
+        .song-item { padding: 10px; border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 12px; animation: slideIn 0.5s ease-out; }
+        @keyframes slideIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
 
-        .history-list { background: rgba(0,0,0,0.2); border-radius: 6px; margin-top: 5px; max-height: 300px; overflow-y: auto; }
-        .song-card { padding: 10px; border-bottom: 1px solid rgba(255,255,255,0.05); display: flex; align-items: center; gap: 10px; font-size: 12px; }
-        .s-time { color: var(--accent); font-weight: bold; min-width: 45px; }
-
-        .play-btn { 
-            width: 80px; height: 80px; border-radius: 50%; background: #fff; 
-            border: none; cursor: pointer; display: flex; align-items: center; 
-            justify-content: center; margin: 20px auto; 
-            -webkit-tap-highlight-color: transparent;
-        }
-
-        footer { 
-            padding: 10px 15px; background: #1a202c; display: flex; 
-            justify-content: space-between; align-items: center; 
-            font-size: 12px; color: #a0aec0; border-top: 1px solid #333;
-            flex-wrap: wrap;
-        }
+        footer { padding: 10px 15px; background: #1a202c; display: flex; justify-content: space-between; align-items: center; font-size: 12px; color: #a0aec0; border-top: 1px solid #333; }
     </style>
 </head>
 <body onload="init()">
 
-<header>
-    <div id="headerTitleDisplay">SENDERNAME</div>
-    <div class="search-container">
-        <input type="text" id="sIn" placeholder="Sender suchen..." onkeypress="if(event.key==='Enter') changeSt(this.value)">
-        <span onclick="changeSt(document.getElementById('sIn').value)" style="cursor:pointer; font-size: 20px;">🔍</span>
-    </div>
-</header>
-
-<div class="content-grid">
-    <div class="panel">
-        <div style="background: #1a202c; padding: 15px; border-radius: 6px; margin-bottom: 10px;">
-            <input type="range" style="width:100%; height: 25px; accent-color:var(--accent);" min="0" max="1" step="0.01" value="0.9" oninput="setV(this.value)">
-            <div id="vLab" style="text-align:center; font-size:12px; color:var(--accent); margin-top:5px; font-weight:bold;">VOL: 90%</div>
-        </div>
-        <div id="mainClock" style="font-size:40px; color:var(--accent); text-align:center; font-weight:bold; margin:10px 0; font-family: monospace;">00:00:00</div>
-        <div id="sideDate" style="text-align:center; color:#fff; font-weight:bold; padding: 8px; border-radius: 4px; border: 1px solid var(--border);">--.--.----</div>
-        
-        <div class="stat-box">
-            <div class="stat-lab">Hörer aktuell</div>
-            <div id="listenerCount" class="stat-val">0</div>
-        </div>
-    </div>
-
-    <div class="panel center-display">
-        <img id="stLogo" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7">
-        <div id="stDisplayNameCenter">DEIN SENDER</div>
-
-        <div class="now-playing-box">
-            <div class="marquee-container">
-                <div id="track">BEREIT...</div>
-            </div>
-        </div>
-        
-        <button class="play-btn" onclick="togglePlay()" id="pBtn">
-            <svg width="40" height="40" viewBox="0 0 24 24"><path d="M8 5v14l11-7z" fill="#000"/></svg>
-        </button>
-        <div id="stDesc" style="font-size:12px; color:#cbd5e0; margin-top: 10px; padding: 0 10px;">-</div>
-    </div>
-
-    <div class="panel">
-        <h3 style="font-size: 12px; text-transform:uppercase; margin:0 0 10px 0; color:var(--accent); border-bottom:1px solid var(--border); padding-bottom:5px;">History</h3>
-        <div id="hist" class="history-list"></div>
+<div id="loginOverlay">
+    <div class="login-box">
+        <h2 style="color:var(--accent); margin-bottom: 10px;">RADIO ENGINE</h2>
+        <input type="text" id="email" placeholder="Name / E-Mail">
+        <input type="password" id="pass" placeholder="Passwort">
+        <button class="login-btn" onclick="handleLogin()">EINLOGGEN</button>
+        <button class="info-btn" onclick="toggleHelp(true)">HILFE / INFO ℹ️</button>
+        <div id="loginStatus"></div>
     </div>
 </div>
 
-<footer>
-    <div>322</div>
-    <div style="color: var(--accent); font-weight: bold;" id="footerClock">00:00:00</div>
-</footer>
+<div id="helpModal">
+    <div class="help-content">
+        <h2 style="color:var(--accent); text-align: center;">Bedienung</h2>
+        <p>1. Einloggen (beliebige Daten)<br>2. Sender suchen<br>3. Play drücken und genießen!</p>
+        <p><strong>Info:</strong> Die Musik läuft auf Android im Hintergrund weiter, wenn du die App offen lässt.</p>
+        <button class="login-btn" onclick="toggleHelp(false)">VERSTANDEN</button>
+    </div>
+</div>
+
+<div id="mainContent">
+    <header>
+        <div class="header-left">
+            <img id="headerLogo" src="">
+            <div id="headerTitleDisplay">SENDERNAME</div>
+            <button class="logout-btn" onclick="handleLogout()">Logout</button>
+        </div>
+        <div class="search-container">
+            <input type="text" id="sIn" placeholder="Sender suchen..." onkeypress="if(event.key==='Enter') changeSt(this.value)">
+            <span onclick="changeSt(document.getElementById('sIn').value)" style="cursor:pointer;">🔍</span>
+        </div>
+    </header>
+
+    <div class="content-grid">
+        <div class="panel">
+            <input type="range" style="width:100%; accent-color:var(--accent);" min="0" max="1" step="0.01" value="0.9" oninput="setV(this.value)">
+            <div id="vLab" style="font-size:12px; color:var(--accent); margin:5px 0;">VOL: 90%</div>
+            <div id="mainClock" style="font-size:35px; color:var(--accent); font-weight:bold; font-family:monospace;">00:00:00</div>
+            <div id="sideDate" style="font-size:14px; margin-top:5px;">--.--.----</div>
+            <div style="margin-top:20px; text-align:center;">
+                <div style="font-size:10px; opacity:0.6;">AKTIVE HÖRER</div>
+                <div id="listenerCount" style="font-size:24px; color:var(--accent); font-weight:bold;">0</div>
+            </div>
+        </div>
+
+        <div class="panel">
+            <img id="stLogo" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7">
+            <div id="stDisplayNameCenter" style="font-size:20px; font-weight:bold;">DEIN SENDER</div>
+            <div class="now-playing-box">
+                <div class="marquee-container"><div id="track">BEREIT...</div></div>
+            </div>
+            <button class="play-btn" onclick="togglePlay()" id="pBtn">
+                <svg width="50" height="50" viewBox="0 0 24 24"><path d="M8 5v14l11-7z" fill="#000"/></svg>
+            </button>
+            <div id="stDesc" style="font-size:11px; color:#aaa; text-align:center; margin-top:10px;">-</div>
+        </div>
+
+        <div class="panel">
+            <h3 style="font-size:12px; color:var(--accent); border-bottom:1px solid #444; width:100%; padding-bottom:5px;">LETZTE SONGS</h3>
+            <div id="hist" style="width:100%; overflow-y:auto; max-height:400px;"></div>
+        </div>
+    </div>
+
+    <footer>
+        <div>v331</div>
+        <div id="footerClock">00:00:00</div>
+    </footer>
+</div>
 
 <audio id="audio" preload="none"></audio>
 
@@ -170,36 +158,51 @@
     const audio = document.getElementById('audio');
     let playing = false;
     let station = "";
-    let lastKnownSong = "BEREIT FÜR SUCHE";
+    let lastKnownSong = "";
+    let currentHistoryJSON = "";
+
+    function toggleHelp(show) { document.getElementById('helpModal').style.display = show ? 'flex' : 'none'; }
+
+    function handleLogin() {
+        const email = document.getElementById('email').value.trim();
+        const pass = document.getElementById('pass').value.trim();
+        if(email && pass) {
+            document.getElementById('loginStatus').innerHTML = "<span style='color:var(--success)'>✔ Erfolgreich!</span>";
+            setTimeout(() => {
+                document.getElementById('loginOverlay').style.display = 'none';
+                document.getElementById('mainContent').style.display = 'block';
+            }, 800);
+        } else {
+            document.getElementById('loginStatus').innerHTML = "<span style='color:#e53e3e'>Daten eingeben</span>";
+        }
+    }
+
+    function handleLogout() { stop(); document.getElementById('mainContent').style.display = 'none'; document.getElementById('loginOverlay').style.display = 'flex'; }
 
     function updateTime() {
         const now = new Date();
-        const tFull = now.toLocaleTimeString('de-DE');
-        const tShort = now.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
-        
-        document.getElementById('mainClock').innerText = tFull;
-        document.getElementById('footerClock').innerText = tFull;
+        document.getElementById('mainClock').innerText = now.toLocaleTimeString('de-DE');
+        document.getElementById('footerClock').innerText = now.toLocaleTimeString('de-DE');
         document.getElementById('sideDate').innerText = now.toLocaleDateString('de-DE');
-
-        if(station !== "") {
-            document.getElementById('track').innerText = lastKnownSong + " | " + tShort;
+        if(station && lastKnownSong) {
+            document.getElementById('track').innerText = lastKnownSong + " | " + now.toLocaleTimeString('de-DE', {hour:'2-digit', minute:'2-digit'});
+            // Media Session Update (Für Android Sperrbildschirm)
+            if ('mediaSession' in navigator) {
+                navigator.mediaSession.metadata = new MediaMetadata({
+                    title: lastKnownSong,
+                    artist: station.toUpperCase(),
+                    album: 'Radio Engine Live'
+                });
+            }
         }
     }
     setInterval(updateTime, 1000);
 
-    function init() {
-        document.getElementById('sIn').value = "";
-        audio.volume = 0.9;
-        updateTime();
-    }
-
     function changeSt(v) {
         if(!v) return;
-        const displayName = v.toUpperCase();
-        document.getElementById('headerTitleDisplay').innerText = displayName;
-        document.getElementById('stDisplayNameCenter').innerText = displayName;
         station = v.toLowerCase().trim().replace(/\s+/g, '-');
-        document.getElementById('sIn').value = "";
+        document.getElementById('headerTitleDisplay').innerText = v.toUpperCase();
+        document.getElementById('stDisplayNameCenter').innerText = v.toUpperCase();
         if(playing) { stop(); start(); }
         updateData();
     }
@@ -211,40 +214,51 @@
         audio.src = "https://stream.laut.fm/" + station + "?cache=" + Math.random();
         audio.play().then(() => {
             playing = true;
-            document.getElementById('pBtn').innerHTML = '<svg width="40" height="40" viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" fill="#000"/></svg>';
+            document.getElementById('pBtn').innerHTML = '<svg width="50" height="50" viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" fill="#000"/></svg>';
+            // Media Session Status
+            if ('mediaSession' in navigator) { navigator.mediaSession.playbackState = "playing"; }
         });
     }
 
-    function stop() { audio.pause(); audio.src = ""; playing = false; document.getElementById('pBtn').innerHTML = '<svg width="40" height="40" viewBox="0 0 24 24"><path d="M8 5v14l11-7z" fill="#000"/></svg>'; }
+    function stop() { 
+        audio.pause(); audio.src = ""; playing = false; 
+        document.getElementById('pBtn').innerHTML = '<svg width="50" height="50" viewBox="0 0 24 24"><path d="M8 5v14l11-7z" fill="#000"/></svg>'; 
+        if ('mediaSession' in navigator) { navigator.mediaSession.playbackState = "paused"; }
+    }
 
     async function updateData() {
         if(!station) return;
         try {
-            const rStat = await fetch(`https://api.laut.fm/station/${station}/listeners?nocache=${Math.random()}`);
+            const rStat = await fetch(`https://api.laut.fm/station/${station}/listeners`);
             const dStat = await rStat.text();
             if(dStat) document.getElementById('listenerCount').innerText = dStat.trim();
 
-            const r = await fetch(`https://api.laut.fm/station/${station}?nocache=${Math.random()}`);
+            const r = await fetch(`https://api.laut.fm/station/${station}`);
             const d = await r.json();
             if (d) {
-                document.getElementById('stLogo').src = d.images ? d.images.station_120x120 : "";
+                const img = d.images ? d.images.station_120x120 : "";
+                document.getElementById('stLogo').src = img;
+                document.getElementById('headerLogo').src = img;
+                document.getElementById('headerLogo').style.display = "block";
                 document.getElementById('stDesc').innerText = d.description || "";
             }
 
-            const rH = await fetch(`https://api.laut.fm/station/${station}/last_songs?nocache=${Math.random()}`);
+            const rH = await fetch(`https://api.laut.fm/station/${station}/last_songs`);
             const s = await rH.json();
-            if(s && s.length > 0) {
+            if(s && JSON.stringify(s) !== currentHistoryJSON) {
+                currentHistoryJSON = JSON.stringify(s);
                 lastKnownSong = s[0].artist.name + " - " + s[0].title;
                 let html = "";
-                s.slice(1, 7).forEach(x => {
-                    const serverTime = new Date(x.started_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-                    html += `<div class="song-card"><span class="s-time">${serverTime}</span><span><b>${x.artist.name}</b> - ${x.title}</span></div>`;
+                s.slice(0, 10).forEach(x => {
+                    const st = new Date(x.started_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                    html += `<div class="song-item"><b style="color:var(--accent);">${st}</b> ${x.artist.name} - ${x.title}</div>`;
                 });
                 document.getElementById('hist').innerHTML = html;
             }
-        } catch(e) { }
+        } catch(e) {}
     }
-    setInterval(updateData, 10000);
+    setInterval(updateData, 8000);
+    function init() { audio.volume = 0.9; updateTime(); }
 </script>
 </body>
 </html>
