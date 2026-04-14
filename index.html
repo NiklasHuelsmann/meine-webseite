@@ -3,11 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Brian-Radio App-Fokus</title>
+    <title>Brian-Radio Pro-Fokus</title>
     <style>
         :root { 
-            --bg-global: #050505; /* Tiefschwarz für den PC-Hintergrund */
-            --bg-app: #0d1117;    /* Dunkelgrau für den App-Bereich */
+            --bg-global: #050505; 
+            --bg-app: #0d1117;    
             --accent: #00d2ff; 
             --highlight: #00f2c3; 
         }
@@ -15,31 +15,29 @@
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 
         body { 
-            background-color: var(--bg-global); /* PC-Hintergrund ist jetzt dunkel */
+            background-color: var(--bg-global); 
             color: #fff; 
             font-family: -apple-system, sans-serif; 
             margin: 0; 
             display: flex; 
-            justify-content: center; /* App mittig auf PC */
+            justify-content: center; 
             min-height: 100vh; 
             overflow: hidden;
         }
 
-        /* Ambient Glow ist jetzt AUS dem globalen Hintergrund entfernt */
-
+        /* PC-Ansicht: Dunkler Rahmen um die App */
         .app { 
             width: 100%; 
-            max-width: 500px; /* Feste Breite für den App-Look auf PC */
+            max-width: 500px; 
             display: flex; 
             flex-direction: column; 
             position: relative; 
             background-color: var(--bg-app);
-            border-left: 1px solid #222; /* Leichter Rand für PC-Ansicht */
+            border-left: 1px solid #222;
             border-right: 1px solid #222;
-            box-shadow: 0 0 100px rgba(0,0,0,0.8); /* Tiefer Schattenwurf auf PC-Hintergrund */
         }
         
-        header { padding: 30px 20px 10px; text-align: center; }
+        header { padding: 25px 20px 10px; text-align: center; }
         .uhr { font-family: monospace; font-size: 14px; color: var(--accent); margin-bottom: 15px; opacity: 0.8; }
         
         .search-area { 
@@ -48,89 +46,109 @@
             display: flex; 
             padding: 8px 15px; 
             border: 1px solid #333; 
-            margin-bottom: 20px; 
+            margin-bottom: 15px; 
         }
         .search-area input { background: transparent; border: none; color: #fff; width: 100%; font-size: 15px; outline: none; }
         
         #stNameDisplay { 
-            font-size: 28px; 
+            font-size: 26px; 
             font-weight: 900; 
             letter-spacing: 1px; 
             text-transform: uppercase; 
-            margin: 10px 0;
+            margin: 5px 0;
             color: #fff;
         }
 
-        .scroll-content { flex: 1; overflow-y: auto; padding: 0 20px 120px; scrollbar-width: none; }
+        .scroll-content { flex: 1; overflow-y: auto; padding: 0 20px 100px; scrollbar-width: none; }
         .scroll-content::-webkit-scrollbar { display: none; }
 
-        /* ZENTRALES LOGO MIT INTERNEM GLOW */
+        /* ZENTRALES LOGO */
         .hero-area { 
             display: flex; 
             flex-direction: column; 
             align-items: center; 
-            padding: 20px 0 50px; 
-            position: relative;
+            padding: 30px 0 60px; /* Mehr Platz nach unten für den Button */
         }
         
-        /* Neuer interner Glow-Effekt, nur hinter dem Logo */
-        .hero-area::before {
-            content: '';
-            position: absolute;
-            top: 50%; left: 50%;
-            transform: translate(-50%, -50%);
-            width: 350px; height: 350px;
-            background: radial-gradient(circle, rgba(0,210,255,0.2) 0%, transparent 70%);
-            border-radius: 50%;
-            z-index: 0;
-            filter: blur(40px);
+        .img-container { 
+            position: relative; 
+            width: 280px; 
+            height: 280px; 
+            margin-bottom: 20px; /* Platz zwischen Bild und Play-Button */
         }
 
-        .img-container { position: relative; width: 260px; height: 260px; margin-bottom: -45px; z-index: 1; }
         #mainImg { 
-            width: 100%; height: 100%; border-radius: 50px; 
-            object-fit: cover; border: 2px solid #333; 
+            width: 100%; 
+            height: 100%; 
+            border-radius: 40px; 
+            object-fit: cover; 
+            border: 2px solid #333; 
             box-shadow: 0 20px 50px rgba(0,0,0,0.7); 
-            transition: opacity 0.5s ease;
         }
         
+        /* Play-Button direkt unter dem Bild */
         #pBtn { 
-            width: 85px; height: 85px; border-radius: 50%; border: none; 
-            background: #fff; color: #000; font-size: 38px; cursor: pointer;
-            display: flex; align-items: center; justify-content: center;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5); z-index: 5;
+            width: 80px; 
+            height: 80px; 
+            border-radius: 50%; 
+            border: none; 
+            background: var(--highlight); 
+            color: #000; 
+            font-size: 35px; 
+            cursor: pointer;
+            display: flex; 
+            align-items: center; 
+            justify-content: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
         }
 
-        /* PLAYLIST */
-        .list-section { margin-top: 60px; }
-        .headline { font-size: 20px; font-weight: bold; font-style: italic; margin-bottom: 25px; color: #eee; border-left: 4px solid var(--highlight); padding-left: 10px; }
+        /* PLAYLIST BEREICH */
+        .list-section { margin-top: 20px; }
+        .headline { font-size: 18px; font-weight: bold; margin-bottom: 20px; color: #fff; }
         
-        .song-entry { display: flex; gap: 15px; margin-bottom: 22px; align-items: flex-start; }
-        .time-cell { min-width: 55px; font-size: 13px; color: #888; font-weight: bold; }
+        .song-entry { display: flex; gap: 15px; margin-bottom: 18px; align-items: flex-start; }
+        .time-cell { min-width: 50px; font-size: 12px; color: #666; font-weight: bold; }
         .song-info { flex: 1; }
-        .artist { font-weight: bold; font-size: 17px; display: block; color: #fff; }
-        .title { color: #888; font-size: 14px; }
+        .artist { font-weight: bold; font-size: 16px; display: block; color: #fff; }
+        .title { color: #888; font-size: 13px; }
 
-        /* VISUALIZER */
-        .viz { display: flex; align-items: flex-end; gap: 2px; height: 18px; }
-        .bar { width: 3px; background: var(--highlight); height: 4px; border-radius: 1px; }
+        /* Visualizer Balken (Lautsprecher-Bewegung) */
+        .viz { display: flex; align-items: flex-end; gap: 2px; height: 16px; }
+        .bar { width: 3px; background: var(--highlight); height: 4px; }
         .playing .bar { animation: bounce 0.8s ease infinite alternate; }
         .bar:nth-child(2) { animation-delay: 0.2s; }
         .bar:nth-child(3) { animation-delay: 0.4s; }
-        @keyframes bounce { from { height: 4px; } to { height: 18px; } }
+        @keyframes bounce { from { height: 4px; } to { height: 16px; } }
 
-        #moreBtn { background: #ffffff05; border: 1px solid #333; color: var(--highlight); font-weight: bold; padding: 12px; width: 100%; border-radius: 12px; cursor: pointer; margin-bottom: 40px; }
+        /* Mehr anzeigen Button */
+        #moreBtn { 
+            background: transparent; 
+            border: none; 
+            color: var(--highlight); 
+            font-weight: bold; 
+            padding: 10px; 
+            width: 100%; 
+            cursor: pointer; 
+            font-size: 14px;
+            margin-bottom: 30px;
+        }
 
-        /* FOOTER DETAILS */
-        .footer-info { padding: 25px; background: #161b22; border-radius: 25px; border: 1px solid #333; margin-top: 20px; }
-        #stDesc { font-size: 15px; color: #aaa; line-height: 1.6; margin-bottom: 20px; }
-        .badge { display: inline-block; padding: 6px 15px; background: #00f2c315; color: var(--highlight); border-radius: 20px; font-size: 13px; font-weight: bold; border: 1px solid #00f2c333; }
+        /* BESCHREIBUNG & HÖRER (Ganz unten) */
+        .footer-info { 
+            padding: 20px; 
+            background: rgba(255,255,255,0.03); 
+            border-radius: 20px; 
+            border: 1px solid #222; 
+            margin-top: 10px;
+        }
+        #stDesc { font-size: 14px; color: #999; line-height: 1.5; margin-bottom: 15px; }
+        .hoerer-info { font-size: 12px; font-weight: bold; color: var(--accent); text-transform: uppercase; }
 
-        /* VOLUME BAR DOCK */
-        .dock { padding: 20px 30px calc(25px + env(safe-area-inset-bottom)); background: #000; border-top: 1px solid #222; }
-        .vol-row { display: flex; align-items: center; gap: 20px; }
-        input[type=range] { flex: 1; -webkit-appearance: none; background: #333; height: 5px; border-radius: 3px; }
-        input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 22px; height: 22px; background: #fff; border-radius: 50%; cursor: pointer; border: 3px solid var(--accent); }
+        /* VOLUME DOCK */
+        .dock { padding: 20px 30px; background: #000; border-top: 1px solid #222; }
+        .vol-row { display: flex; align-items: center; gap: 15px; }
+        input[type=range] { flex: 1; -webkit-appearance: none; background: #333; height: 4px; border-radius: 2px; }
+        input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 20px; height: 20px; background: #fff; border-radius: 50%; border: 2px solid var(--accent); }
     </style>
 </head>
 <body>
@@ -140,9 +158,9 @@
         <div id="uhr" class="uhr">00:00:00</div>
         <div class="search-area">
             <input type="text" id="sIn" placeholder="Sender suchen..." onkeydown="if(event.key==='Enter') switchStation()">
-            <span onclick="switchStation()" style="cursor:pointer; font-size: 20px;">🔍</span>
+            <span onclick="switchStation()" style="cursor:pointer">🔍</span>
         </div>
-        <div id="stNameDisplay">RADIO PRO</div>
+        <div id="stNameDisplay">SENDERNAME</div>
     </header>
 
     <div class="scroll-content">
@@ -154,22 +172,22 @@
         </div>
 
         <div class="list-section">
-            <span class="headline">Zuletzt gelaufen</span>
+            <span class="headline">Jetzt läuft</span>
             <div id="songList"></div>
             <button id="moreBtn" onclick="toggleMore()">mehr Songs anzeigen</button>
         </div>
 
         <div class="footer-info">
-            <div id="stDesc">Suche einen Sender, um zu starten.</div>
-            <div id="hoerer" class="badge">0 Hörer live</div>
+            <div id="stDesc">Lade Beschreibung...</div>
+            <div id="hoerer" class="hoerer-info">0 PERSONEN LIVE</div>
         </div>
     </div>
 
     <div class="dock">
         <div class="vol-row">
-            <span style="font-size: 20px;">🔈</span>
+            <span>🔈</span>
             <input type="range" id="vol" min="0" max="1" step="0.01" value="0.8">
-            <span id="volPerc" style="font-family: monospace; font-weight: bold; width: 45px; color: var(--accent);">80%</span>
+            <span id="volPerc" style="font-family: monospace; width: 40px;">80%</span>
         </div>
     </div>
 </div>
@@ -181,10 +199,8 @@
     let dataJob = null;
     let showAll = false;
 
-    // Uhrzeit
     setInterval(() => { document.getElementById('uhr').innerText = new Date().toLocaleTimeString('de-DE'); }, 1000);
 
-    // Lautstärke
     document.getElementById('vol').oninput = (e) => { 
         au.volume = e.target.value; 
         document.getElementById('volPerc').innerText = Math.round(e.target.value * 100) + "%";
@@ -226,23 +242,17 @@
             ]);
 
             document.getElementById('stNameDisplay').innerText = s.display_name;
-            document.getElementById('stDesc').innerText = s.description || "Keine Beschreibung verfügbar.";
+            document.getElementById('stDesc').innerText = s.description || "Willkommen beim Radio.";
             document.getElementById('hoerer').innerText = h + " PERSONEN LIVE";
 
-            // Bild-Wechsel
             let newImg = s.images.station_640x640.replace('http://', 'https://');
             if(newImg !== lastImg) {
-                const img = document.getElementById('mainImg');
-                img.style.opacity = 0;
-                setTimeout(() => {
-                    img.src = newImg;
-                    img.onload = () => img.style.opacity = 1;
-                }, 300);
+                document.getElementById('mainImg').src = newImg;
                 lastImg = newImg;
             }
 
             let html = "";
-            const limit = showAll ? 12 : 3;
+            const limit = showAll ? 10 : 3;
             l.slice(0, limit).forEach((song, i) => {
                 const time = new Date(song.started_at).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
                 const isNow = i === 0;
