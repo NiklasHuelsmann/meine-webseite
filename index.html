@@ -1,50 +1,104 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Radio Ultimate Fix</title>
+    <style>
+        :root { --bg: #000; --accent: #00d2ff; }
+        body { background: var(--bg); color: #fff; font-family: sans-serif; margin: 0; display: flex; justify-content: center; height: 100vh; overflow: hidden; }
+        .app { width: 100%; max-width: 450px; display: flex; flex-direction: column; position: relative; }
+        header { padding: 20px; background: #111; border-bottom: 1px solid #333; }
+        .search-bar { display: flex; background: #222; padding: 10px; border-radius: 10px; border: 1px solid #444; }
+        input { background: transparent; border: none; color: #fff; flex: 1; outline: none; font-size: 16px; }
+        .main { flex: 1; padding: 20px; text-align: center; overflow-y: auto; }
+        #mainImg { width: 160px; height: 160px; border-radius: 20px; margin-top: 20px; object-fit: cover; background: #111; }
+        .dock { position: absolute; bottom: 0; left: 0; right: 0; background: #111; padding: 25px; border-top: 1px solid #333; }
+        .player-row { display: flex; align-items: center; gap: 20px; }
+        #pBtn { width: 70px; height: 70px; border-radius: 50%; border: none; background: #fff; color: #000; font-size: 30px; cursor: pointer; }
+        #status { font-size: 11px; color: var(--accent); margin-top: 10px; text-transform: uppercase; }
+        #curT { margin-top: 20px; font-weight: bold; color: #ccc; }
+    </style>
+</head>
+<body>
+
+<div class="app">
+    <header>
+        <div class="search-bar">
+            <input type="text" id="sIn" placeholder="Sendername..." onkeypress="if(event.key==='Enter') startRadio()">
+            <button onclick="startRadio()" style="background:none; border:none; color:var(--accent); font-size:22px; cursor:pointer;">🔍</button>
+        </div>
+    </header>
+
+    <div class="main">
+        <img id="mainImg" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=">
+        <h2 id="stName">RADIO PRO</h2>
+        <div id="curT">Sender suchen & starten</div>
+        <div id="hoerer" style="color: var(--accent); font-size: 12px; margin-top: 10px;"></div>
+    </div>
+
+    <div class="dock">
+        <div class="player-row">
+            <button id="pBtn" onclick="toggle()">▶</button>
+            <div style="flex: 1;">
+                <input type="range" id="vVol" min="0" max="1" step="0.01" value="0.8" style="width: 100%; accent-color: var(--accent);">
+                <div id="status">Bereit</div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
-    // Audio-Objekt global und sofort bereitstellen
     const audio = new Audio();
     audio.crossOrigin = "anonymous";
     let slug = "";
 
-    // Such- und Startfunktion kombiniert
-    async function search() {
+    // Lautstärke
+    document.getElementById('vVol').oninput = (e) => { audio.volume = e.target.value; };
+
+    async function startRadio() {
         const val = document.getElementById('sIn').value;
         if(!val) return;
         slug = val.toLowerCase().trim().replace(/[^a-z0-9-]/g, '');
         
-        // Den Stream direkt vorbereiten
-        audio.src = `https://stream.laut.fm/${slug}?t=${Date.now()}`;
-        document.getElementById('status').innerText = "BEREIT - PLAY DRÜCKEN";
+        document.getElementById('status').innerText = "VERBINDE...";
         
-        // Daten im Hintergrund laden
+        // Audio vorbereiten
+        audio.pause();
+        audio.src = "https://stream.laut.fm/" + slug + "?t=" + Date.now();
+        
+        // Sofort versuchen zu spielen
+        playNow();
         loadData();
     }
 
-    // Der Button-Klick muss absolut direkt sein
     function toggle() {
-        if(!slug) {
-            alert("Bitte erst einen Sendernamen suchen!");
-            return;
-        }
-        
-        const btn = document.getElementById('pBtn');
-        if(audio.paused) {
-            // Absolut direkter Startbefehl ohne setTimeout oder Promises
-            audio.play();
-            btn.innerHTML = "⏸";
-            document.getElementById('status').innerText = "LIVE";
-        } else {
-            audio.pause();
-            btn.innerHTML = "▶";
-            document.getElementById('status').innerText = "GESTOPPT";
-        }
+        if(!slug) return;
+        if(audio.paused) { playNow(); } else { audio.pause(); document.getElementById('pBtn').innerHTML = "▶"; }
     }
 
-    // Daten separat laden, um den Audio-Thread nicht zu stören
+    function playNow() {
+        audio.play().then(() => {
+            document.getElementById('pBtn').innerHTML = "⏸";
+            document.getElementById('status').innerText = "LIVE";
+        }).catch(e => {
+            document.getElementById('status').innerText = "BLOCKIERT - NOCHMAL PLAY!";
+        });
+    }
+
     async function loadData() {
         try {
-            const r = await fetch(`https://api.laut.fm/station/${slug}`);
-            const s = await r.json();
-            document.getElementById('stName').innerText = s.display_name;
-            document.getElementById('mainImg').src = s.images.station_640x640;
+            const res = await fetch("https://api.laut.fm/station/" + slug);
+            const data = await res.json();
+            document.getElementById('stName').innerText = data.display_name;
+            document.getElementById('mainImg').src = data.images.station_640x640;
+            
+            const res2 = await fetch("https://api.laut.fm/station/" + slug + "/last_songs");
+            const songs = await res2.json();
+            document.getElementById('curT').innerText = songs[0].artist.name + " - " + songs[0].title;
         } catch(e) {}
     }
 </script>
+
+</body>
+</html>
