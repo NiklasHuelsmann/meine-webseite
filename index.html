@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Radio Pro v11.5 - FINAL RELEASE</title>
+    <title>Radio Pro v13.5 - Final Edition</title>
     <style>
         :root { --bg: #050505; --accent: #00d2ff; --panel: #111; --text: #fff; }
         * { box-sizing: border-box; font-family: 'Segoe UI', Roboto, sans-serif; margin: 0; padding: 0; }
@@ -16,21 +16,22 @@
         
         .head-display { margin-left: auto; display: flex; align-items: center; background: #0a0a0a; padding: 4px 10px; border-radius: 8px; border: 1px solid #222; gap: 10px; }
         #headLogo { width: 30px; height: 30px; border-radius: 3px; object-fit: cover; display: none; border: 1px solid var(--accent); }
-        #headStationName { font-family: 'Courier New', monospace; color: var(--accent); font-weight: bold; font-size: 14px; text-transform: uppercase; max-width: 100px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+        #headStationName { font-family: 'Courier New', monospace; color: var(--accent); font-weight: bold; font-size: 14px; text-transform: uppercase; max-width: 120px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
         #uhr { font-family: monospace; color: var(--accent); font-size: 18px; font-weight: bold; padding-left: 10px; border-left: 1px solid #333; }
 
-        /* MAIN */
+        /* MAIN AREA */
         .main { flex: 1; display: grid; grid-template-columns: 350px 1fr; overflow: hidden; }
         @media (max-width: 850px) { .main { grid-template-columns: 1fr; overflow-y: auto; } body { overflow: auto; } }
 
         .left { background: var(--panel); padding: 20px; border-right: 1px solid #222; display: flex; flex-direction: column; gap: 12px; }
         #stName { font-size: 26px; font-weight: bold; color: var(--accent); }
-        #stDesc { font-size: 14px; color: #ccc; line-height: 1.5; margin-bottom: 8px; border-top: 1px solid #222; padding-top: 10px; }
-        #mainImg { width: 100%; aspect-ratio: 1/1; border-radius: 12px; object-fit: cover; border: 1px solid #333; }
+        #stDesc { font-size: 14px; color: #ccc; line-height: 1.5; border-top: 1px solid #222; padding-top: 10px; min-height: 50px; }
+        #mainImg { width: 100%; aspect-ratio: 1/1; border-radius: 12px; object-fit: cover; border: 1px solid #333; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
         
-        .play-btn { background: #1db954; color: white; border: none; padding: 18px; border-radius: 35px; font-weight: bold; font-size: 20px; cursor: pointer; margin-top: 10px; }
+        .play-btn { background: #1db954; color: white; border: none; padding: 18px; border-radius: 35px; font-weight: bold; font-size: 20px; cursor: pointer; margin-top: 10px; transition: transform 0.1s; }
+        .play-btn:active { transform: scale(0.95); }
         .play-btn.playing { background: #ff3333; }
-        .vol { width: 100%; margin-top: 15px; accent-color: var(--accent); }
+        .vol { width: 100%; margin-top: 15px; accent-color: var(--accent); cursor: pointer; }
 
         .right { padding: 30px; overflow-y: auto; }
         .current-box { background: rgba(0, 210, 255, 0.07); padding: 20px; border-radius: 12px; border-left: 5px solid var(--accent); margin-bottom: 25px; }
@@ -40,7 +41,7 @@
         /* FOOTER */
         footer { height: 85px; background: #000; border-top: 2px solid #1a1a1a; display: flex; align-items: center; padding: 0 20px; gap: 15px; }
         .vis-circle { width: 50px; height: 50px; border: 2px solid #333; border-radius: 50%; display: flex; align-items: center; justify-content: center; gap: 3px; flex-shrink: 0; }
-        .vis-circle.active { border-color: var(--accent); }
+        .vis-circle.active { border-color: var(--accent); box-shadow: 0 0 10px var(--accent); }
         .bar { width: 4px; height: 10px; background: var(--accent); border-radius: 2px; }
         .vis-circle.active .bar { animation: barAnim 0.7s infinite ease-in-out; }
         @keyframes barAnim { 0%, 100% { height: 8px; } 50% { height: 28px; } }
@@ -51,7 +52,7 @@
         
         .footer-info { display: flex; flex-direction: column; align-items: flex-end; min-width: 90px; }
         #hoerer { color: var(--accent); font-weight: bold; font-family: monospace; font-size: 14px; }
-        #version { color: #444; font-size: 10px; font-family: monospace; margin-top: 2px; }
+        #version { color: #444; font-size: 10px; font-family: monospace; }
     </style>
 </head>
 <body onload="initApp()">
@@ -63,7 +64,7 @@
     </div>
     <div class="head-display">
         <img id="headLogo" src="">
-        <div id="headStationName">OFFLINE</div>
+        <div id="headStationName">WÄHLE SENDER</div>
         <div id="uhr">00:00:00</div>
     </div>
 </header>
@@ -71,10 +72,10 @@
 <div class="main">
     <div class="left">
         <div id="stName">RADIO SYSTEM</div>
-        <div id="stDesc">Suchen Sie einen Sender oben links...</div>
+        <div id="stDesc">Suchen Sie oben links nach Ihrem laut.fm Lieblingssender.</div>
         <img id="mainImg" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7">
         <button id="pBtn" class="play-btn" onclick="toggle()">START RADIO</button>
-        <input type="range" class="vol" min="0" max="1" step="0.01" value="0.8" oninput="player.volume=this.value">
+        <input type="range" id="vControl" class="vol" min="0" max="1" step="0.01" value="0.8">
     </div>
     <div class="right">
         <div class="current-box">
@@ -92,11 +93,11 @@
         <div class="bar" style="animation-delay:0.4s"></div>
     </div>
     <div class="scroll-wrap">
-        <div id="fTrack">+++ Radio Pro v11.5 - Bitte Sender suchen +++</div>
+        <div id="fTrack">+++ Radio Online System v13.5 +++</div>
     </div>
     <div class="footer-info">
         <div id="hoerer">0 LSTNR</div>
-        <div id="version">v11.5 FINAL</div>
+        <div id="version">v13.5 FINAL</div>
     </div>
 </footer>
 
@@ -104,12 +105,14 @@
 
 <script>
     const player = document.getElementById('player');
+    const vControl = document.getElementById('vControl');
     let slug = "";
     let isPlaying = false;
     let dataInterval;
 
     function initApp() {
         setInterval(() => { document.getElementById('uhr').innerText = new Date().toLocaleTimeString(); }, 1000);
+        vControl.addEventListener('input', () => { player.volume = vControl.value; });
     }
 
     function sync(v) {
@@ -123,15 +126,16 @@
     async function toggle() {
         if(!slug) return;
         if(!isPlaying) {
-            // Direkter Stream-Zugriff ohne Umwege für Firefox/Mobile
             player.src = "https://stream.laut.fm/" + slug + "?t=" + Date.now();
+            player.volume = vControl.value;
             try {
+                player.load(); // Wichtig für Firefox Sichtbarkeit
                 await player.play();
                 isPlaying = true;
                 updateUI(true);
             } catch (e) {
-                // Zweiter Versuch falls Browser blockt
-                player.load();
+                console.error("Audio-Fehler:", e);
+                // Notfall-Play Versuch
                 player.play();
                 isPlaying = true;
                 updateUI(true);
@@ -147,15 +151,9 @@
     function updateUI(playState) {
         const btn = document.getElementById('pBtn');
         const vis = document.getElementById('vC');
-        if(playState) {
-            btn.innerText = "STOPP";
-            btn.classList.add('playing');
-            vis.classList.add('active');
-        } else {
-            btn.innerText = "START RADIO";
-            btn.classList.remove('playing');
-            vis.classList.remove('active');
-        }
+        btn.innerText = playState ? "STOPP" : "START RADIO";
+        btn.classList.toggle('playing', playState);
+        vis.classList.toggle('active', playState);
     }
 
     async function loadData() {
@@ -180,18 +178,12 @@
             
             document.getElementById('curSongTime').innerText = timeStr + " UHR";
             document.getElementById('curT').innerText = trackStr;
-            document.getElementById('fTrack').innerText = " +++ AKTUELL AUF " + data.display_name.toUpperCase() + ": " + trackStr + " +++ ";
+            document.getElementById('fTrack').innerText = " +++ JETZT AUF " + data.display_name.toUpperCase() + ": " + trackStr + " +++ ";
 
             let html = "";
             songs.slice(1, 10).forEach(s => {
                 const sTime = new Date(s.started_at).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
-                html += `<div class="history-card">
-                    <span class="song-time">${sTime}</span>
-                    <div style="display:flex; flex-direction:column;">
-                        <b style="font-size:15px;">${s.artist.name}</b>
-                        <span style="color:#aaa; font-size:13px;">${s.title}</span>
-                    </div>
-                </div>`;
+                html += `<div class="history-card"><span class="song-time">${sTime}</span><div><b>${s.artist.name}</b><br><small style="color:#aaa">${s.title}</small></div></div>`;
             });
             document.getElementById('hList').innerHTML = html;
         } catch(e) {}
