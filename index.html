@@ -2,178 +2,197 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Radio Pro v7.5 FINAL</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Radio Pro Ultimate</title>
     <style>
         :root {
-            --bg: #1a1a1a;
+            --bg: #0a0a0a;
+            --panel: #141414;
             --accent: #00d2ff;
-            --stopp: #ff7043;
+            --card: #1c1c1c;
             --text: #ffffff;
-            --border: #333333;
-            --error: #ff4444;
+            --border: #333;
         }
 
-        * { box-sizing: border-box; font-family: 'Arial', sans-serif; margin: 0; padding: 0; }
-        body { background: var(--bg); color: var(--text); display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+        * { box-sizing: border-box; font-family: 'Segoe UI', Arial, sans-serif; margin: 0; padding: 0; }
+        body { background: var(--bg); color: var(--text); height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
 
-        header { padding: 10px 15px; display: flex; align-items: center; gap: 15px; background: #000; border-bottom: 1px solid var(--border); }
-        .search-area { display: flex; background: #222; border-radius: 20px; padding: 6px 15px; align-items: center; border: 2px solid #444; }
-        #sIn { background: transparent; border: none; color: white; width: 130px; font-size: 14px; outline: none; }
-        .search-btn { color: var(--accent); cursor: pointer; font-size: 16px; margin-left: 5px; }
-        .uhr { font-family: monospace; color: var(--accent); font-weight: bold; font-size: 14px; margin-left: auto; }
-
-        .container { flex: 1; display: grid; grid-template-columns: 380px 1fr; overflow: hidden; }
-        @media (max-width: 900px) { .container { grid-template-columns: 1fr; overflow-y: auto; } body { overflow: auto; } }
-
-        .left-panel { background: #111; padding: 20px; border-right: 1px solid var(--border); display: flex; flex-direction: column; gap: 12px; }
-        #stName { font-size: 20px; font-weight: bold; color: var(--accent); text-transform: lowercase; }
-        #stationDisplay { width: 100%; aspect-ratio: 1/1; object-fit: cover; background: #000; border: 1px solid #333; }
+        /* HEADER */
+        header { padding: 10px 20px; display: flex; align-items: center; background: #000; border-bottom: 2px solid var(--accent); gap: 15px; }
+        .search-area { display: flex; background: #222; border-radius: 20px; padding: 5px 15px; align-items: center; }
+        #sIn { background: transparent; border: none; color: white; width: 150px; outline: none; }
         
-        .btn-main { background: #238636; color: white; border: none; padding: 18px; font-weight: bold; cursor: pointer; text-transform: uppercase; font-size: 16px; }
-        .btn-main.is-playing { background: var(--stopp); }
+        .header-logos { display: flex; align-items: center; gap: 10px; margin-left: 20px; }
+        #miniLogo { width: 32px; height: 32px; border-radius: 4px; object-fit: cover; display: none; border: 1px solid var(--accent); }
+        #uhr { font-family: monospace; color: var(--accent); font-size: 18px; margin-left: auto; }
 
-        .vol-area { display: flex; align-items: center; gap: 15px; margin-top: 5px; }
-        input[type=range] { flex: 1; -webkit-appearance: none; background: #444; height: 3px; outline: none; }
-        input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 18px; height: 18px; background: #fff; border-radius: 50%; border: 1px solid #000; cursor: pointer; }
+        /* CONTENT */
+        .main { flex: 1; display: grid; grid-template-columns: 400px 1fr; overflow: hidden; }
+        @media (max-width: 900px) { .main { grid-template-columns: 1fr; overflow-y: auto; } }
 
-        #streamUrlDisplay { font-size: 10px; color: var(--accent); word-break: break-all; margin-top: 8px; font-family: monospace; background: rgba(0,0,0,0.5); padding: 5px; border: 1px solid #222; }
-
-        /* Fehlermeldung Style */
-        .error-msg { color: var(--error); font-weight: bold; font-size: 12px; margin-top: 5px; display: none; }
-
-        .right-panel { padding: 25px; overflow-y: auto; background: #1a1a1a; }
-        .section-title { font-size: 11px; font-weight: bold; color: #888; text-transform: uppercase; border-bottom: 1px solid #333; padding-bottom: 6px; margin-bottom: 15px; }
-        .now-box { display: flex; align-items: center; gap: 15px; background: rgba(0,0,0,0.4); padding: 15px; margin-bottom: 20px; border-left: 3px solid var(--accent); }
+        /* LEFT PANEL (Player) */
+        .player-side { background: var(--panel); padding: 25px; border-right: 1px solid var(--border); display: flex; flex-direction: column; gap: 15px; }
+        .station-header { margin-bottom: 10px; }
+        #stName { font-size: 26px; font-weight: bold; color: var(--accent); }
+        #stSlogan { font-size: 14px; color: #888; margin-top: 4px; }
         
-        .history-item { display: flex; gap: 20px; padding: 12px 0; border-bottom: 1px dotted #333; font-size: 14px; }
-        .h-time { color: var(--accent); font-weight: bold; min-width: 50px; }
-        .h-info b { color: #fff; display: block; }
-
-        footer { background: #000; height: 75px; display: flex; align-items: center; padding: 0 15px; border-top: 1px solid #333; gap: 15px; }
-        .vis-circle { width: 45px; height: 45px; border-radius: 50%; border: 2px solid #fff; display: flex; align-items: center; justify-content: center; gap: 3px; }
-        .bar { width: 4px; background: var(--accent); height: 8px; border-radius: 2px; }
-        .vis-circle.active .bar { animation: dance 0.7s infinite ease-in-out; }
-        @keyframes dance { 0%, 100% { height: 8px; } 50% { height: 25px; } }
+        #errorBox { color: #ff5252; font-weight: bold; font-size: 13px; display: none; padding: 10px; border: 1px solid #ff5252; border-radius: 5px; text-align: center; }
+        #stationDisplay { width: 100%; aspect-ratio: 1/1; object-fit: cover; border-radius: 10px; border: 1px solid #444; box-shadow: 0 0 20px rgba(0,0,0,0.8); }
         
-        .marquee { flex: 1; overflow: hidden; white-space: nowrap; color: var(--accent); font-weight: bold; font-size: 18px; }
-        #fSong { display: inline-block; animation: scroll 15s linear infinite; padding-left: 100%; }
-        @keyframes scroll { 0% { transform: translateX(0); } 100% { transform: translateX(-100%); } }
+        .btn-main { background: #1db954; color: white; border: none; padding: 20px; font-weight: bold; cursor: pointer; border-radius: 35px; font-size: 18px; transition: 0.3s; }
+        .btn-main.playing { background: #ff5252; }
+
+        .vol-box { display: flex; align-items: center; gap: 10px; background: #000; padding: 10px; border-radius: 10px; }
+        input[type=range] { flex: 1; accent-color: var(--accent); }
+        #streamUrlDisplay { font-size: 10px; color: #555; word-break: break-all; text-align: center; }
+
+        /* RIGHT PANEL (Songs) */
+        .content-side { padding: 30px; overflow-y: auto; background: var(--bg); }
+        .current-song-area { background: linear-gradient(145deg, #111, #1a1a1a); padding: 30px; border-radius: 15px; border-left: 6px solid var(--accent); margin-bottom: 30px; text-align: center; }
+        #curS { font-size: 24px; font-weight: bold; color: #fff; }
+        
+        .history-grid { display: flex; flex-direction: column; gap: 12px; }
+        .song-card { background: var(--card); padding: 15px; border-radius: 10px; display: flex; align-items: center; gap: 20px; transition: 0.2s; border: 1px solid #222; }
+        .song-card:hover { border-color: var(--accent); background: #252525; }
+        .s-time { color: var(--accent); font-weight: bold; font-family: monospace; font-size: 16px; }
+        .s-info b { display: block; color: #eee; font-size: 16px; }
+        .s-info span { color: #888; font-size: 14px; }
+
+        /* FOOTER */
+        footer { height: 80px; background: #000; display: flex; align-items: center; padding: 0 20px; border-top: 2px solid #222; gap: 20px; }
+        .vis-box { width: 50px; height: 50px; display: flex; align-items: center; justify-content: center; gap: 3px; border: 2px solid #333; border-radius: 50%; }
+        .vis-box.active { border-color: var(--accent); }
+        .bar { width: 4px; background: var(--accent); height: 10px; border-radius: 2px; }
+        .vis-box.active .bar { animation: dance 0.6s infinite ease-in-out; }
+        @keyframes dance { 0%, 100% { height: 10px; } 50% { height: 30px; } }
+
+        .marquee-box { flex: 1; overflow: hidden; white-space: nowrap; }
+        #fSong { display: inline-block; animation: scroll 25s linear infinite; font-size: 20px; font-weight: bold; color: var(--accent); }
+        @keyframes scroll { 0% { transform: translateX(100%); } 100% { transform: translateX(-100%); } }
+
+        .listeners { background: #1a1a1a; color: var(--accent); padding: 8px 15px; border-radius: 20px; font-weight: bold; font-size: 13px; border: 1px solid #333; }
     </style>
 </head>
-<body onload="boot()">
+<body onload="init()">
 
 <header>
     <div class="search-area">
-        <input type="text" id="sIn" placeholder="Sender suchen..." onkeypress="if(event.key==='Enter') startSync(this.value)">
-        <span class="search-btn" onclick="startSync(document.getElementById('sIn').value)">🔍</span>
+        <input type="text" id="sIn" placeholder="Sendername..." onkeypress="if(event.key==='Enter') sync(this.value)">
+        <span style="cursor:pointer" onclick="sync(document.getElementById('sIn').value)">🔍</span>
     </div>
-    <div id="uhr" class="uhr">00:00:00</div>
+    <div class="header-logos">
+        <img id="miniLogo" src="" alt="">
+    </div>
+    <div id="uhr">00:00:00</div>
 </header>
 
-<div class="container">
-    <div class="left-panel">
-        <div id="stName">RADIO PRO</div>
-        <div id="errorBox" class="error-msg">⚠️ Dieser Sender existiert nicht oder ist offline.</div>
+<div class="main">
+    <div class="player-side">
+        <div class="station-header">
+            <div id="stName">RADIO PLAYER</div>
+            <div id="stSlogan">Wähle deinen Stream</div>
+        </div>
+        <div id="errorBox">SENDER OFFLINE</div>
         <img id="stationDisplay" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7">
-        <button id="pBtn" class="btn-main" onclick="playClick()">START</button>
-        
-        <div class="vol-area">
+        <button id="pBtn" class="btn-main" onclick="togglePlay()">START</button>
+        <div class="vol-box">
             <span>🔈</span>
-            <input type="range" id="volRange" min="0" max="1" step="0.01" value="0.9" oninput="setV(this.value)">
+            <input type="range" id="vol" min="0" max="1" step="0.01" value="0.8" oninput="audio.volume=this.value">
         </div>
         <div id="streamUrlDisplay">URL: bereit</div>
     </div>
 
-    <div class="right-panel">
-        <div class="section-title">JETZT LÄUFT</div>
-        <div class="now-box">
-            <span id="curT" style="color:var(--accent); font-weight:bold; margin-right:10px;">--:--</span>
-            <span id="curS" style="font-weight:bold;">Bitte suchen</span>
+    <div class="content-side">
+        <div style="font-size: 12px; color: #555; margin-bottom: 10px; letter-spacing: 2px;">AKTUELL LÄUFT:</div>
+        <div class="current-song-area">
+            <div id="curS">Warte auf Musik...</div>
         </div>
-        <div class="section-title">HISTORIE (9 SONGS)</div>
-        <div id="hList"></div>
+        <div style="font-size: 12px; color: #555; margin-bottom: 15px; letter-spacing: 2px;">HISTORY:</div>
+        <div id="hList" class="history-grid"></div>
     </div>
 </div>
 
 <footer>
-    <div id="fVis" class="vis-circle">
+    <div id="fVis" class="vis-box">
         <div class="bar"></div><div class="bar"></div><div class="bar"></div>
     </div>
-    <div class="marquee"><div id="fSong">Bereit...</div></div>
+    <div class="marquee-box">
+        <div id="fSong">+++ Willkommen beim Radio Pro +++</div>
+    </div>
+    <div id="hoerer" class="listeners">0 HÖRER</div>
 </footer>
 
-<audio id="audioEngine" preload="none" crossorigin="anonymous"></audio>
+<audio id="audio" crossorigin="anonymous"></audio>
 
 <script>
-    const audio = document.getElementById('audioEngine');
-    let isPlaying = false, currentSlug = "";
+    const audio = document.getElementById('audio');
+    let isPlaying = false, slug = "";
 
-    function boot() {
-        setInterval(() => { document.getElementById('uhr').innerText = new Date().toLocaleTimeString('de-DE'); }, 1000);
+    function init() {
+        setInterval(() => { document.getElementById('uhr').innerText = new Date().toLocaleTimeString(); }, 1000);
     }
 
-    function setV(v) { audio.volume = v; }
-
-    function startSync(val) {
+    function sync(val) {
         if(!val) return;
-        currentSlug = val.toLowerCase().trim().replace(/\s+/g, '-');
-        document.getElementById('errorBox').style.display = "none"; // Reset Fehler
-        updateAPI();
+        slug = val.toLowerCase().trim().replace(/\s+/g, '-');
+        document.getElementById('errorBox').style.display = "none";
+        loadData();
+        setInterval(loadData, 15000);
     }
 
-    function playClick() {
-        if(!currentSlug) return;
-        const btn = document.getElementById('pBtn');
+    function togglePlay() {
+        if(!slug) return;
         if(!isPlaying) {
-            audio.src = "https://stream.laut.fm/" + currentSlug + "?nocache=" + Date.now();
-            audio.load();
+            audio.src = "https://stream.laut.fm/" + slug + "?nocache=" + Date.now();
             audio.play().then(() => {
                 isPlaying = true;
-                btn.innerText = "STOPP";
+                document.getElementById('pBtn').innerText = "STOPP";
+                document.getElementById('pBtn').classList.add('playing');
                 document.getElementById('fVis').classList.add('active');
-            }).catch(e => {
-                // Falls der Stream-Link direkt einen Fehler wirft
+            }).catch(() => {
                 document.getElementById('errorBox').style.display = "block";
+                document.getElementById('errorBox').innerText = "STREAM NICHT ERREICHBAR";
             });
         } else {
-            audio.pause(); isPlaying = false;
-            btn.innerText = "START";
+            audio.pause(); audio.src = ""; isPlaying = false;
+            document.getElementById('pBtn').innerText = "START";
+            document.getElementById('pBtn').classList.remove('playing');
             document.getElementById('fVis').classList.remove('active');
         }
     }
 
-    async function updateAPI() {
-        if(!currentSlug) return;
+    async function loadData() {
+        if(!slug) return;
         try {
-            const response = await fetch(`https://api.laut.fm/station/${currentSlug}`);
-            if(!response.ok) throw new Error("Not Found");
-            
-            const i = await response.json();
-            const s = await fetch(`https://api.laut.fm/station/${currentSlug}/last_songs`).then(r => r.json());
-            
+            const r = await fetch(`https://api.laut.fm/station/${slug}`);
+            const i = await r.json();
+            const s = await fetch(`https://api.laut.fm/station/${slug}/last_songs`).then(res => res.json());
+            const l = await fetch(`https://api.laut.fm/station/${slug}/listeners`).then(res => res.text());
+
             document.getElementById('stName').innerText = i.display_name;
+            document.getElementById('stSlogan').innerText = i.description || "Live auf laut.fm";
             document.getElementById('stationDisplay').src = i.images.station_640x640;
-            document.getElementById('streamUrlDisplay').innerText = "URL: https://stream.laut.fm/" + currentSlug;
+            document.getElementById('miniLogo').src = i.images.station_80x80;
+            document.getElementById('miniLogo').style.display = "block";
+            document.getElementById('streamUrlDisplay').innerText = "URL: https://stream.laut.fm/" + slug;
+            document.getElementById('hoerer').innerText = l + " HÖRER";
             
             const now = s[0];
             document.getElementById('curS').innerText = now.artist.name + " - " + now.title;
-            document.getElementById('fSong').innerText = "+++ " + now.artist.name + " - " + now.title + " +++ ";
-            
-            let h = "";
+            document.getElementById('fSong').innerText = " +++ AKTUELL: " + now.artist.name + " - " + now.title + " +++ ";
+
+            let hHtml = "";
             s.slice(1, 10).forEach(song => {
-                const time = new Date(song.started_at).toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'});
-                h += `<div class="history-item"><div class="h-time">${time}</div><div class="h-info"><b>${song.artist.name}</b><span>${song.title}</span></div></div>`;
+                const time = new Date(song.started_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                hHtml += `
+                <div class="song-card">
+                    <div class="s-time">${time}</div>
+                    <div class="s-info"><b>${song.artist.name}</b><span>${song.title}</span></div>
+                </div>`;
             });
-            document.getElementById('hList').innerHTML = h;
+            document.getElementById('hList').innerHTML = hHtml;
         } catch(e) {
-            // Fehlerbehandlung: Sender nicht gefunden
             document.getElementById('errorBox').style.display = "block";
-            document.getElementById('stName').innerText = "FEHLER";
-            document.getElementById('curS').innerText = "Sender nicht aktiv";
-            document.getElementById('fSong').innerText = "Sender nicht gefunden...";
-            document.getElementById('hList').innerHTML = "";
-            document.getElementById('streamUrlDisplay').innerText = "URL: nicht verfügbar";
         }
     }
 </script>
