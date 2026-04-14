@@ -2,39 +2,81 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Radio Ultimate Fix</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Radio Ultimate Live</title>
     <style>
-        :root { --bg: #000; --accent: #00d2ff; }
-        body { background: var(--bg); color: #fff; font-family: sans-serif; margin: 0; display: flex; justify-content: center; height: 100vh; overflow: hidden; }
-        .app { width: 100%; max-width: 450px; display: flex; flex-direction: column; position: relative; }
-        header { padding: 20px; background: #111; border-bottom: 1px solid #333; }
-        .search-bar { display: flex; background: #222; padding: 10px; border-radius: 10px; border: 1px solid #444; }
-        input { background: transparent; border: none; color: #fff; flex: 1; outline: none; font-size: 16px; }
-        .main { flex: 1; padding: 20px; text-align: center; overflow-y: auto; }
-        #mainImg { width: 160px; height: 160px; border-radius: 20px; margin-top: 20px; object-fit: cover; background: #111; }
-        .dock { position: absolute; bottom: 0; left: 0; right: 0; background: #111; padding: 25px; border-top: 1px solid #333; }
+        :root { --bg: #000; --accent: #00d2ff; --surface: #121212; }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; }
+        body { 
+            background: var(--bg); color: #fff; 
+            font-family: -apple-system, system-ui, sans-serif; 
+            margin: 0; display: flex; justify-content: center; 
+            height: 100vh; overflow: hidden;
+        }
+        .app { width: 100%; max-width: 500px; display: flex; flex-direction: column; position: relative; }
+        
+        header { padding: 15px 20px; background: #000; border-bottom: 1px solid #222; }
+        .search-box { 
+            display: flex; background: #1c1c1e; border-radius: 12px; 
+            padding: 5px 15px; border: 2px solid #333; align-items: center; 
+        }
+        input { 
+            background: transparent; border: none; color: #fff; 
+            flex: 1; font-size: 16px; height: 45px; 
+        }
+        
+        .main { flex: 1; overflow-y: auto; padding: 20px; text-align: center; }
+        #mainImg { 
+            width: 180px; height: 180px; border-radius: 25px; 
+            object-fit: cover; box-shadow: 0 10px 40px rgba(0,0,0,0.8); 
+            background: #111; border: 1px solid #333; 
+        }
+        #stName { font-size: 26px; font-weight: 800; margin: 20px 0 5px; }
+        #hoerer { font-size: 12px; color: var(--accent); font-weight: bold; margin-bottom: 25px; letter-spacing: 1px; }
+        
+        .track-info { 
+            background: #1c1c1e; border-radius: 15px; padding: 15px; 
+            margin-bottom: 20px; border-left: 4px solid var(--accent);
+            font-weight: bold; font-size: 16px;
+        }
+
+        .h-item { 
+            background: #0d0d0d; padding: 12px; border-radius: 12px; 
+            display: flex; gap: 15px; margin-bottom: 8px; 
+            font-size: 13px; text-align: left; border: 1px solid #1a1a1a; 
+        }
+        .h-time { color: var(--accent); font-weight: bold; min-width: 45px; }
+
+        .dock { 
+            background: rgba(15,15,15,0.98); backdrop-filter: blur(20px); 
+            border-top: 1px solid #333; padding: 25px 25px 45px; 
+            border-radius: 30px 30px 0 0; 
+        }
         .player-row { display: flex; align-items: center; gap: 20px; }
-        #pBtn { width: 70px; height: 70px; border-radius: 50%; border: none; background: #fff; color: #000; font-size: 30px; cursor: pointer; }
-        #status { font-size: 11px; color: var(--accent); margin-top: 10px; text-transform: uppercase; }
-        #curT { margin-top: 20px; font-weight: bold; color: #ccc; }
+        #pBtn { 
+            width: 80px; height: 80px; border-radius: 50%; border: none; 
+            background: #fff; color: #000; font-size: 35px; cursor: pointer; 
+            display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+        }
+        #status { font-size: 11px; color: #666; text-align: center; margin-top: 15px; text-transform: uppercase; font-weight: bold; }
     </style>
 </head>
 <body>
 
 <div class="app">
     <header>
-        <div class="search-bar">
-            <input type="text" id="sIn" placeholder="Sendername..." onkeypress="if(event.key==='Enter') startRadio()">
-            <button onclick="startRadio()" style="background:none; border:none; color:var(--accent); font-size:22px; cursor:pointer;">🔍</button>
+        <div class="search-box">
+            <input type="text" id="sIn" placeholder="Sendername hier..." autocomplete="off" onkeydown="if(event.key==='Enter') startStream()">
+            <button onclick="startStream()" style="background:none; border:none; color:var(--accent); font-size:24px; cursor:pointer;">🔍</button>
         </div>
     </header>
 
     <div class="main">
         <img id="mainImg" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=">
-        <h2 id="stName">RADIO PRO</h2>
-        <div id="curT">Sender suchen & starten</div>
-        <div id="hoerer" style="color: var(--accent); font-size: 12px; margin-top: 10px;"></div>
+        <div id="stName">LIVE STREAM</div>
+        <div id="hoerer">BEREIT</div>
+        <div id="curT" class="track-info">Sender eingeben & hören</div>
+        <div id="hList"></div>
     </div>
 
     <div class="dock">
@@ -42,7 +84,7 @@
             <button id="pBtn" onclick="toggle()">▶</button>
             <div style="flex: 1;">
                 <input type="range" id="vVol" min="0" max="1" step="0.01" value="0.8" style="width: 100%; accent-color: var(--accent);">
-                <div id="status">Bereit</div>
+                <div id="status">Warte auf Eingabe</div>
             </div>
         </div>
     </div>
@@ -51,54 +93,88 @@
 <script>
     const audio = new Audio();
     audio.crossOrigin = "anonymous";
-    let slug = "";
+    let currentSlug = "";
+    let apiInterval = null;
 
-    // Lautstärke
+    // Lautstärkeregelung
     document.getElementById('vVol').oninput = (e) => { audio.volume = e.target.value; };
 
-    async function startRadio() {
-        const val = document.getElementById('sIn').value;
-        if(!val) return;
-        slug = val.toLowerCase().trim().replace(/[^a-z0-9-]/g, '');
+    // FUNKTION: Stream sofort starten
+    async function startStream() {
+        const input = document.getElementById('sIn').value;
+        if(!input) return;
+        
+        document.activeElement.blur(); // Tastatur schließen
+        currentSlug = input.toLowerCase().trim().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+        
+        // Audio hart neu laden um Puffer zu leeren
+        audio.pause();
+        audio.src = `https://stream.laut.fm/${currentSlug}?t=${Date.now()}`;
+        audio.load();
         
         document.getElementById('status').innerText = "VERBINDE...";
         
-        // Audio vorbereiten
-        audio.pause();
-        audio.src = "https://stream.laut.fm/" + slug + "?t=" + Date.now();
-        
-        // Sofort versuchen zu spielen
-        playNow();
-        loadData();
+        // Sofort-Abspielen (Wichtig für alle Browser)
+        audio.play().then(() => {
+            document.getElementById('pBtn').innerHTML = "⏸";
+            document.getElementById('status').innerText = "LIVE AKTIV";
+        }).catch(() => {
+            document.getElementById('status').innerText = "BITTE PLAY DRÜCKEN";
+        });
+
+        refreshData();
+        if(apiInterval) clearInterval(apiInterval);
+        apiInterval = setInterval(refreshData, 15000);
     }
 
     function toggle() {
-        if(!slug) return;
-        if(audio.paused) { playNow(); } else { audio.pause(); document.getElementById('pBtn').innerHTML = "▶"; }
-    }
-
-    function playNow() {
-        audio.play().then(() => {
+        if(!currentSlug) return;
+        if(audio.paused) {
+            // Live-Signal erzwingen (kein alter Puffer)
+            audio.src = `https://stream.laut.fm/${currentSlug}?t=${Date.now()}`;
+            audio.play();
             document.getElementById('pBtn').innerHTML = "⏸";
-            document.getElementById('status').innerText = "LIVE";
-        }).catch(e => {
-            document.getElementById('status').innerText = "BLOCKIERT - NOCHMAL PLAY!";
-        });
+            document.getElementById('status').innerText = "LIVE AKTIV";
+        } else {
+            audio.pause();
+            audio.src = ""; 
+            document.getElementById('pBtn').innerHTML = "▶";
+            document.getElementById('status').innerText = "GESTOPPT";
+        }
     }
 
-    async function loadData() {
+    async function refreshData() {
+        if(!currentSlug) return;
         try {
-            const res = await fetch("https://api.laut.fm/station/" + slug);
-            const data = await res.json();
-            document.getElementById('stName').innerText = data.display_name;
-            document.getElementById('mainImg').src = data.images.station_640x640;
+            const [s, l, h] = await Promise.all([
+                fetch(`https://api.laut.fm/station/${currentSlug}`).then(r => r.json()),
+                fetch(`https://api.laut.fm/station/${currentSlug}/last_songs`).then(r => r.json()),
+                fetch(`https://api.laut.fm/station/${currentSlug}/listeners`).then(r => r.text())
+            ]);
             
-            const res2 = await fetch("https://api.laut.fm/station/" + slug + "/last_songs");
-            const songs = await res2.json();
-            document.getElementById('curT').innerText = songs[0].artist.name + " - " + songs[0].title;
-        } catch(e) {}
+            document.getElementById('stName').innerText = s.display_name;
+            document.getElementById('mainImg').src = s.images.station_640x640;
+            document.getElementById('hoerer').innerText = h + " PERSONEN HÖREN ZU";
+            document.getElementById('curT').innerText = l[0].artist.name + " - " + l[0].title;
+            
+            let html = "";
+            l.slice(1, 8).forEach(song => {
+                const time = new Date(song.started_at).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+                html += `<div class="h-item"><span class="h-time">${time}</span> <span><b>${song.artist.name}</b> - ${song.title}</span></div>`;
+            });
+            document.getElementById('hList').innerHTML = html;
+        } catch(e) { 
+            console.log("API Fehler, Stream läuft weiter..."); 
+        }
     }
-</script>
 
+    // Falls der Stream durch Internetprobleme stoppt -> Auto-Reload
+    audio.onerror = () => {
+        if(currentSlug && !audio.paused) {
+            toggle(); // Reset
+            setTimeout(startStream, 1000); // Neustart
+        }
+    };
+</script>
 </body>
 </html>
