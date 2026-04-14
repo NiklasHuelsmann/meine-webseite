@@ -3,8 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
-    <title>Brian-Radio Premium Build</title>
+    <title>Brian-Radio Final</title>
     <style>
         :root { 
             --bg-global: #050505; 
@@ -26,7 +25,6 @@
             overflow: hidden; 
         }
 
-        /* Haupt-Container der App */
         .app { 
             width: 100%; 
             max-width: 500px; 
@@ -34,11 +32,8 @@
             flex-direction: column; 
             background-color: var(--bg-app);
             position: relative;
-            border-left: 1px solid #222;
-            border-right: 1px solid #222;
         }
         
-        /* Header Bereich */
         header { padding: 20px 20px 10px; text-align: center; flex-shrink: 0; }
         .uhr { font-family: monospace; font-size: 14px; color: var(--accent); margin-bottom: 10px; }
         
@@ -55,45 +50,26 @@
         .search-btn { cursor: pointer; font-size: 18px; padding-left: 10px; }
         
         #stNameDisplay { 
-            font-size: 24px; 
-            font-weight: 900; 
-            text-transform: uppercase; 
-            margin: 5px 0;
-            overflow: hidden;
-            text-overflow: ellipsis;
+            font-size: 24px; font-weight: 900; text-transform: uppercase; 
+            margin: 5px 0; overflow: hidden; text-overflow: ellipsis;
         }
 
-        /* Scrollbarer Bereich */
         .scroll-content { 
-            flex: 1; 
-            overflow-y: auto; 
-            -webkit-overflow-scrolling: touch; 
-            padding: 0 20px 40px; 
-            scrollbar-width: none; 
+            flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; 
+            padding: 0 20px 40px; scrollbar-width: none; 
         }
         .scroll-content::-webkit-scrollbar { display: none; }
 
-        /* Logo & Player */
-        .hero-area { 
-            display: flex; 
-            flex-direction: column; 
-            align-items: center; 
-            padding: 20px 0 40px; 
-        }
+        .hero-area { display: flex; flex-direction: column; align-items: center; padding: 20px 0 40px; }
         
         .img-container { 
-            width: 280px; 
-            height: 280px; 
-            margin-bottom: 25px; 
+            width: 280px; height: 280px; margin-bottom: 25px; 
+            background: #1a1d23; border-radius: 40px; /* Platzhalter-Farbe */
         }
 
         #mainImg { 
-            width: 100%; 
-            height: 100%; 
-            border-radius: 40px; 
-            object-fit: cover; 
-            box-shadow: 0 15px 40px rgba(0,0,0,0.6); 
-            transition: opacity 0.3s;
+            width: 100%; height: 100%; border-radius: 40px; 
+            object-fit: cover; box-shadow: 0 15px 40px rgba(0,0,0,0.6); 
         }
         
         #pBtn { 
@@ -101,11 +77,8 @@
             background: #fff; color: #000; font-size: 38px; cursor: pointer;
             display: flex; align-items: center; justify-content: center;
             box-shadow: 0 8px 25px rgba(0,0,0,0.4);
-            transition: transform 0.1s;
         }
-        #pBtn:active { transform: scale(0.92); }
 
-        /* Playlist */
         .list-section { margin-top: 10px; }
         .headline { font-size: 18px; font-weight: bold; margin-bottom: 20px; display: block; }
         
@@ -118,12 +91,9 @@
         .artist { font-weight: bold; font-size: 15px; display: block; color: #fff; }
         .title { color: #999; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
-        /* Musik-Visualizer */
         .viz { display: flex; align-items: flex-end; gap: 2px; height: 16px; }
         .bar { width: 3px; background: var(--highlight); height: 4px; }
         .playing .bar { animation: bounce 0.8s ease infinite alternate; }
-        .bar:nth-child(2) { animation-delay: 0.2s; }
-        .bar:nth-child(3) { animation-delay: 0.4s; }
         @keyframes bounce { from { height: 4px; } to { height: 16px; } }
 
         #moreBtn { 
@@ -132,7 +102,6 @@
             cursor: pointer; margin: 10px 0 30px;
         }
 
-        /* Footer & Info */
         .footer-info { 
             padding: 20px; background: rgba(0,0,0,0.2); 
             border-radius: 20px; border: 1px solid #222; text-align: center;
@@ -141,11 +110,9 @@
         .hoerer-info { font-size: 12px; font-weight: bold; color: var(--highlight); display: block; margin-bottom: 10px; }
         .version-tag { font-size: 10px; color: #444; letter-spacing: 1px; font-family: monospace; text-transform: uppercase; }
 
-        /* Volume Dock */
         .dock { padding: 20px 30px 35px; background: #000; border-top: 1px solid #222; flex-shrink: 0; }
         .vol-row { display: flex; align-items: center; gap: 15px; }
-        input[type=range] { flex: 1; -webkit-appearance: none; background: #333; height: 4px; border-radius: 2px; }
-        input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 20px; height: 20px; background: #fff; border-radius: 50%; cursor: pointer; border: 2px solid var(--accent); }
+        input[type=range] { flex: 1; }
     </style>
 </head>
 <body>
@@ -163,7 +130,7 @@
     <div class="scroll-content">
         <div class="hero-area">
             <div class="img-container">
-                <img id="mainImg" src="https://laut.fm/images/station_640x640.png" crossorigin="anonymous">
+                <img id="mainImg" src="https://laut.fm/images/station_640x640.png">
             </div>
             <button id="pBtn" onclick="toggle()">▶</button>
         </div>
@@ -175,9 +142,9 @@
         </div>
 
         <div class="footer-info">
-            <div id="stDesc">Suche manuell nach deinem Lieblingssender.</div>
+            <div id="stDesc">Suche nach deinem Sender.</div>
             <span id="hoerer" class="hoerer-info">0 HÖRER LIVE</span>
-            <div class="version-tag">Version v77.0 Build</div>
+            <div class="version-tag">Version 77.1 Image Fix</div>
         </div>
     </div>
 
@@ -197,33 +164,23 @@
     let dataJob = null;
     let showAll = false;
 
-    // Reset beim Start
-    window.onload = () => {
-        document.getElementById('sIn').value = "";
-    };
+    window.onload = () => { document.getElementById('sIn').value = ""; };
 
-    // Uhrzeit
     setInterval(() => { 
         document.getElementById('uhr').innerText = new Date().toLocaleTimeString('de-DE'); 
     }, 1000);
 
-    // Lautstärke
     document.getElementById('vol').oninput = (e) => { 
         au.volume = e.target.value; 
         document.getElementById('volPerc').innerText = Math.round(e.target.value * 100) + "%";
     };
 
-    // Suche
     function startManualSearch() {
         const val = document.getElementById('sIn').value.trim();
         if(!val) return;
-        
         currentSlug = val.toLowerCase().replace(/[^a-z0-9-]/g, '');
         au.src = "https://stream.laut.fm/" + currentSlug;
-        au.play().then(() => {
-            document.getElementById('pBtn').innerHTML = "⏸";
-        }).catch(e => console.log("Stream Error"));
-
+        au.play().then(() => { document.getElementById('pBtn').innerHTML = "⏸"; }).catch(e => {});
         updateUI();
         if(dataJob) clearInterval(dataJob);
         dataJob = setInterval(updateUI, 15000);
@@ -252,25 +209,25 @@
                 fetch("https://api.laut.fm/station/" + currentSlug + "/listeners").then(r => r.text())
             ]);
             document.getElementById('stNameDisplay').innerText = s.display_name;
-            document.getElementById('stDesc').innerText = s.description || "Keine Info.";
+            document.getElementById('stDesc').innerText = s.description || "";
             document.getElementById('hoerer').innerText = h + " PERSONEN LIVE";
             
-            // Bild-Fix für Smartphone (erzwingt HTTPS)
-            let newImg = s.images.station_640x640.replace('http://', 'https://');
-            if(newImg !== lastImg) { 
-                document.getElementById('mainImg').src = newImg; 
-                lastImg = newImg; 
-            }
+            // Wichtig: Wir nutzen assets.laut.fm statt der API-Bilder, falls vorhanden
+            let imgUrl = s.images.station_640x640.replace('http://', 'https://');
             
+            if(imgUrl !== lastImg) {
+                document.getElementById('mainImg').src = imgUrl;
+                lastImg = imgUrl;
+            }
+
             let html = "";
             const limit = showAll ? 10 : 3;
             l.slice(0, limit).forEach((song, i) => {
                 const time = new Date(song.started_at).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
-                html += `
-                    <div class="song-entry">
-                        <div class="time-cell">${i === 0 ? '<div class="viz '+(au.paused?'':'playing')+'"><div class="bar"></div><div class="bar"></div><div class="bar"></div></div>' : time}</div>
-                        <div class="song-info"><span class="artist">${song.artist.name}</span><span class="title">${song.title}</span></div>
-                    </div>`;
+                html += `<div class="song-entry">
+                    <div class="time-cell">${i === 0 ? '<div class="viz '+(au.paused?'':'playing')+'"><div class="bar"></div><div class="bar"></div><div class="bar"></div></div>' : time}</div>
+                    <div class="song-info"><span class="artist">${song.artist.name}</span><span class="title">${song.title}</span></div>
+                </div>`;
             });
             document.getElementById('songList').innerHTML = html;
         } catch(e) {}
