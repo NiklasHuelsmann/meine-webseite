@@ -1,119 +1,50 @@
-<!DOCTYPE html>
-<html lang="de">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Radio Pro GitHub-Fix</title>
-    <style>
-        :root { --bg: #000; --accent: #00d2ff; }
-        body { background: var(--bg); color: #fff; font-family: sans-serif; margin: 0; overflow: hidden; display: flex; justify-content: center; }
-        .app { width: 100%; max-width: 450px; height: 100vh; display: flex; flex-direction: column; }
-        header { padding: 20px; background: #111; border-bottom: 1px solid #333; }
-        .search-bar { display: flex; gap: 10px; background: #222; padding: 10px; border-radius: 10px; }
-        input { background: transparent; border: none; color: #fff; flex: 1; outline: none; }
-        .main { flex: 1; padding: 20px; overflow-y: auto; text-align: center; padding-bottom: 250px; }
-        #mainImg { width: 150px; height: 150px; border-radius: 15px; margin-bottom: 15px; box-shadow: 0 10px 20px rgba(0,0,0,0.5); }
-        .dock { position: fixed; bottom: 0; width: 100%; max-width: 450px; background: rgba(20,20,20,0.95); backdrop-filter: blur(10px); padding: 20px; border-top: 1px solid #333; }
-        #pBtn { width: 70px; height: 70px; border-radius: 50%; border: none; background: #fff; font-size: 30px; cursor: pointer; }
-        #status { font-size: 10px; color: var(--accent); margin-top: 10px; text-transform: uppercase; letter-spacing: 1px; }
-        .h-item { background: #111; margin-bottom: 5px; padding: 10px; border-radius: 8px; display: flex; gap: 10px; font-size: 13px; text-align: left; }
-        .h-time { color: var(--accent); font-weight: bold; }
-    </style>
-</head>
-<body>
-
-<div class="app">
-    <header>
-        <div class="search-bar">
-            <input type="text" id="sIn" placeholder="Sendername..." onkeypress="if(event.key==='Enter') search()">
-            <button onclick="search()" style="background:none; border:none; color:var(--accent); font-size:20px; cursor:pointer;">🔍</button>
-        </div>
-    </header>
-
-    <div class="main">
-        <img id="mainImg" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=">
-        <h2 id="stName">RADIO PRO</h2>
-        <div id="hoerer">---</div>
-        <div id="curT" style="margin: 20px 0; font-weight: bold;">Bereit zum Abspielen</div>
-        <div id="hList"></div>
-    </div>
-
-    <div class="dock">
-        <div style="display: flex; align-items: center; gap: 20px;">
-            <button id="pBtn" onclick="toggle()">▶</button>
-            <div style="flex: 1;">
-                <input type="range" id="vVol" min="0" max="1" step="0.01" value="0.8" style="width: 100%; accent-color: var(--accent);">
-                <div id="status">Standby</div>
-            </div>
-        </div>
-    </div>
-</div>
-
 <script>
+    // Audio-Objekt global und sofort bereitstellen
     const audio = new Audio();
     audio.crossOrigin = "anonymous";
     let slug = "";
-    let updateTimer = null;
 
-    // Volume Fix
-    document.getElementById('vVol').oninput = (e) => { audio.volume = e.target.value; };
-
+    // Such- und Startfunktion kombiniert
     async function search() {
         const val = document.getElementById('sIn').value;
         if(!val) return;
         slug = val.toLowerCase().trim().replace(/[^a-z0-9-]/g, '');
         
-        // Firefox-Unlock: Wir setzen die Quelle und versuchen sofort zu spielen
+        // Den Stream direkt vorbereiten
         audio.src = `https://stream.laut.fm/${slug}?t=${Date.now()}`;
+        document.getElementById('status').innerText = "BEREIT - PLAY DRÜCKEN";
         
-        document.getElementById('status').innerText = "VERBINDE...";
-        
-        playAudio();
-        
-        await loadData();
-        if(updateTimer) clearInterval(updateTimer);
-        updateTimer = setInterval(loadData, 15000);
+        // Daten im Hintergrund laden
+        loadData();
     }
 
+    // Der Button-Klick muss absolut direkt sein
     function toggle() {
-        if(!slug) return;
-        if(audio.paused) { playAudio(); } else { audio.pause(); document.getElementById('pBtn').innerHTML = "▶"; }
-    }
-
-    function playAudio() {
-        // Der entscheidende Befehl für GitHub Pages & Firefox
-        audio.play().then(() => {
-            document.getElementById('pBtn').innerHTML = "⏸";
+        if(!slug) {
+            alert("Bitte erst einen Sendernamen suchen!");
+            return;
+        }
+        
+        const btn = document.getElementById('pBtn');
+        if(audio.paused) {
+            // Absolut direkter Startbefehl ohne setTimeout oder Promises
+            audio.play();
+            btn.innerHTML = "⏸";
             document.getElementById('status').innerText = "LIVE";
-        }).catch(e => {
-            // Wenn Firefox blockt, zeigen wir es dem User
-            document.getElementById('status').innerText = "BLOCKIERT! KLICK PLAY!";
-            console.log("Autoplay blockiert:", e);
-        });
+        } else {
+            audio.pause();
+            btn.innerHTML = "▶";
+            document.getElementById('status').innerText = "GESTOPPT";
+        }
     }
 
+    // Daten separat laden, um den Audio-Thread nicht zu stören
     async function loadData() {
-        if(!slug) return;
         try {
-            const [s, l, h] = await Promise.all([
-                fetch(`https://api.laut.fm/station/${slug}`).then(r => r.json()),
-                fetch(`https://api.laut.fm/station/${slug}/last_songs`).then(r => r.json()),
-                fetch(`https://api.laut.fm/station/${slug}/listeners`).then(r => r.text())
-            ]);
+            const r = await fetch(`https://api.laut.fm/station/${slug}`);
+            const s = await r.json();
             document.getElementById('stName').innerText = s.display_name;
             document.getElementById('mainImg').src = s.images.station_640x640;
-            document.getElementById('hoerer').innerText = h + " Hörer online";
-            document.getElementById('curT').innerText = l[0].artist.name + " - " + l[0].title;
-            
-            let html = "";
-            l.slice(1, 6).forEach(song => {
-                const time = new Date(song.started_at).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
-                html += `<div class="h-item"><span class="h-time">${time}</span><span>${song.artist.name} - ${song.title}</span></div>`;
-            });
-            document.getElementById('hList').innerHTML = html;
         } catch(e) {}
     }
 </script>
-
-</body>
-</html>
