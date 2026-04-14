@@ -3,12 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Radio Ultimate v24.7 - Speaker Edition</title>
+    <title>Radio Ultimate v25.4 - Universal Browser Edition</title>
     <style>
         :root { --bg: #000000; --accent: #00d2ff; --card: #121212; --text: #ffffff; }
         * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; margin: 0; padding: 0; }
         body { background: var(--bg); color: var(--text); display: flex; justify-content: center; height: 100vh; overflow: hidden; }
         
+        /* App Shell - Optimiert für TV, Desktop und Mobile */
         .app-shell { width: 100%; max-width: 500px; background: #000; display: flex; flex-direction: column; border-left: 1px solid #222; border-right: 1px solid #222; position: relative; }
         
         header { padding: 15px; background: rgba(0,0,0,0.95); border-bottom: 1px solid #222; z-index: 100; }
@@ -16,49 +17,57 @@
         #sIn { background: transparent; border: none; color: #fff; flex: 1; outline: none; font-size: 16px; }
         .uhr-display { text-align: center; font-size: 14px; color: var(--accent); font-family: 'Courier New', monospace; margin-top: 8px; font-weight: bold; }
 
-        .scroll-content { flex: 1; overflow-y: auto; padding: 20px; padding-bottom: 180px; scroll-behavior: smooth; }
+        .scroll-content { flex: 1; overflow-y: auto; padding: 20px; padding-bottom: 220px; scroll-behavior: smooth; }
         
+        /* Sender Anzeige */
         .station-display { display: flex; align-items: center; gap: 15px; margin-bottom: 25px; background: var(--card); padding: 15px; border-radius: 20px; border: 1px solid #222; }
         #sideLogo { width: 60px; height: 60px; border-radius: 12px; border: 1px solid var(--accent); object-fit: cover; }
         
         .main-cover-box { margin-bottom: 25px; text-align: center; }
         #mainImg { width: 100%; aspect-ratio: 1/1; border-radius: 25px; object-fit: cover; box-shadow: 0 10px 30px rgba(0,0,0,0.8); border: 1px solid #333; }
         
-        /* LAUTSPRECHER ANIMATION */
-        .speaker-box { font-size: 30px; margin-bottom: 10px; transition: 0.3s; opacity: 0.3; }
-        .playing .speaker-box { opacity: 1; animation: pulse 0.6s infinite alternate; }
-        @keyframes pulse { from { transform: scale(1); } to { transform: scale(1.15); } }
-
         .current-track { text-align: center; margin-bottom: 30px; }
-        #curT { font-size: 1.2rem; font-weight: bold; padding: 0 10px; }
+        .song-line { display: flex; align-items: center; justify-content: center; gap: 10px; }
+        #curT { font-size: 1.2rem; font-weight: bold; }
+        
+        /* Lautsprecher Animation */
+        .speaker-icon { font-size: 22px; transition: 0.3s; opacity: 0.3; }
+        .playing .speaker-icon { opacity: 1; animation: pulse 0.6s infinite alternate; color: var(--accent); }
+        @keyframes pulse { from { transform: scale(1); } to { transform: scale(1.2); } }
+
+        /* Der Pendel-Ticker mit "spielt" */
+        .player-bar { position: absolute; bottom: 0; left: 0; right: 0; background: rgba(10,10,10,0.98); backdrop-filter: blur(25px); border-top: 1px solid #222; padding: 15px 20px 30px 20px; z-index: 200; }
+        .ticker-container { width: 100%; overflow: hidden; margin-bottom: 15px; background: #080808; padding: 12px; border-radius: 10px; white-space: nowrap; border: 1px solid #1a1a1a; }
+        #ticker { display: inline-block; color: var(--accent); font-weight: bold; font-size: 13px; padding-right: 60px; animation: swingAction 18s ease-in-out infinite; }
+        
+        @keyframes swingAction {
+            0%, 20% { transform: translateX(0); }
+            45%, 55% { transform: translateX(calc(-100% + 260px)); }
+            80%, 100% { transform: translateX(0); }
+        }
+
+        /* Controls */
+        .controls { display: flex; align-items: center; gap: 15px; }
+        .play-btn { width: 70px; height: 70px; border-radius: 50%; border: none; background: #fff; color: #000; font-size: 28px; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 15px rgba(255,255,255,0.2); }
         
         .history-card { display: flex; align-items: center; gap: 15px; background: #0a0a0a; padding: 12px; border-radius: 15px; margin-bottom: 10px; border: 1px solid #1a1a1a; }
         .h-time { font-family: monospace; font-size: 13px; color: var(--accent); font-weight: bold; }
-
-        .player-bar { position: absolute; bottom: 0; left: 0; right: 0; background: rgba(10,10,10,0.98); backdrop-filter: blur(25px); border-top: 1px solid #222; padding: 20px; z-index: 200; }
-        .controls { display: flex; align-items: center; gap: 15px; }
-        .play-btn { width: 65px; height: 65px; border-radius: 50%; border: none; background: #fff; color: #000; font-size: 26px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
-        
-        .ticker-wrap { overflow: hidden; white-space: nowrap; margin-bottom: 10px; color: var(--accent); font-weight: bold; font-size: 13px; text-align: center; }
-        #ticker { display: inline-block; animation: scroll 15s linear infinite; }
-        @keyframes scroll { 0% { transform: translateX(100%); } 100% { transform: translateX(-100%); } }
-        
-        .footer-meta { display: flex; justify-content: space-between; align-items: center; margin-top: 10px; font-size: 9px; color: #555; font-family: monospace; }
         input[type=range] { width: 100%; accent-color: var(--accent); cursor: pointer; }
+        .footer-meta { display: flex; justify-content: space-between; align-items: center; margin-top: 12px; font-size: 9px; color: #444; font-family: monospace; }
     </style>
 </head>
 <body onload="initApp()">
 
-<div class="app-shell">
+<div class="app-shell" id="app">
     <header>
         <div class="search-row">
-            <input type="text" id="sIn" placeholder="Sender + Enter..." onkeypress="if(event.key==='Enter') sync(this.value)">
+            <input type="text" id="sIn" placeholder="Sender Name..." onkeypress="if(event.key==='Enter') sync(this.value)">
             <span onclick="sync(document.getElementById('sIn').value)" style="cursor:pointer">🔍</span>
         </div>
         <div id="uhr" class="uhr-display">--:--:--</div>
     </header>
 
-    <div class="scroll-content" id="mainContainer">
+    <div class="scroll-content">
         <div class="station-display">
             <img id="sideLogo" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=">
             <div class="station-info">
@@ -72,19 +81,23 @@
         </div>
 
         <div class="current-track">
-            <div class="speaker-box">🔊</div>
-            <div id="curTime" style="font-size: 11px; color: #555;">--:-- UHR</div>
-            <div id="curT">Sender eingeben</div>
+            <div id="curTime" style="font-size: 11px; color:#555; margin-bottom:5px;">--:-- UHR</div>
+            <div class="song-line">
+                <div id="curT">Sender wählen...</div>
+                <div class="speaker-icon">🔊</div>
+            </div>
         </div>
 
-        <div class="history-section" id="hList"></div>
+        <div id="hList"></div>
     </div>
 
     <div class="player-bar">
-        <div class="ticker-wrap"><div id="ticker">+++ RADIO ULTIMATE v24.7 +++</div></div>
+        <div class="ticker-container">
+            <div id="ticker">SENDER BEREIT spielt...</div>
+        </div>
         <div class="controls">
             <button id="pBtn" class="play-btn" onclick="togglePlay()">▶</button>
-            <div class="vol-box">
+            <div class="vol-box" style="flex:1;">
                 <div style="display:flex; justify-content: space-between; font-size: 10px; margin-bottom: 5px;">
                     <span>LAUTSTÄRKE</span><span id="volP">80%</span>
                 </div>
@@ -93,7 +106,7 @@
         </div>
         <div class="footer-meta">
             <span id="streamUrl">https://stream.laut.fm/</span>
-            <span>VERSION v24.7</span>
+            <span>RADIO ULTIMATE v25.4 (Chrome/Edge/TV Ready)</span>
         </div>
     </div>
 </div>
@@ -103,7 +116,7 @@
     const vControl = document.getElementById('vControl');
     const volP = document.getElementById('volP');
     const btn = document.getElementById('pBtn');
-    const container = document.querySelector('.app-shell');
+    const app = document.getElementById('app');
     let slug = "";
     let dataInterval;
 
@@ -121,7 +134,7 @@
         if(!v) return;
         slug = v.toLowerCase().trim().replace(/\s+/g, '-');
         document.getElementById('streamUrl').innerText = "https://stream.laut.fm/" + slug;
-        if(audioObj) { audioObj.pause(); audioObj = null; btn.innerHTML = "▶"; container.classList.remove('playing'); }
+        if(audioObj) { audioObj.pause(); audioObj = null; btn.innerHTML = "▶"; app.classList.remove('playing'); }
         if(dataInterval) clearInterval(dataInterval);
         loadData();
         dataInterval = setInterval(loadData, 15000);
@@ -130,20 +143,23 @@
     function togglePlay() {
         if(!slug) return;
         if(!audioObj || audioObj.paused) {
+            // Timestamp verhindert Caching in Chrome, Edge & Firefox gleichermaßen
             audioObj = new Audio(`https://stream.laut.fm/${slug}?t=${Date.now()}`);
             audioObj.crossOrigin = "anonymous";
             audioObj.volume = vControl.value;
             audioObj.play().then(() => {
                 btn.innerHTML = "⏸";
                 btn.style.background = "#00d2ff";
-                container.classList.add('playing');
-            }).catch(e => console.log("Start via Klick"));
+                app.classList.add('playing');
+            }).catch(e => {
+                console.log("Interaktion erforderlich.");
+            });
         } else {
             audioObj.pause();
             audioObj = null; 
             btn.innerHTML = "▶";
             btn.style.background = "#fff";
-            container.classList.remove('playing');
+            app.classList.remove('playing');
         }
     }
 
@@ -154,15 +170,21 @@
             const songs = await fetch(`https://api.laut.fm/station/${slug}/last_songs`).then(r => r.json());
             const listen = await fetch(`https://api.laut.fm/station/${slug}/listeners`).then(r => r.text());
 
+            const sName = data.display_name.toUpperCase();
+            const currentSong = songs[0];
+            const albumName = currentSong.album ? currentSong.album.toUpperCase() : "SINGLE/LIVE";
+            const trackString = currentSong.artist.name.toUpperCase() + " - " + currentSong.title.toUpperCase();
+
             document.getElementById('stName').innerText = data.display_name;
             document.getElementById('mainImg').src = data.images.station_640x640;
             document.getElementById('sideLogo').src = data.images.station_80x80;
             document.getElementById('hoerer').innerText = listen + " HÖRER";
-
-            const track = songs[0].artist.name + " - " + songs[0].title;
-            document.getElementById('curT').innerText = track;
-            document.getElementById('curTime').innerText = new Date(songs[0].started_at).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) + " UHR";
-            document.getElementById('ticker').innerText = "+++ LIVE: " + track + " +++";
+            document.getElementById('curT').innerText = currentSong.artist.name + " - " + currentSong.title;
+            document.getElementById('curTime').innerText = new Date(currentSong.started_at).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) + " UHR";
+            
+            // Ticker: Name + spielt (klein) + Album + Song
+            document.getElementById('ticker').innerText = 
+                `${sName} spielt | ALBUM: ${albumName} | AKTUELL: ${trackString}`;
 
             let html = "";
             songs.slice(1, 15).forEach(s => {
