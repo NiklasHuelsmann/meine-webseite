@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Brian-Radio Final Edition</title>
+    <title>Brian-Radio Final Build</title>
     <style>
         :root { 
             --bg-global: #050505; 
@@ -37,6 +37,7 @@
         header { padding: 20px 20px 10px; text-align: center; flex-shrink: 0; }
         .uhr { font-family: monospace; font-size: 14px; color: var(--accent); margin-bottom: 10px; }
         
+        /* Suche-Bereich */
         .search-area { 
             background: rgba(255,255,255,0.07); 
             border-radius: 15px; 
@@ -44,8 +45,11 @@
             padding: 10px 15px; 
             border: 1px solid #333; 
             margin-bottom: 10px; 
+            align-items: center;
         }
         .search-area input { background: transparent; border: none; color: #fff; width: 100%; font-size: 16px; outline: none; }
+        .search-btn { cursor: pointer; font-size: 18px; padding-left: 10px; transition: transform 0.1s; }
+        .search-btn:active { transform: scale(1.2); }
         
         #stNameDisplay { 
             font-size: 24px; 
@@ -91,9 +95,7 @@
             background: #fff; color: #000; font-size: 38px; cursor: pointer;
             display: flex; align-items: center; justify-content: center;
             box-shadow: 0 8px 25px rgba(0,0,0,0.4);
-            transition: transform 0.1s;
         }
-        #pBtn:active { transform: scale(0.92); }
 
         .list-section { margin-top: 10px; }
         .headline { font-size: 18px; font-weight: bold; margin-bottom: 20px; display: block; }
@@ -127,14 +129,7 @@
         #stDesc { font-size: 14px; color: #aaa; line-height: 1.6; margin-bottom: 15px; text-align: left; }
         .hoerer-info { font-size: 12px; font-weight: bold; color: var(--highlight); display: block; margin-bottom: 10px; }
         
-        /* Versionsnummer Design */
-        .version-tag { 
-            font-size: 10px; 
-            color: #444; 
-            letter-spacing: 1px; 
-            font-family: monospace;
-            text-transform: uppercase;
-        }
+        .version-tag { font-size: 10px; color: #444; letter-spacing: 1px; font-family: monospace; text-transform: uppercase; }
 
         .dock { padding: 20px 30px 35px; background: #000; border-top: 1px solid #222; flex-shrink: 0; }
         .vol-row { display: flex; align-items: center; gap: 15px; }
@@ -147,10 +142,10 @@
     <header>
         <div id="uhr" class="uhr">00:00:00</div>
         <div class="search-area">
-            <input type="text" id="sIn" placeholder="Sender suchen..." onkeydown="if(event.key==='Enter') switchStation()">
-            <span onclick="switchStation()" style="cursor:pointer">🔍</span>
+            <input type="text" id="sIn" placeholder="Sendernamen eingeben..." onkeydown="if(event.key==='Enter') startManualSearch()">
+            <span class="search-btn" onclick="startManualSearch()">🔍</span>
         </div>
-        <div id="stNameDisplay">STARTBEREIT</div>
+        <div id="stNameDisplay">BEREIT</div>
     </header>
 
     <div class="scroll-content">
@@ -168,9 +163,9 @@
         </div>
 
         <div class="footer-info">
-            <div id="stDesc">Wähle einen Sender aus.</div>
+            <div id="stDesc">Suche manuell nach deinem Lieblingssender.</div>
             <span id="hoerer" class="hoerer-info">0 HÖRER LIVE</span>
-            <div class="version-tag">Version 76.5 Premium Build</div>
+            <div class="version-tag">Version 76.8 Final Build</div>
         </div>
     </div>
 
@@ -190,23 +185,35 @@
     let dataJob = null;
     let showAll = false;
 
-    setInterval(() => { document.getElementById('uhr').innerText = new Date().toLocaleTimeString('de-DE'); }, 1000);
+    setInterval(() => { 
+        document.getElementById('uhr').innerText = new Date().toLocaleTimeString('de-DE'); 
+    }, 1000);
 
     document.getElementById('vol').oninput = (e) => { 
         au.volume = e.target.value; 
         document.getElementById('volPerc').innerText = Math.round(e.target.value * 100) + "%";
     };
 
-    function switchStation() {
+    // Nur diese Funktion löst die Suche aus
+    function startManualSearch() {
         const val = document.getElementById('sIn').value.trim();
         if(!val) return;
+        
+        // Slug bereinigen
         currentSlug = val.toLowerCase().replace(/[^a-z0-9-]/g, '');
+        
+        // Stream starten
         au.src = "https://stream.laut.fm/" + currentSlug;
-        au.play();
-        document.getElementById('pBtn').innerHTML = "⏸";
+        au.play().then(() => {
+            document.getElementById('pBtn').innerHTML = "⏸";
+        }).catch(e => console.log("Stream Error"));
+
+        // UI & Updates
         updateUI();
         if(dataJob) clearInterval(dataJob);
         dataJob = setInterval(updateUI, 15000);
+        
+        // Tastatur einklappen
         document.activeElement.blur();
     }
 
