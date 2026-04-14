@@ -3,69 +3,134 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Brian-Radio App-Original</title>
+    <title>Brian-Radio App-Fokus</title>
     <style>
-        :root { --bg: #1a1e29; --accent: #00d2ff; --surface: #252a38; --highlight: #00f2c3; }
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        body { background: var(--bg); color: #fff; font-family: sans-serif; margin: 0; display: flex; justify-content: center; height: 100vh; overflow: hidden; }
-        
-        .app { width: 100%; max-width: 500px; display: flex; flex-direction: column; position: relative; }
-        
-        /* Header mit Uhr & Suche */
-        header { padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; background: var(--bg); z-index: 10; }
-        .uhr { font-family: monospace; font-size: 16px; color: #fff; opacity: 0.8; }
-        .search-area { background: #00000033; border-radius: 8px; display: flex; padding: 5px 10px; width: 50%; border: 1px solid #ffffff11; }
-        .search-area input { background: transparent; border: none; color: #fff; width: 100%; font-size: 13px; outline: none; }
+        :root { 
+            --bg-global: #050505; /* Tiefschwarz für den PC-Hintergrund */
+            --bg-app: #0d1117;    /* Dunkelgrau für den App-Bereich */
+            --accent: #00d2ff; 
+            --highlight: #00f2c3; 
+        }
 
-        /* Scroll-Inhalt (Hier wie im Screenshot) */
-        .scroll-content { flex: 1; overflow-y: auto; padding: 20px; scrollbar-width: none; }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+        body { 
+            background-color: var(--bg-global); /* PC-Hintergrund ist jetzt dunkel */
+            color: #fff; 
+            font-family: -apple-system, sans-serif; 
+            margin: 0; 
+            display: flex; 
+            justify-content: center; /* App mittig auf PC */
+            min-height: 100vh; 
+            overflow: hidden;
+        }
+
+        /* Ambient Glow ist jetzt AUS dem globalen Hintergrund entfernt */
+
+        .app { 
+            width: 100%; 
+            max-width: 500px; /* Feste Breite für den App-Look auf PC */
+            display: flex; 
+            flex-direction: column; 
+            position: relative; 
+            background-color: var(--bg-app);
+            border-left: 1px solid #222; /* Leichter Rand für PC-Ansicht */
+            border-right: 1px solid #222;
+            box-shadow: 0 0 100px rgba(0,0,0,0.8); /* Tiefer Schattenwurf auf PC-Hintergrund */
+        }
+        
+        header { padding: 30px 20px 10px; text-align: center; }
+        .uhr { font-family: monospace; font-size: 14px; color: var(--accent); margin-bottom: 15px; opacity: 0.8; }
+        
+        .search-area { 
+            background: rgba(255,255,255,0.05); 
+            border-radius: 12px; 
+            display: flex; 
+            padding: 8px 15px; 
+            border: 1px solid #333; 
+            margin-bottom: 20px; 
+        }
+        .search-area input { background: transparent; border: none; color: #fff; width: 100%; font-size: 15px; outline: none; }
+        
+        #stNameDisplay { 
+            font-size: 28px; 
+            font-weight: 900; 
+            letter-spacing: 1px; 
+            text-transform: uppercase; 
+            margin: 10px 0;
+            color: #fff;
+        }
+
+        .scroll-content { flex: 1; overflow-y: auto; padding: 0 20px 120px; scrollbar-width: none; }
         .scroll-content::-webkit-scrollbar { display: none; }
 
-        .headline { font-size: 24px; font-weight: bold; font-style: italic; margin-bottom: 25px; display: block; }
+        /* ZENTRALES LOGO MIT INTERNEM GLOW */
+        .hero-area { 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            padding: 20px 0 50px; 
+            position: relative;
+        }
         
-        /* Song Liste Design wie im Foto */
-        .song-list { display: flex; flex-direction: column; gap: 20px; }
-        .song-entry { display: flex; gap: 15px; align-items: flex-start; }
-        .time-label { font-size: 13px; color: #ffffff88; min-width: 45px; margin-top: 2px; }
+        /* Neuer interner Glow-Effekt, nur hinter dem Logo */
+        .hero-area::before {
+            content: '';
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            width: 350px; height: 350px;
+            background: radial-gradient(circle, rgba(0,210,255,0.2) 0%, transparent 70%);
+            border-radius: 50%;
+            z-index: 0;
+            filter: blur(40px);
+        }
+
+        .img-container { position: relative; width: 260px; height: 260px; margin-bottom: -45px; z-index: 1; }
+        #mainImg { 
+            width: 100%; height: 100%; border-radius: 50px; 
+            object-fit: cover; border: 2px solid #333; 
+            box-shadow: 0 20px 50px rgba(0,0,0,0.7); 
+            transition: opacity 0.5s ease;
+        }
+        
+        #pBtn { 
+            width: 85px; height: 85px; border-radius: 50%; border: none; 
+            background: #fff; color: #000; font-size: 38px; cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5); z-index: 5;
+        }
+
+        /* PLAYLIST */
+        .list-section { margin-top: 60px; }
+        .headline { font-size: 20px; font-weight: bold; font-style: italic; margin-bottom: 25px; color: #eee; border-left: 4px solid var(--highlight); padding-left: 10px; }
+        
+        .song-entry { display: flex; gap: 15px; margin-bottom: 22px; align-items: flex-start; }
+        .time-cell { min-width: 55px; font-size: 13px; color: #888; font-weight: bold; }
         .song-info { flex: 1; }
-        .artist { font-weight: bold; font-size: 16px; display: block; margin-bottom: 2px; }
-        .title { color: #ffffffaa; font-size: 14px; }
-        
-        /* Visualizer im obersten Song */
-        .viz-icon { width: 20px; height: 20px; display: flex; align-items: flex-end; gap: 2px; }
+        .artist { font-weight: bold; font-size: 17px; display: block; color: #fff; }
+        .title { color: #888; font-size: 14px; }
+
+        /* VISUALIZER */
+        .viz { display: flex; align-items: flex-end; gap: 2px; height: 18px; }
         .bar { width: 3px; background: var(--highlight); height: 4px; border-radius: 1px; }
         .playing .bar { animation: bounce 0.8s ease infinite alternate; }
         .bar:nth-child(2) { animation-delay: 0.2s; }
         .bar:nth-child(3) { animation-delay: 0.4s; }
         @keyframes bounce { from { height: 4px; } to { height: 18px; } }
 
-        /* Mehr Anzeigen Button */
-        #moreBtn { 
-            background: none; border: none; color: var(--highlight); 
-            font-weight: bold; font-size: 14px; cursor: pointer; 
-            margin: 25px auto; display: block; text-align: center;
-        }
+        #moreBtn { background: #ffffff05; border: 1px solid #333; color: var(--highlight); font-weight: bold; padding: 12px; width: 100%; border-radius: 12px; cursor: pointer; margin-bottom: 40px; }
 
-        /* Sender Details (Unten) */
-        .details-box { margin-top: 40px; padding-top: 20px; border-top: 1px solid #ffffff11; }
-        .details-box h2 { font-size: 20px; margin: 0 0 10px 0; color: var(--accent); }
-        .details-box p { font-size: 14px; color: #ffffff99; line-height: 1.6; }
-        .hoerer-badge { font-size: 12px; font-weight: bold; color: var(--highlight); background: #00f2c311; padding: 5px 12px; border-radius: 20px; display: inline-block; }
+        /* FOOTER DETAILS */
+        .footer-info { padding: 25px; background: #161b22; border-radius: 25px; border: 1px solid #333; margin-top: 20px; }
+        #stDesc { font-size: 15px; color: #aaa; line-height: 1.6; margin-bottom: 20px; }
+        .badge { display: inline-block; padding: 6px 15px; background: #00f2c315; color: var(--highlight); border-radius: 20px; font-size: 13px; font-weight: bold; border: 1px solid #00f2c333; }
 
-        /* Player Dock unten (Die dunkle Leiste) */
-        .player-dock { 
-            background: #12151e; border-top: 1px solid #ffffff11; 
-            padding: 15px 20px calc(20px + env(safe-area-inset-bottom));
-            display: flex; align-items: center; gap: 15px;
-        }
-        #mainImg { width: 50px; height: 50px; border-radius: 8px; object-fit: cover; }
-        .dock-info { flex: 1; overflow: hidden; }
-        .dock-station { font-size: 12px; font-weight: bold; text-transform: uppercase; color: #fff; }
-        .dock-song { font-size: 11px; color: #ffffff88; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        
-        #pBtn { background: none; border: none; color: var(--highlight); font-size: 30px; cursor: pointer; }
-
-        .volume-pop { position: absolute; bottom: 85px; right: 20px; background: var(--surface); padding: 10px; border-radius: 10px; display: none; flex-direction: column; align-items: center; border: 1px solid #444; }
+        /* VOLUME BAR DOCK */
+        .dock { padding: 20px 30px calc(25px + env(safe-area-inset-bottom)); background: #000; border-top: 1px solid #222; }
+        .vol-row { display: flex; align-items: center; gap: 20px; }
+        input[type=range] { flex: 1; -webkit-appearance: none; background: #333; height: 5px; border-radius: 3px; }
+        input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 22px; height: 22px; background: #fff; border-radius: 50%; cursor: pointer; border: 3px solid var(--accent); }
     </style>
 </head>
 <body>
@@ -74,35 +139,37 @@
     <header>
         <div id="uhr" class="uhr">00:00:00</div>
         <div class="search-area">
-            <input type="text" id="sIn" placeholder="Suche" onkeydown="if(event.key==='Enter') startRadio()">
-            <span onclick="startRadio()" style="cursor:pointer">🔍</span>
+            <input type="text" id="sIn" placeholder="Sender suchen..." onkeydown="if(event.key==='Enter') switchStation()">
+            <span onclick="switchStation()" style="cursor:pointer; font-size: 20px;">🔍</span>
         </div>
+        <div id="stNameDisplay">RADIO PRO</div>
     </header>
 
     <div class="scroll-content">
-        <span class="headline">Jetzt läuft</span>
-        
-        <div id="hList" class="song-list">
+        <div class="hero-area">
+            <div class="img-container">
+                <img id="mainImg" src="https://laut.fm/images/station_640x640.png">
             </div>
+            <button id="pBtn" onclick="toggle()">▶</button>
+        </div>
 
-        <button id="moreBtn" onclick="toggleMore()">mehr Songs anzeigen</button>
+        <div class="list-section">
+            <span class="headline">Zuletzt gelaufen</span>
+            <div id="songList"></div>
+            <button id="moreBtn" onclick="toggleMore()">mehr Songs anzeigen</button>
+        </div>
 
-        <div class="details-box">
-            <h2 id="stName">Brian-Radio</h2>
-            <div id="stDesc">Lade Senderbeschreibung...</div>
-            <div id="hoerer" class="hoerer-badge">0 Hörer live</div>
+        <div class="footer-info">
+            <div id="stDesc">Suche einen Sender, um zu starten.</div>
+            <div id="hoerer" class="badge">0 Hörer live</div>
         </div>
     </div>
 
-    <div class="player-dock">
-        <img id="mainImg" src="https://laut.fm/images/station_640x640.png">
-        <div class="dock-info">
-            <div id="dockStation" class="dock-station">SENDER WÄHLEN</div>
-            <div id="dockSong" class="dock-song">Warte auf Musik...</div>
-        </div>
-        <div style="display:flex; align-items:center; gap:15px;">
-            <input type="range" id="vol" min="0" max="1" step="0.01" value="0.8" style="width:60px;">
-            <button id="pBtn" onclick="toggle()">▶</button>
+    <div class="dock">
+        <div class="vol-row">
+            <span style="font-size: 20px;">🔈</span>
+            <input type="range" id="vol" min="0" max="1" step="0.01" value="0.8">
+            <span id="volPerc" style="font-family: monospace; font-weight: bold; width: 45px; color: var(--accent);">80%</span>
         </div>
     </div>
 </div>
@@ -110,14 +177,20 @@
 <script>
     const au = new Audio();
     let currentSlug = "";
+    let lastImg = "";
     let dataJob = null;
-    let showAllSongs = false;
+    let showAll = false;
 
+    // Uhrzeit
     setInterval(() => { document.getElementById('uhr').innerText = new Date().toLocaleTimeString('de-DE'); }, 1000);
 
-    document.getElementById('vol').oninput = (e) => { au.volume = e.target.value; };
+    // Lautstärke
+    document.getElementById('vol').oninput = (e) => { 
+        au.volume = e.target.value; 
+        document.getElementById('volPerc').innerText = Math.round(e.target.value * 100) + "%";
+    };
 
-    function startRadio() {
+    function switchStation() {
         const val = document.getElementById('sIn').value.trim();
         if(!val) return;
         currentSlug = val.toLowerCase().replace(/[^a-z0-9-]/g, '');
@@ -134,11 +207,12 @@
         if(!currentSlug) return;
         if(au.paused) { au.play(); document.getElementById('pBtn').innerHTML = "⏸"; }
         else { au.pause(); document.getElementById('pBtn').innerHTML = "▶"; }
+        updateUI();
     }
 
     function toggleMore() {
-        showAllSongs = !showAllSongs;
-        document.getElementById('moreBtn').innerText = showAllSongs ? "weniger anzeigen" : "mehr Songs anzeigen";
+        showAll = !showAll;
+        document.getElementById('moreBtn').innerText = showAll ? "weniger anzeigen" : "mehr Songs anzeigen";
         updateUI();
     }
 
@@ -151,24 +225,30 @@
                 fetch("https://api.laut.fm/station/" + currentSlug + "/listeners").then(r => r.text())
             ]);
 
-            // Bilder & Namen
-            document.getElementById('mainImg').src = s.images.station_640x640.replace('http://', 'https://');
-            document.getElementById('stName').innerText = s.display_name;
-            document.getElementById('dockStation').innerText = s.display_name;
-            document.getElementById('stDesc').innerText = s.description || "Willkommen beim Radio.";
-            document.getElementById('hoerer').innerText = h + " Hörer live";
-            document.getElementById('dockSong').innerText = l[0].artist.name + " - " + l[0].title;
+            document.getElementById('stNameDisplay').innerText = s.display_name;
+            document.getElementById('stDesc').innerText = s.description || "Keine Beschreibung verfügbar.";
+            document.getElementById('hoerer').innerText = h + " PERSONEN LIVE";
 
-            // Songliste bauen
+            // Bild-Wechsel
+            let newImg = s.images.station_640x640.replace('http://', 'https://');
+            if(newImg !== lastImg) {
+                const img = document.getElementById('mainImg');
+                img.style.opacity = 0;
+                setTimeout(() => {
+                    img.src = newImg;
+                    img.onload = () => img.style.opacity = 1;
+                }, 300);
+                lastImg = newImg;
+            }
+
             let html = "";
-            const displayLimit = showAllSongs ? 12 : 4;
-            l.slice(0, displayLimit).forEach((song, index) => {
+            const limit = showAll ? 12 : 3;
+            l.slice(0, limit).forEach((song, i) => {
                 const time = new Date(song.started_at).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
-                const isFirst = index === 0;
-                
+                const isNow = i === 0;
                 html += `
                     <div class="song-entry">
-                        <div class="time-label">${isFirst ? '<div id="viz" class="viz-icon playing"><div class="bar"></div><div class="bar"></div><div class="bar"></div></div>' : time}</div>
+                        <div class="time-cell">${isNow ? '<div class="viz '+(au.paused?'':'playing')+'"><div class="bar"></div><div class="bar"></div><div class="bar"></div></div>' : time}</div>
                         <div class="song-info">
                             <span class="artist">${song.artist.name}</span>
                             <span class="title">${song.title}</span>
@@ -176,9 +256,7 @@
                     </div>
                 `;
             });
-            document.getElementById('hList').innerHTML = html;
-            if(!au.paused) document.getElementById('viz').classList.add('playing');
-
+            document.getElementById('songList').innerHTML = html;
         } catch(e) {}
     }
 </script>
