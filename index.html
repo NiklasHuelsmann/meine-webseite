@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Brian-Radio Final Touch</title>
+    <title>Brian-Radio Final Edition</title>
     <style>
         :root { 
             --bg-global: #050505; 
@@ -22,7 +22,7 @@
             display: flex; 
             justify-content: center; 
             height: 100vh; 
-            overflow: hidden; /* Verhindert das Wackeln der ganzen Seite */
+            overflow: hidden; 
         }
 
         .app { 
@@ -34,7 +34,6 @@
             position: relative;
         }
         
-        /* Header Fixiert */
         header { padding: 20px 20px 10px; text-align: center; flex-shrink: 0; }
         .uhr { font-family: monospace; font-size: 14px; color: var(--accent); margin-bottom: 10px; }
         
@@ -53,22 +52,19 @@
             font-weight: 900; 
             text-transform: uppercase; 
             margin: 5px 0;
-            white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
         }
 
-        /* Scroll-Bereich optimiert für Smartphone-Touch */
         .scroll-content { 
             flex: 1; 
             overflow-y: auto; 
-            -webkit-overflow-scrolling: touch; /* Erlaubt weiches Scrollen auf iPhone/Android */
+            -webkit-overflow-scrolling: touch; 
             padding: 0 20px 40px; 
             scrollbar-width: none; 
         }
         .scroll-content::-webkit-scrollbar { display: none; }
 
-        /* Zentrierung Logo & Play */
         .hero-area { 
             display: flex; 
             flex-direction: column; 
@@ -80,7 +76,6 @@
             width: 280px; 
             height: 280px; 
             margin-bottom: 25px; 
-            position: relative;
         }
 
         #mainImg { 
@@ -92,40 +87,26 @@
         }
         
         #pBtn { 
-            width: 85px; 
-            height: 85px; 
-            border-radius: 50%; 
-            border: none; 
-            background: #fff; 
-            color: #000; 
-            font-size: 38px; 
-            cursor: pointer;
-            display: flex; 
-            align-items: center; 
-            justify-content: center;
+            width: 85px; height: 85px; border-radius: 50%; border: none; 
+            background: #fff; color: #000; font-size: 38px; cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
             box-shadow: 0 8px 25px rgba(0,0,0,0.4);
             transition: transform 0.1s;
         }
-        #pBtn:active { transform: scale(0.92); } /* Feedback beim Drücken */
+        #pBtn:active { transform: scale(0.92); }
 
-        /* Playlist */
         .list-section { margin-top: 10px; }
         .headline { font-size: 18px; font-weight: bold; margin-bottom: 20px; display: block; }
         
         .song-entry { 
-            display: flex; 
-            gap: 15px; 
-            margin-bottom: 20px; 
-            padding: 10px;
-            background: rgba(255,255,255,0.03);
-            border-radius: 12px;
+            display: flex; gap: 15px; margin-bottom: 15px; padding: 12px;
+            background: rgba(255,255,255,0.03); border-radius: 15px;
         }
         .time-cell { min-width: 45px; font-size: 12px; color: var(--accent); font-weight: bold; }
         .song-info { flex: 1; overflow: hidden; }
         .artist { font-weight: bold; font-size: 15px; display: block; color: #fff; }
         .title { color: #999; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
-        /* Visualizer */
         .viz { display: flex; align-items: flex-end; gap: 2px; height: 16px; }
         .bar { width: 3px; background: var(--highlight); height: 4px; }
         .playing .bar { animation: bounce 0.8s ease infinite alternate; }
@@ -134,31 +115,30 @@
         @keyframes bounce { from { height: 4px; } to { height: 16px; } }
 
         #moreBtn { 
-            background: rgba(255,255,255,0.05); 
-            border: 1px solid #333; 
-            color: #fff; 
-            font-weight: bold; 
-            padding: 15px; 
-            width: 100%; 
-            border-radius: 12px;
-            cursor: pointer; 
-            margin: 10px 0 30px;
+            background: rgba(255,255,255,0.05); border: 1px solid #333; color: #fff; 
+            font-weight: bold; padding: 15px; width: 100%; border-radius: 12px;
+            cursor: pointer; margin: 10px 0 30px;
         }
 
-        /* Footer Info */
         .footer-info { 
-            padding: 20px; 
-            background: rgba(0,0,0,0.2); 
-            border-radius: 20px; 
-            border: 1px solid #222; 
+            padding: 20px; background: rgba(0,0,0,0.2); 
+            border-radius: 20px; border: 1px solid #222; text-align: center;
         }
-        #stDesc { font-size: 14px; color: #aaa; line-height: 1.6; margin-bottom: 15px; }
-        .hoerer-info { font-size: 12px; font-weight: bold; color: var(--highlight); letter-spacing: 1px; }
+        #stDesc { font-size: 14px; color: #aaa; line-height: 1.6; margin-bottom: 15px; text-align: left; }
+        .hoerer-info { font-size: 12px; font-weight: bold; color: var(--highlight); display: block; margin-bottom: 10px; }
+        
+        /* Versionsnummer Design */
+        .version-tag { 
+            font-size: 10px; 
+            color: #444; 
+            letter-spacing: 1px; 
+            font-family: monospace;
+            text-transform: uppercase;
+        }
 
-        /* Volume unten fixiert */
         .dock { padding: 20px 30px 35px; background: #000; border-top: 1px solid #222; flex-shrink: 0; }
         .vol-row { display: flex; align-items: center; gap: 15px; }
-        input[type=range] { flex: 1; height: 6px; border-radius: 3px; cursor: pointer; }
+        input[type=range] { flex: 1; }
     </style>
 </head>
 <body>
@@ -168,7 +148,7 @@
         <div id="uhr" class="uhr">00:00:00</div>
         <div class="search-area">
             <input type="text" id="sIn" placeholder="Sender suchen..." onkeydown="if(event.key==='Enter') switchStation()">
-            <span onclick="switchStation()" style="cursor:pointer; font-size: 18px;">🔍</span>
+            <span onclick="switchStation()" style="cursor:pointer">🔍</span>
         </div>
         <div id="stNameDisplay">STARTBEREIT</div>
     </header>
@@ -188,16 +168,17 @@
         </div>
 
         <div class="footer-info">
-            <div id="stDesc">Wähle einen Sender aus, um Details zu sehen.</div>
-            <div id="hoerer" class="hoerer-info">0 HÖRER LIVE</div>
+            <div id="stDesc">Wähle einen Sender aus.</div>
+            <span id="hoerer" class="hoerer-info">0 HÖRER LIVE</span>
+            <div class="version-tag">Version 76.5 Premium Build</div>
         </div>
     </div>
 
     <div class="dock">
         <div class="vol-row">
-            <span style="font-size: 18px;">🔈</span>
+            <span>🔈</span>
             <input type="range" id="vol" min="0" max="1" step="0.01" value="0.8">
-            <span id="volPerc" style="font-family: monospace; width: 40px; font-weight: bold; color: var(--accent);">80%</span>
+            <span id="volPerc" style="font-family: monospace; width: 40px; color: var(--accent);">80%</span>
         </div>
     </div>
 </div>
@@ -209,12 +190,8 @@
     let dataJob = null;
     let showAll = false;
 
-    // Uhrzeit Update
-    setInterval(() => { 
-        document.getElementById('uhr').innerText = new Date().toLocaleTimeString('de-DE'); 
-    }, 1000);
+    setInterval(() => { document.getElementById('uhr').innerText = new Date().toLocaleTimeString('de-DE'); }, 1000);
 
-    // Lautstärke Regler
     document.getElementById('vol').oninput = (e) => { 
         au.volume = e.target.value; 
         document.getElementById('volPerc').innerText = Math.round(e.target.value * 100) + "%";
@@ -235,13 +212,8 @@
 
     function toggle() {
         if(!currentSlug) return;
-        if(au.paused) { 
-            au.play(); 
-            document.getElementById('pBtn').innerHTML = "⏸"; 
-        } else { 
-            au.pause(); 
-            document.getElementById('pBtn').innerHTML = "▶"; 
-        }
+        if(au.paused) { au.play(); document.getElementById('pBtn').innerHTML = "⏸"; }
+        else { au.pause(); document.getElementById('pBtn').innerHTML = "▶"; }
         updateUI();
     }
 
@@ -259,31 +231,20 @@
                 fetch("https://api.laut.fm/station/" + currentSlug + "/last_songs").then(r => r.json()),
                 fetch("https://api.laut.fm/station/" + currentSlug + "/listeners").then(r => r.text())
             ]);
-
             document.getElementById('stNameDisplay').innerText = s.display_name;
-            document.getElementById('stDesc').innerText = s.description || "Keine Beschreibung vorhanden.";
+            document.getElementById('stDesc').innerText = s.description || "Keine Info.";
             document.getElementById('hoerer').innerText = h + " PERSONEN LIVE";
-
             let newImg = s.images.station_640x640.replace('http://', 'https://');
-            if(newImg !== lastImg) {
-                document.getElementById('mainImg').src = newImg;
-                lastImg = newImg;
-            }
-
+            if(newImg !== lastImg) { document.getElementById('mainImg').src = newImg; lastImg = newImg; }
             let html = "";
             const limit = showAll ? 10 : 3;
             l.slice(0, limit).forEach((song, i) => {
                 const time = new Date(song.started_at).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
-                const isNow = i === 0;
                 html += `
                     <div class="song-entry">
-                        <div class="time-cell">${isNow ? '<div class="viz '+(au.paused?'':'playing')+'"><div class="bar"></div><div class="bar"></div><div class="bar"></div></div>' : time}</div>
-                        <div class="song-info">
-                            <span class="artist">${song.artist.name}</span>
-                            <span class="title">${song.title}</span>
-                        </div>
-                    </div>
-                `;
+                        <div class="time-cell">${i === 0 ? '<div class="viz '+(au.paused?'':'playing')+'"><div class="bar"></div><div class="bar"></div><div class="bar"></div></div>' : time}</div>
+                        <div class="song-info"><span class="artist">${song.artist.name}</span><span class="title">${song.title}</span></div>
+                    </div>`;
             });
             document.getElementById('songList').innerHTML = html;
         } catch(e) {}
