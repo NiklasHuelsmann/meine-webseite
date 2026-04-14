@@ -3,160 +3,41 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Brian-Radio Premium</title>
+    <title>Brian-Radio Premium Final</title>
     <style>
-        :root { 
-            --bg: #050505; 
-            --accent: #00d2ff; 
-            --surface: #121214; 
-            --text-main: #ffffff;
-            --text-dim: #888888;
-        }
-        
+        :root { --bg: #050505; --accent: #00d2ff; --surface: #121214; }
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; }
+        body { background: var(--bg); color: #fff; font-family: sans-serif; margin: 0; display: flex; justify-content: center; height: 100vh; overflow: hidden; }
+        .app { width: 100%; max-width: 600px; display: flex; flex-direction: column; }
         
-        body { 
-            background: var(--bg); 
-            color: var(--text-main); 
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            margin: 0; 
-            display: flex; 
-            justify-content: center; 
-            height: 100vh; 
-            overflow: hidden; 
-        }
-
-        .app { 
-            width: 100%; 
-            max-width: 600px; /* Etwas breiter für Tablets */
-            display: flex; 
-            flex-direction: column; 
-            background: var(--bg);
-        }
+        header { padding: 20px; background: rgba(0,0,0,0.9); border-bottom: 1px solid #222; flex-shrink: 0; }
+        .clock { text-align: center; color: var(--accent); font-family: monospace; font-size: 20px; margin-bottom: 15px; }
+        .search-box { display: flex; background: var(--surface); border-radius: 16px; padding: 4px 16px; border: 1px solid #333; }
+        input[type=text] { background: transparent; border: none; color: #fff; flex: 1; height: 48px; font-size: 16px; }
         
-        header { 
-            padding: 20px; 
-            background: rgba(0,0,0,0.8); 
-            backdrop-filter: blur(10px);
-            border-bottom: 1px solid #222; 
-            flex-shrink: 0; 
-            z-index: 10;
-        }
-
-        .clock { 
-            text-align: center; 
-            color: var(--accent); 
-            font-family: "Courier New", monospace; 
-            font-size: 20px; 
-            font-weight: bold;
-            margin-bottom: 15px; 
-            text-shadow: 0 0 10px rgba(0, 210, 255, 0.3);
-        }
-
-        .search-box { 
-            display: flex; 
-            background: var(--surface); 
-            border-radius: 16px; 
-            padding: 4px 16px; 
-            border: 1px solid #333;
-            box-shadow: inset 0 2px 4px rgba(0,0,0,0.5);
-        }
-
-        input[type=text] { 
-            background: transparent; 
-            border: none; 
-            color: #fff; 
-            flex: 1; 
-            height: 48px; 
-            font-size: 16px; 
-        }
+        .main { flex: 1; overflow-y: auto; padding: 20px; text-align: center; scrollbar-width: none; }
+        #mainImg { width: 220px; height: 220px; border-radius: 30px; object-fit: cover; border: 1px solid #333; margin: 10px 0 20px; background: #111; box-shadow: 0 10px 40px rgba(0,0,0,0.8); transition: opacity 0.4s; }
         
-        .main { 
-            flex: 1; 
-            overflow-y: auto; 
-            padding: 20px; 
-            text-align: center; 
-            scrollbar-width: none;
-        }
-        .main::-webkit-scrollbar { display: none; }
-
-        /* Bild-Design für Mobile & Tablet */
-        #mainImg { 
-            width: 220px; 
-            height: 220px; 
-            max-width: 60vw;
-            max-height: 60vw;
-            border-radius: 30px; 
-            object-fit: cover; 
-            border: 1px solid #333; 
-            margin: 10px 0 20px;
-            background: #111;
-            box-shadow: 0 15px 35px rgba(0,0,0,0.8);
-            transition: opacity 0.4s ease;
-        }
+        #stName { font-size: 26px; margin: 0 0 8px; font-weight: 800; text-transform: uppercase; }
+        /* Senderbeschreibung Style */
+        #stDesc { font-size: 13px; color: #aaa; line-height: 1.5; margin-bottom: 15px; padding: 0 10px; font-style: italic; }
         
-        #stName { font-size: 26px; margin: 0 0 5px; letter-spacing: 1px; font-weight: 800; }
-        #hoerer { font-size: 12px; color: var(--accent); font-weight: bold; margin-bottom: 25px; text-transform: uppercase; letter-spacing: 2px; }
+        #hoerer { font-size: 11px; color: var(--accent); font-weight: bold; margin-bottom: 25px; letter-spacing: 2px; }
+        .song-box { background: var(--surface); border-radius: 20px; padding: 18px; text-align: left; border-left: 6px solid var(--accent); margin-bottom: 30px; }
+        #curT { font-weight: 600; font-size: 18px; display: block; line-height: 1.4; }
         
-        .song-box { 
-            background: var(--surface); 
-            border-radius: 20px; 
-            padding: 18px; 
-            text-align: left; 
-            border-left: 6px solid var(--accent); 
-            margin-bottom: 30px; 
-            box-shadow: 0 8px 20px rgba(0,0,0,0.4);
-        }
-        .song-time { font-size: 11px; color: var(--accent); font-weight: 700; display: block; margin-bottom: 6px; }
-        #curT { font-weight: 600; font-size: 18px; display: block; line-height: 1.4; color: #fff; }
-        
-        .history-label { text-align: left; font-size: 12px; color: var(--text-dim); margin: 0 0 12px 5px; font-weight: bold; text-transform: uppercase; }
+        .h-item { background: #0f0f11; padding: 14px; border-radius: 14px; display: flex; gap: 15px; margin-bottom: 10px; font-size: 14px; border: 1px solid #1a1a1c; text-align: left; }
+        .h-time { color: var(--accent); font-weight: bold; }
 
-        .h-item { 
-            background: #0f0f11; 
-            padding: 14px; 
-            border-radius: 14px; 
-            display: flex; 
-            gap: 15px; 
-            margin-bottom: 10px; 
-            font-size: 14px; 
-            border: 1px solid #1a1a1c; 
-            text-align: left;
-            align-items: center;
-        }
-        .h-time { color: var(--accent); font-weight: bold; font-family: monospace; font-size: 13px; }
-
-        /* Das elegante Dock unten */
-        .dock { 
-            background: #000; 
-            border-top: 1px solid #222; 
-            padding: 20px 25px calc(25px + env(safe-area-inset-bottom)); 
-            border-radius: 30px 30px 0 0; 
-            flex-shrink: 0;
-            box-shadow: 0 -10px 30px rgba(0,0,0,0.9);
-        }
-
+        .dock { background: #000; border-top: 1px solid #222; padding: 20px 25px calc(25px + env(safe-area-inset-bottom)); border-radius: 30px 30px 0 0; flex-shrink: 0; }
         .p-row { display: flex; align-items: center; gap: 20px; }
-
-        #pBtn { 
-            width: 72px; height: 72px; border-radius: 50%; border: none; 
-            background: #fff; color: #000; font-size: 32px; cursor: pointer; 
-            flex-shrink: 0; display: flex; align-items: center; justify-content: center;
-            box-shadow: 0 4px 15px rgba(255,255,255,0.2);
-            transition: transform 0.1s;
-        }
-        #pBtn:active { transform: scale(0.92); }
+        #pBtn { width: 72px; height: 72px; border-radius: 50%; border: none; background: #fff; color: #000; font-size: 32px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
         
         .vol-area { flex: 1; display: flex; flex-direction: column; gap: 8px; }
-        .vol-label-row { display: flex; justify-content: space-between; align-items: center; padding: 0 2px; }
-        .vol-text { font-size: 10px; color: var(--text-dim); font-weight: bold; text-transform: uppercase; letter-spacing: 1px; }
-        #volPerc { font-size: 13px; color: var(--accent); font-weight: bold; }
-        
-        input[type=range] { -webkit-appearance: none; width: 100%; background: transparent; cursor: pointer; }
+        #volPerc { font-size: 13px; color: var(--accent); font-weight: bold; float: right; }
+        input[type=range] { -webkit-appearance: none; width: 100%; background: transparent; }
         input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 6px; background: #222; border-radius: 3px; }
-        input[type=range]::-webkit-slider-thumb { height: 22px; width: 22px; border-radius: 50%; background: #fff; -webkit-appearance: none; margin-top: -8px; border: 3px solid var(--accent); box-shadow: 0 0 10px rgba(0,210,255,0.4); }
-        
-        #status { font-size: 10px; color: #444; text-align: center; margin-top: 12px; font-weight: bold; letter-spacing: 2px; }
+        input[type=range]::-webkit-slider-thumb { height: 22px; width: 22px; border-radius: 50%; background: #fff; -webkit-appearance: none; margin-top: -8px; border: 3px solid var(--accent); }
     </style>
 </head>
 <body>
@@ -165,22 +46,21 @@
     <header>
         <div id="uhr" class="clock">00:00:00</div>
         <div class="search-box">
-            <input type="text" id="sIn" placeholder="Sendername..." onkeydown="if(event.key==='Enter') playRadio()">
-            <button onclick="playRadio()" style="background:none; border:none; color:var(--accent); font-size:24px; cursor:pointer;">🔍</button>
+            <input type="text" id="sIn" placeholder="Sendername..." onkeydown="if(event.key==='Enter') switchStation()">
+            <button onclick="switchStation()" style="background:none; border:none; color:var(--accent); font-size:24px; cursor:pointer;">🔍</button>
         </div>
     </header>
 
     <div class="main">
-        <img id="mainImg" src="https://laut.fm/images/station_640x640.png" alt="Radio Logo">
+        <img id="mainImg" src="https://laut.fm/images/station_640x640.png">
         <h2 id="stName">RADIO PRO</h2>
-        <div id="hoerer">BEREIT ZUM START</div>
+        <div id="stDesc">Willkommen bei deinem persönlichen Radio.</div>
+        <div id="hoerer">BEREIT</div>
         
         <div class="song-box">
-            <span id="stTime" class="song-time">LIVE INFORMATION</span>
-            <span id="curT">Wähle deinen Lieblingssender</span>
+            <span style="font-size:10px; color:var(--accent); font-weight:700; text-transform:uppercase;">Aktueller Song</span>
+            <span id="curT">Sender eingeben und genießen</span>
         </div>
-        
-        <div class="history-label">Zuletzt gelaufen</div>
         <div id="hList"></div>
     </div>
 
@@ -189,11 +69,10 @@
             <button id="pBtn" onclick="toggle()">▶</button>
             <div class="vol-area">
                 <div class="vol-label-row">
-                    <span class="vol-text">Lautsprecher</span>
+                    <span style="font-size:10px; color:#666; font-weight:bold;">LAUTSPRECHER</span>
                     <span id="volPerc">80%</span>
                 </div>
                 <input type="range" id="vol" min="0" max="1" step="0.01" value="0.8">
-                <div id="status">SYSTEM BEREIT</div>
             </div>
         </div>
     </div>
@@ -202,34 +81,23 @@
 <script>
     const au = new Audio();
     let currentSlug = "";
-    let lastImg = "";
     let dataJob = null;
+    let lastImg = "";
 
-    // Zeit-Update
     setInterval(() => { document.getElementById('uhr').innerText = new Date().toLocaleTimeString('de-DE'); }, 1000);
 
-    // Lautstärke
-    const volSlider = document.getElementById('vol');
-    const volDisplay = document.getElementById('volPerc');
-    volSlider.oninput = (e) => { 
-        const v = e.target.value;
-        au.volume = v; 
-        volDisplay.innerText = Math.round(v * 100) + "%";
+    document.getElementById('vol').oninput = (e) => { 
+        au.volume = e.target.value; 
+        document.getElementById('volPerc').innerText = Math.round(e.target.value * 100) + "%";
     };
 
-    function playRadio() {
-        const inputVal = document.getElementById('sIn').value;
-        if(!inputVal) return;
-        currentSlug = inputVal.toLowerCase().trim().replace(/[^a-z0-9-]/g, '');
-        
+    function switchStation() {
+        const input = document.getElementById('sIn').value.trim();
+        if(!input) return;
+        currentSlug = input.toLowerCase().replace(/[^a-z0-9-]/g, '');
         au.src = "https://stream.laut.fm/" + currentSlug;
-        au.play().then(() => {
-            document.getElementById('pBtn').innerHTML = "⏸";
-            document.getElementById('status').innerText = "LIVE AKTIV";
-        }).catch(() => {
-            document.getElementById('status').innerText = "PLAY DRÜCKEN";
-        });
-        
+        au.play();
+        document.getElementById('pBtn').innerHTML = "⏸";
         updateUI();
         if(dataJob) clearInterval(dataJob);
         dataJob = setInterval(updateUI, 15000);
@@ -238,17 +106,8 @@
 
     function toggle() {
         if(!currentSlug) return;
-        if(au.paused) {
-            au.src = "https://stream.laut.fm/" + currentSlug + "?t=" + Date.now();
-            au.play();
-            document.getElementById('pBtn').innerHTML = "⏸";
-            document.getElementById('status').innerText = "LIVE AKTIV";
-        } else {
-            au.pause();
-            au.src = ""; 
-            document.getElementById('pBtn').innerHTML = "▶";
-            document.getElementById('status').innerText = "GESTOPPT";
-        }
+        if(au.paused) { au.play(); document.getElementById('pBtn').innerHTML = "⏸"; }
+        else { au.pause(); document.getElementById('pBtn').innerHTML = "▶"; }
     }
 
     async function updateUI() {
@@ -259,9 +118,12 @@
                 fetch("https://api.laut.fm/station/" + currentSlug + "/last_songs").then(r => r.json()),
                 fetch("https://api.laut.fm/station/" + currentSlug + "/listeners").then(r => r.text())
             ]);
-            
-            document.getElementById('stName').innerText = s.display_name.toUpperCase();
-            
+
+            document.getElementById('stName').innerText = s.display_name;
+            // Beschreibung einfügen
+            document.getElementById('stDesc').innerText = s.description || "Keine Beschreibung verfügbar.";
+            document.getElementById('hoerer').innerText = h + " PERSONEN SIND LIVE DABEI";
+
             let newImg = s.images.station_640x640.replace('http://', 'https://');
             if(newImg !== lastImg) {
                 const img = document.getElementById('mainImg');
@@ -272,16 +134,13 @@
                 }, 300);
                 lastImg = newImg;
             }
-            
-            document.getElementById('hoerer').innerText = h + " PERSONEN HÖREN ZU";
-            const startStr = new Date(l[0].started_at).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
-            document.getElementById('stTime').innerText = "SEIT " + startStr + " UHR LÄUFT:";
+
             document.getElementById('curT').innerText = l[0].artist.name + " - " + l[0].title;
             
             let html = "";
-            l.slice(1, 8).forEach(song => {
+            l.slice(1, 7).forEach(song => {
                 const time = new Date(song.started_at).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
-                html += `<div class="h-item"><span class="h-time">${time}</span> <span><b>${song.artist.name}</b><br><span style="color:#888; font-size:12px;">${song.title}</span></span></div>`;
+                html += `<div class="h-item"><span class="h-time">${time}</span> <span><b>${song.artist.name}</b><br>${song.title}</span></div>`;
             });
             document.getElementById('hList').innerHTML = html;
         } catch(e) {}
