@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>RadioApp</title>
+    <title>RadioApps</title>
     <style>
         :root { 
             --bg-global: #050505; 
@@ -17,7 +17,7 @@
         body { 
             background-color: var(--bg-global); 
             color: #fff; 
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
+            font-family: -apple-system, system-ui, sans-serif; 
             margin: 0; 
             display: flex; 
             justify-content: center; 
@@ -27,152 +27,139 @@
 
         .app { 
             width: 100%; 
-            max-width: 500px; 
+            max-width: 900px; 
             display: flex; 
-            flex-direction: column; 
+            flex-direction: row; 
             background-color: var(--bg-app);
-            position: relative;
+            border-left: 1px solid #222;
+            border-right: 1px solid #222;
+        }
+
+        @media (max-width: 700px) {
+            .app { flex-direction: column; max-width: 500px; }
+            .side-history { display: none; }
         }
         
-        header { padding: 20px 20px 10px; text-align: center; flex-shrink: 0; }
+        .main-player {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            border-right: 1px solid #222;
+            overflow: hidden;
+        }
+
+        header { padding: 20px; text-align: center; flex-shrink: 0; }
         .uhr { font-family: monospace; font-size: 14px; color: var(--accent); margin-bottom: 10px; }
         
         .search-area { 
             background: rgba(255,255,255,0.07); 
-            border-radius: 15px; 
-            display: flex; 
-            padding: 10px 15px; 
-            border: 1px solid #333; 
-            margin-bottom: 10px; 
-            align-items: center;
+            border-radius: 12px; display: flex; padding: 10px; border: 1px solid #333; margin-bottom: 10px; 
         }
-        .search-area input { background: transparent; border: none; color: #fff; width: 100%; font-size: 16px; outline: none; }
-        .search-btn { cursor: pointer; font-size: 18px; padding-left: 10px; }
-        
-        #stNameDisplay { 
-            font-size: 24px; font-weight: 900; text-transform: uppercase; 
-            margin: 5px 0; overflow: hidden; text-overflow: ellipsis;
-        }
+        .search-area input { background: transparent; border: none; color: #fff; width: 100%; outline: none; }
 
         .scroll-content { 
-            flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; 
-            padding: 0 20px 40px; scrollbar-width: none; 
+            flex: 1; overflow-y: auto; padding: 0 20px 40px; scrollbar-width: none; 
+            -webkit-overflow-scrolling: touch;
         }
         .scroll-content::-webkit-scrollbar { display: none; }
 
-        .hero-area { display: flex; flex-direction: column; align-items: center; padding: 20px 0 40px; }
-        
-        .img-container { 
-            width: 280px; height: 280px; margin-bottom: 25px; 
-            background: #1a1d23; border-radius: 40px; /* Platzhalter-Farbe */
-        }
-
-        #mainImg { 
-            width: 100%; height: 100%; border-radius: 40px; 
-            object-fit: cover; box-shadow: 0 15px 40px rgba(0,0,0,0.6); 
-        }
+        .hero-area { display: flex; flex-direction: column; align-items: center; padding: 20px 0; }
+        .img-container { width: 240px; height: 240px; margin-bottom: 20px; }
+        #mainImg { width: 100%; height: 100%; border-radius: 30px; object-fit: cover; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
         
         #pBtn { 
-            width: 85px; height: 85px; border-radius: 50%; border: none; 
-            background: #fff; color: #000; font-size: 38px; cursor: pointer;
-            display: flex; align-items: center; justify-content: center;
-            box-shadow: 0 8px 25px rgba(0,0,0,0.4);
+            width: 70px; height: 70px; border-radius: 50%; border: none; background: #fff; 
+            font-size: 30px; cursor: pointer; display: flex; align-items: center; justify-content: center;
         }
 
-        .list-section { margin-top: 10px; }
-        .headline { font-size: 18px; font-weight: bold; margin-bottom: 20px; display: block; }
-        
         .song-entry { 
-            display: flex; gap: 15px; margin-bottom: 15px; padding: 12px;
-            background: rgba(255,255,255,0.03); border-radius: 15px;
+            display: flex; gap: 12px; margin-bottom: 10px; padding: 10px;
+            background: rgba(255,255,255,0.03); border-radius: 12px; font-size: 14px;
         }
-        .time-cell { min-width: 45px; font-size: 12px; color: var(--accent); font-weight: bold; }
-        .song-info { flex: 1; overflow: hidden; }
-        .artist { font-weight: bold; font-size: 15px; display: block; color: #fff; }
-        .title { color: #999; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .artist { font-weight: bold; color: #fff; display: block; }
+        .title { color: #999; }
 
-        .viz { display: flex; align-items: flex-end; gap: 2px; height: 16px; }
-        .bar { width: 3px; background: var(--highlight); height: 4px; }
-        .playing .bar { animation: bounce 0.8s ease infinite alternate; }
-        @keyframes bounce { from { height: 4px; } to { height: 16px; } }
-
-        #moreBtn { 
-            background: rgba(255,255,255,0.05); border: 1px solid #333; color: #fff; 
-            font-weight: bold; padding: 15px; width: 100%; border-radius: 12px;
-            cursor: pointer; margin: 10px 0 30px;
+        .side-history {
+            width: 300px;
+            background: rgba(0,0,0,0.2);
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+            overflow-y: auto;
         }
+        .side-history h3 { font-size: 16px; color: var(--accent); border-bottom: 1px solid #333; padding-bottom: 10px; }
 
-        .footer-info { 
-            padding: 20px; background: rgba(0,0,0,0.2); 
-            border-radius: 20px; border: 1px solid #222; text-align: center;
-        }
-        #stDesc { font-size: 14px; color: #aaa; line-height: 1.6; margin-bottom: 15px; text-align: left; }
-        .hoerer-info { font-size: 12px; font-weight: bold; color: var(--highlight); display: block; margin-bottom: 10px; }
-        .version-tag { font-size: 10px; color: #444; letter-spacing: 1px; font-family: monospace; text-transform: uppercase; }
-
-        .dock { padding: 20px 30px 35px; background: #000; border-top: 1px solid #222; flex-shrink: 0; }
+        /* Dock mit Lautsprecher und Prozentzahl */
+        .dock { padding: 15px 25px; background: #000; border-top: 1px solid #222; }
         .vol-row { display: flex; align-items: center; gap: 15px; }
-        input[type=range] { flex: 1; }
+        input[type=range] { flex: 1; cursor: pointer; }
+        #volPerc { 
+            font-family: monospace; 
+            width: 45px; 
+            text-align: right; 
+            font-weight: bold; 
+            color: var(--accent); 
+        }
+        
+        .footer-info { padding: 15px; background: rgba(0,0,0,0.3); border-radius: 15px; margin-top: 20px; font-size: 13px; }
     </style>
 </head>
 <body>
 
 <div class="app">
-    <header>
-        <div id="uhr" class="uhr">00:00:00</div>
-        <div class="search-area">
-            <input type="text" id="sIn" placeholder="Sender suchen..." autocomplete="off" onkeydown="if(event.key==='Enter') startManualSearch()">
-            <span class="search-btn" onclick="startManualSearch()">🔍</span>
-        </div>
-        <div id="stNameDisplay">BEREIT</div>
-    </header>
-
-    <div class="scroll-content">
-        <div class="hero-area">
-            <div class="img-container">
-                <img id="mainImg" src="https://laut.fm/images/station_640x640.png">
+    <div class="main-player">
+        <header>
+            <div id="uhr" class="uhr">00:00:00</div>
+            <div class="search-area">
+                <input type="text" id="sIn" placeholder="Sender suchen..." autocomplete="off" onkeydown="if(event.key==='Enter') startManualSearch()">
+                <span onclick="startManualSearch()" style="cursor:pointer">🔍</span>
             </div>
-            <button id="pBtn" onclick="toggle()">▶</button>
-        </div>
+            <div id="stNameDisplay" style="font-weight: 900;">RADIO READY</div>
+        </header>
 
-        <div class="list-section">
-            <span class="headline">Zuletzt gespielt</span>
+        <div class="scroll-content">
+            <div class="hero-area">
+                <div class="img-container">
+                    <img id="mainImg" src="https://laut.fm/images/station_640x640.png">
+                </div>
+                <button id="pBtn" onclick="toggle()">▶</button>
+            </div>
+
             <div id="songList"></div>
-            <button id="moreBtn" onclick="toggleMore()">Mehr anzeigen</button>
+            
+            <div class="footer-info">
+                <div id="stDesc">Wähle einen Sender.</div>
+                <span id="hoerer" style="color:var(--highlight); font-weight:bold; font-size:11px;">0 HÖRER LIVE</span><br>
+                <small style="color:#444;">Version 78.1</small>
+            </div>
         </div>
 
-        <div class="footer-info">
-            <div id="stDesc">Suche nach deinem Sender.</div>
-            <span id="hoerer" class="hoerer-info">0 HÖRER LIVE</span>
-            <div class="version-tag">v77.1</div>
+        <div class="dock">
+            <div class="vol-row">
+                <span>🔈</span>
+                <input type="range" id="vol" min="0" max="1" step="0.01" value="0.8">
+                <span id="volPerc">80%</span> </div>
         </div>
     </div>
 
-    <div class="dock">
-        <div class="vol-row">
-            <span>🔈</span>
-            <input type="range" id="vol" min="0" max="1" step="0.01" value="0.8">
-            <span id="volPerc" style="font-family: monospace; width: 40px; color: var(--accent);">95%</span>
-        </div>
+    <div class="side-history">
+        <h3>Song Verlauf</h3>
+        <div id="historyList"></div>
     </div>
 </div>
 
 <script>
     const au = new Audio();
     let currentSlug = "";
-    let lastImg = "";
-    let dataJob = null;
-    let showAll = false;
+    let historyArr = [];
 
-    window.onload = () => { document.getElementById('sIn').value = ""; };
+    setInterval(() => { document.getElementById('uhr').innerText = new Date().toLocaleTimeString('de-DE'); }, 1000);
 
-    setInterval(() => { 
-        document.getElementById('uhr').innerText = new Date().toLocaleTimeString('de-DE'); 
-    }, 1000);
-
+    // Lautstärke Update inklusive Prozentzahl-Ziffern
     document.getElementById('vol').oninput = (e) => { 
-        au.volume = e.target.value; 
-        document.getElementById('volPerc').innerText = Math.round(e.target.value * 100) + "%";
+        const val = e.target.value;
+        au.volume = val; 
+        document.getElementById('volPerc').innerText = Math.round(val * 100) + "%";
     };
 
     function startManualSearch() {
@@ -180,24 +167,16 @@
         if(!val) return;
         currentSlug = val.toLowerCase().replace(/[^a-z0-9-]/g, '');
         au.src = "https://stream.laut.fm/" + currentSlug;
-        au.play().then(() => { document.getElementById('pBtn').innerHTML = "⏸"; }).catch(e => {});
+        au.play();
+        document.getElementById('pBtn').innerHTML = "⏸";
         updateUI();
-        if(dataJob) clearInterval(dataJob);
-        dataJob = setInterval(updateUI, 15000);
+        setInterval(updateUI, 15000);
         document.activeElement.blur();
     }
 
     function toggle() {
-        if(!currentSlug) return;
         if(au.paused) { au.play(); document.getElementById('pBtn').innerHTML = "⏸"; }
         else { au.pause(); document.getElementById('pBtn').innerHTML = "▶"; }
-        updateUI();
-    }
-
-    function toggleMore() {
-        showAll = !showAll;
-        document.getElementById('moreBtn').innerText = showAll ? "Weniger anzeigen" : "Mehr anzeigen";
-        updateUI();
     }
 
     async function updateUI() {
@@ -208,26 +187,29 @@
                 fetch("https://api.laut.fm/station/" + currentSlug + "/last_songs").then(r => r.json()),
                 fetch("https://api.laut.fm/station/" + currentSlug + "/listeners").then(r => r.text())
             ]);
+
             document.getElementById('stNameDisplay').innerText = s.display_name;
             document.getElementById('stDesc').innerText = s.description || "";
             document.getElementById('hoerer').innerText = h + " PERSONEN LIVE";
-            
-            // Wichtig: Wir nutzen assets.laut.fm statt der API-Bilder, falls vorhanden
-            let imgUrl = s.images.station_640x640.replace('http://', 'https://');
-            
-            if(imgUrl !== lastImg) {
-                document.getElementById('mainImg').src = imgUrl;
-                lastImg = imgUrl;
-            }
+            document.getElementById('mainImg').src = s.images.station_640x640.replace('http://', 'https://');
 
             let html = "";
-            const limit = showAll ? 10 : 3;
-            l.slice(0, limit).forEach((song, i) => {
-                const time = new Date(song.started_at).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+            l.slice(0, 3).forEach((song, i) => {
                 html += `<div class="song-entry">
-                    <div class="time-cell">${i === 0 ? '<div class="viz '+(au.paused?'':'playing')+'"><div class="bar"></div><div class="bar"></div><div class="bar"></div></div>' : time}</div>
-                    <div class="song-info"><span class="artist">${song.artist.name}</span><span class="title">${song.title}</span></div>
+                    <div>${i === 0 ? '🎵' : '•'}</div>
+                    <div><span class="artist">${song.artist.name}</span><span class="title">${song.title}</span></div>
                 </div>`;
+                
+                const songId = song.artist.name + " - " + song.title;
+                if(!historyArr.includes(songId)) {
+                    historyArr.unshift(songId);
+                    const div = document.createElement('div');
+                    div.className = 'song-entry';
+                    div.style.fontSize = '12px';
+                    div.innerHTML = `<div><span class="artist">${song.artist.name}</span><span class="title">${song.title}</span></div>`;
+                    const list = document.getElementById('historyList');
+                    list.insertBefore(div, list.firstChild);
+                }
             });
             document.getElementById('songList').innerHTML = html;
         } catch(e) {}
