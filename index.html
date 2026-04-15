@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Brian-Radio Ultra Detect v82.4</title>
+    <title>Brian-Radio Pro v82.5</title>
     <style>
         :root { 
             --bg-global: #050505; 
@@ -18,55 +18,31 @@
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 
         body { 
-            background-color: var(--bg-global); 
-            color: #fff; 
+            background-color: var(--bg-global); color: #fff; 
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; 
-            margin: 0; 
-            display: flex; 
-            justify-content: center; 
-            height: 100vh; 
-            overflow: hidden; 
+            margin: 0; display: flex; justify-content: center; height: 100vh; overflow: hidden; 
         }
 
-        .app { 
-            width: 100%; 
-            max-width: 500px; 
-            display: flex; 
-            flex-direction: column; 
-            background-color: var(--bg-app);
-        }
-        
+        .app { width: 100%; max-width: 500px; display: flex; flex-direction: column; background-color: var(--bg-app); }
         header { padding: 15px 20px 10px; text-align: center; flex-shrink: 0; }
         .uhr { font-family: monospace; font-size: 16px; color: var(--accent); margin-bottom: 10px; font-weight: bold; }
         
         .search-area { 
-            background: rgba(255,255,255,0.07); 
-            border-radius: 12px; 
-            display: flex; 
-            padding: 10px 15px; 
-            border: 1px solid #333; 
-            margin-bottom: 15px; 
-            align-items: center;
+            background: rgba(255,255,255,0.07); border-radius: 12px; display: flex; 
+            padding: 10px 15px; border: 1px solid #333; margin-bottom: 15px; align-items: center;
         }
         .search-area input { background: transparent; border: none; color: #fff; width: 100%; font-size: 16px; outline: none; }
         
         #stNameDisplay { font-size: 20px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 5px; }
 
-        .scroll-content { 
-            flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; 
-            padding: 0 20px 30px; scrollbar-width: none; 
-        }
+        .scroll-content { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 0 20px 30px; scrollbar-width: none; }
         .scroll-content::-webkit-scrollbar { display: none; }
 
         .hero-area { display: flex; flex-direction: column; align-items: center; padding: 10px 0 20px; }
         .img-container { width: 240px; height: 240px; margin-bottom: 20px; }
         #mainImg { width: 100%; height: 100%; border-radius: 25px; object-fit: cover; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
         
-        #pBtn { 
-            width: 75px; height: 75px; border-radius: 50%; border: none; 
-            background: #fff; color: #000; font-size: 30px; cursor: pointer;
-            display: flex; align-items: center; justify-content: center;
-        }
+        #pBtn { width: 75px; height: 75px; border-radius: 50%; border: none; background: #fff; color: #000; font-size: 30px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
 
         .section-title { font-size: 20px; font-weight: bold; font-style: italic; margin: 25px 0 15px; display: block; color: #fff; }
         
@@ -81,22 +57,12 @@
         .title { color: #aaa; font-size: 13px; }
 
         .is-ad { color: var(--ad-color) !important; font-weight: 900; }
-        .is-news { color: var(--news-color) !important; font-weight: 900; text-shadow: 0 0 10px var(--accent); }
+        .is-news { color: var(--news-color) !important; font-weight: 900; text-shadow: 0 0 8px rgba(255,255,255,0.5); }
         .is-live { color: var(--live-color) !important; font-weight: 900; }
 
-        #moreBtn { 
-            background: rgba(255,255,255,0.05); border: 1px solid #444; color: #fff; 
-            padding: 12px; width: 100%; border-radius: 10px; cursor: pointer; font-size: 14px; margin: 10px 0 25px;
-        }
+        #moreBtn { background: rgba(255,255,255,0.05); border: 1px solid #444; color: #fff; padding: 12px; width: 100%; border-radius: 10px; cursor: pointer; font-size: 14px; margin: 10px 0 25px; }
 
-        .station-info-box {
-            background: rgba(0,0,0,0.3);
-            border-radius: 15px;
-            padding: 20px;
-            margin-top: 20px;
-            border: 1px solid #222;
-            text-align: center;
-        }
+        .station-info-box { background: rgba(0,0,0,0.3); border-radius: 15px; padding: 20px; margin-top: 20px; border: 1px solid #222; text-align: center; }
         #stDesc { font-size: 14px; color: #bbb; line-height: 1.5; margin-bottom: 10px; text-align: left; }
         #hoerer { color: var(--highlight); font-weight: bold; font-size: 13px; display: block; margin-bottom: 5px; }
         .ver-tag { font-size: 10px; color: #444; text-transform: uppercase; letter-spacing: 1px; }
@@ -129,16 +95,14 @@
 
         <span class="section-title">Jetzt läuft</span>
         <div id="currentSongArea"></div>
-
         <span class="section-title" style="font-size: 16px; opacity: 0.6;">Zuletzt gelaufen</span>
         <div id="songHistory"></div>
-        
         <button id="moreBtn" onclick="toggleMore()">Mehr anzeigen</button>
 
         <div class="station-info-box">
             <div id="stDesc">Wähle einen Sender.</div>
             <span id="hoerer">0 Hörer live</span>
-            <div class="ver-tag">Version 82.4 | Pro Build</div>
+            <div class="ver-tag">Version 82.5 | Pro Build</div>
         </div>
     </div>
 
@@ -172,7 +136,7 @@
         au.play().then(() => { document.getElementById('pBtn').innerHTML = "⏸"; });
         updateUI();
         if(updateTimer) clearInterval(updateTimer);
-        updateTimer = setInterval(updateUI, 10000); // Schnelleres Update (alle 10 Sek)
+        updateTimer = setInterval(updateUI, 8000); // Noch schnelleres Update: 8 Sek
         document.activeElement.blur();
     }
 
@@ -204,61 +168,37 @@
             document.getElementById('hoerer').innerText = h + " Hörer live";
 
             const current = l[0];
-            const lowerArtist = current.artist.name.toLowerCase();
-            const lowerTitle = current.title.toLowerCase();
+            const artist = current.artist.name.toLowerCase();
+            const title = current.title.toLowerCase();
             
-            // 1. Nachrichten-Check
-            const isNews = lowerArtist.includes("nachrichten") || lowerArtist.includes("news") || lowerTitle.includes("zeitfunk");
+            // VERBESSERTE ERKENNUNG
+            const isNews = artist.includes("nachrichten") || title.includes("nachrichten") || artist.includes("news") || title.includes("news") || title.includes("zeitfunk") || title.includes("wetter");
+            const isLive = artist.includes("moderation") || title.includes("moderation") || artist.includes("talk") || title.includes("talk") || artist.includes("live") || title.includes("live") || current.type === "station_voice";
+            const isAd = !isNews && !isLive && (current.type === "ad" || artist.includes("werbung") || artist.includes("laut.fm") || artist.includes("ad-server") || title.includes("promotion"));
             
-            // 2. Moderations-Check
-            const isLive = lowerArtist.includes("moderation") || lowerArtist.includes("talk") || lowerTitle.includes("live") || current.type === "station_voice";
-            
-            // 3. Verstärkter Werbe-Check (sucht jetzt nach mehr Begriffen)
-            const isAd = !isNews && !isLive && (
-                current.type === "ad" || 
-                lowerArtist.includes("werbung") || 
-                lowerArtist.includes("ad-server") || 
-                lowerArtist.includes("laut.fm") || 
-                lowerTitle.includes("promotion") ||
-                lowerArtist === "werbespot"
-            );
-            
-            let icon = "🔊";
-            let artistDisplay = current.artist.name;
-            let titleDisplay = current.title;
-            let statusClass = "";
+            let icon = "🔊", artistDisp = current.artist.name, titleDisp = current.title, cls = "";
 
-            if (isLive) {
-                icon = "🎤"; artistDisplay = "MODERATION"; titleDisplay = "Live am Mikrofon"; statusClass = "is-live";
-            } else if (isNews) {
-                icon = "📰"; artistDisplay = "NACHRICHTEN"; titleDisplay = "Aktuelle Meldungen"; statusClass = "is-news";
+            if (isNews) {
+                icon = "📰"; artistDisp = "NACHRICHTEN"; titleDisp = current.title.includes("News") ? current.title : "Aktuelle Meldungen"; cls = "is-news";
+            } else if (isLive) {
+                icon = "🎤"; artistDisp = "MODERATION"; titleDisp = "Live am Mikrofon"; cls = "is-live";
             } else if (isAd) {
-                icon = "📢"; artistDisplay = "WERBUNG"; titleDisplay = "Gleich geht es weiter..."; statusClass = "is-ad";
+                icon = "📢"; artistDisp = "WERBUNG"; titleDisp = "Gleich geht es weiter..."; cls = "is-ad";
             }
 
             document.getElementById('currentSongArea').innerHTML = `
                 <div class="song-entry now-playing">
                     <div class="icon-cell">${icon}</div>
-                    <div class="song-info">
-                        <span class="artist ${statusClass}">${artistDisplay}</span>
-                        <span class="title">${titleDisplay}</span>
-                    </div>
+                    <div class="song-info"><span class="artist ${cls}">${artistDisp}</span><span class="title">${titleDisp}</span></div>
                 </div>`;
 
-            let historyHtml = "";
-            const limit = showAll ? 10 : 4;
-            l.slice(1, limit).forEach(song => {
+            let hist = "";
+            const lim = showAll ? 10 : 4;
+            l.slice(1, lim).forEach(song => {
                 const time = new Date(song.started_at).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
-                historyHtml += `
-                    <div class="song-entry">
-                        <div class="time-cell">${time}</div>
-                        <div class="song-info">
-                            <span class="artist">${song.artist.name}</span>
-                            <span class="title">${song.title}</span>
-                        </div>
-                    </div>`;
+                hist += `<div class="song-entry"><div class="time-cell">${time}</div><div class="song-info"><span class="artist">${song.artist.name}</span><span class="title">${song.title}</span></div></div>`;
             });
-            document.getElementById('songHistory').innerHTML = historyHtml;
+            document.getElementById('songHistory').innerHTML = hist;
         } catch(e) {}
     }
 </script>
