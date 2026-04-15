@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Brian-Radio Pro Ad-Detect</title>
+    <title>Brian-Radio Final v82.1</title>
     <style>
         :root { 
             --bg-global: #050505; 
             --bg-app: #1a1d23;    
             --accent: #00d2ff; 
             --highlight: #00f2c3; 
-            --ad-color: #ffcc00; /* Goldgelb für Werbung */
+            --ad-color: #ffcc00; 
         }
 
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -35,7 +35,7 @@
         }
         
         header { padding: 15px 20px 10px; text-align: center; flex-shrink: 0; }
-        .uhr { font-family: monospace; font-size: 16px; color: var(--accent); margin-bottom: 10px; }
+        .uhr { font-family: monospace; font-size: 16px; color: var(--accent); margin-bottom: 10px; font-weight: bold; }
         
         .search-area { 
             background: rgba(255,255,255,0.07); 
@@ -78,8 +78,7 @@
         .artist { font-weight: bold; font-size: 15px; display: block; color: #fff; }
         .title { color: #aaa; font-size: 13px; }
 
-        /* Anzeige für Werbung */
-        .is-ad { color: var(--ad-color) !important; font-weight: 900; letter-spacing: 1px; }
+        .is-ad { color: var(--ad-color) !important; font-weight: 900; }
 
         #moreBtn { 
             background: rgba(255,255,255,0.05); border: 1px solid #444; color: #fff; 
@@ -92,9 +91,11 @@
             padding: 20px;
             margin-top: 20px;
             border: 1px solid #222;
+            text-align: center;
         }
-        #stDesc { font-size: 14px; color: #bbb; line-height: 1.5; margin-bottom: 15px; }
-        #hoerer { color: var(--highlight); font-weight: bold; font-size: 13px; }
+        #stDesc { font-size: 14px; color: #bbb; line-height: 1.5; margin-bottom: 10px; text-align: left; }
+        #hoerer { color: var(--highlight); font-weight: bold; font-size: 13px; display: block; margin-bottom: 5px; }
+        .ver-tag { font-size: 10px; color: #444; text-transform: uppercase; letter-spacing: 1px; }
 
         .dock { padding: 15px 25px 35px; background: #000; border-top: 1px solid #222; }
         .vol-row { display: flex; align-items: center; gap: 15px; }
@@ -131,8 +132,9 @@
         <button id="moreBtn" onclick="toggleMore()">Mehr anzeigen</button>
 
         <div class="station-info-box">
-            <div id="stDesc">Wähle einen Sender.</div>
-            <div id="hoerer">0 Hörer live</div>
+            <div id="stDesc">Suche einen Sender.</div>
+            <span id="hoerer">0 Hörer live</span>
+            <div class="ver-tag">Version 82.1 | Pro Build</div>
         </div>
     </div>
 
@@ -194,27 +196,25 @@
 
             document.getElementById('stNameDisplay').innerText = s.display_name;
             document.getElementById('mainImg').src = s.images.station_640x640.replace('http://', 'https://');
-            document.getElementById('stDesc').innerText = s.description || "";
+            document.getElementById('stDesc').innerText = s.description || "Keine Beschreibung.";
             document.getElementById('hoerer').innerText = h + " Hörer live";
 
-            // Aktueller Song & Werbungserkennung
             const current = l[0];
             const isAd = current.type === "ad" || current.artist.name.toLowerCase().includes("werbung") || current.artist.name.toLowerCase().includes("laut.fm");
             
             const icon = isAd ? "📢" : "🔊";
-            const artistName = isAd ? "WERBUNG" : current.artist.name;
+            const artistDisplay = isAd ? "WERBUNG" : current.artist.name;
             const adClass = isAd ? "is-ad" : "";
 
             document.getElementById('currentSongArea').innerHTML = `
                 <div class="song-entry now-playing">
                     <div class="icon-cell">${icon}</div>
                     <div class="song-info">
-                        <span class="artist ${adClass}">${artistName}</span>
+                        <span class="artist ${adClass}">${artistDisplay}</span>
                         <span class="title">${isAd ? 'Gleich geht es weiter...' : current.title}</span>
                     </div>
                 </div>`;
 
-            // Verlauf
             let historyHtml = "";
             const limit = showAll ? 10 : 4;
             l.slice(1, limit).forEach(song => {
