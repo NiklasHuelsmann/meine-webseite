@@ -3,12 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Radio App Final v88.4</title>
+    <title>Radio App FINALE v88.6</title>
     <style>
         :root { 
             --bg-dark: #0c0e14; 
             --accent-green: #00e699;
             --accent-pink: #ff00ff;
+            --accent-yellow: #ffd700; /* Werbung */
+            --accent-blue: #00d9ff;   /* Nachrichten */
             --text-main: #ffffff;
             --text-dim: #717b8a;
         }
@@ -50,7 +52,7 @@
         .section-content { padding: 0 25px; }
         .track-now-container { display: flex; align-items: flex-start; gap: 12px; padding: 10px 0 25px; border-bottom: 1px solid rgba(255,255,255,0.05); margin-bottom: 10px; min-height: 80px; }
         .speaker-icon { font-size: 22px; margin-top: 4px; }
-        .artist-main { font-size: 24px; font-weight: 800; color: var(--accent-green); display: block; margin-bottom: 5px; }
+        .artist-main { font-size: 24px; font-weight: 800; display: block; margin-bottom: 5px; }
         .title-main { font-size: 18px; color: #fff; display: block; font-weight: 400; opacity: 0.95; }
 
         .history-item { display: flex; padding: 14px 0; border-bottom: 1px solid rgba(255,255,255,0.03); font-size: 14px; align-items: center; }
@@ -79,7 +81,7 @@
     </div>
 
     <div id="searchBox">
-        <input type="text" id="sIn" placeholder="Sendername eingeben..." onkeydown="if(event.key==='Enter') startSearch()">
+        <input type="text" id="sIn" placeholder="Sendername..." onkeydown="if(event.key==='Enter') startSearch()">
         <div class="close-btn" onclick="closeSearch()">✕</div>
     </div>
 
@@ -99,7 +101,7 @@
             <div class="track-now-container">
                 <div class="speaker-icon">🔊</div>
                 <div id="currentSongArea">
-                    <span class="artist-main">BEREIT</span>
+                    <span class="artist-main" style="color: var(--accent-green)">BEREIT</span>
                     <span class="title-main">Wähle einen Sender</span>
                 </div>
             </div>
@@ -116,7 +118,7 @@
             <div class="location" id="stLocArea"></div>
             <div id="stDesc"></div>
             <div class="hoerer" id="hoerer">0 HÖRER</div>
-            <div style="text-align: center; font-size: 8px; margin-top: 40px; opacity: 0.2; letter-spacing: 2px;">V88.4 SMART-LOCATION</div>
+            <div style="text-align: center; font-size: 8px; margin-top: 40px; opacity: 0.2; letter-spacing: 2px;">V88.6 ADS & NEWS FIX</div>
         </div>
     </div>
 </div>
@@ -132,22 +134,14 @@
     setInterval(updateClock, 1000); updateClock();
 
     function setVol(val) { au.volume = val; }
-    function openSearch() { 
-        const input = document.getElementById('sIn');
-        input.value = ""; 
-        document.getElementById('searchBox').style.display = 'flex'; 
-        input.focus(); 
-    }
+    function openSearch() { document.getElementById('sIn').value = ""; document.getElementById('searchBox').style.display = 'flex'; document.getElementById('sIn').focus(); }
     function closeSearch() { document.getElementById('searchBox').style.display = 'none'; }
 
     async function shareStation() {
         if(!currentSlug) return;
         const text = `Hör dir mal ${currentStationName} auf laut.fm an: https://laut.fm/${currentSlug}`;
-        if (navigator.share) {
-            await navigator.share({ title: currentStationName, url: `https://laut.fm/${currentSlug}` });
-        } else {
-            window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`);
-        }
+        if (navigator.share) { await navigator.share({ title: currentStationName, url: `https://laut.fm/${currentSlug}` }); }
+        else { window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`); }
     }
 
     async function startSearch() {
@@ -177,30 +171,31 @@
                 fetch("https://api.laut.fm/station/" + currentSlug + "/listeners").then(r => r.text())
             ]);
 
-            currentStationName = s.display_name;
             document.getElementById('stNameDisplay').innerText = s.display_name;
             document.getElementById('mainImg').src = s.images.station_640x640;
             document.getElementById('stSlogan').innerText = s.page_title || s.display_name;
-            
-            // Verbesserte Standort-Logik
-            let cityDisplay = s.city ? s.city.toUpperCase() : "RADIO-NETZWERK";
-            document.getElementById('stLocArea').innerHTML = "📍 " + cityDisplay;
-            
+            document.getElementById('stLocArea').innerHTML = "📍 " + (s.city ? s.city.toUpperCase() : "RADIO-NETZWERK");
             document.getElementById('stDesc').innerText = s.description || "";
-            
-            const hoererBox = document.getElementById('hoerer');
-            hoererBox.innerText = h + " HÖRER";
-            hoererBox.style.display = "inline-block";
+            document.getElementById('hoerer').innerText = h + " HÖRER";
+            document.getElementById('hoerer').style.display = "inline-block";
 
             const cur = l[0];
+            let artistColor = "var(--accent-green)";
+            
+            // Typ-Erkennung für Farbe
+            if(cur.type === "gold") artistColor = "var(--accent-yellow)"; // Werbung
+            if(cur.type === "news") artistColor = "var(--accent-blue)";   // News
+            
+            // Mod-Check
             if(cur.type === "pink" || cur.type === "moderation") {
                 document.getElementById('modBadge').style.display = "block";
+                artistColor = "var(--accent-pink)";
             } else {
                 document.getElementById('modBadge').style.display = "none";
             }
 
             document.getElementById('currentSongArea').innerHTML = `
-                <span class="artist-main">${cur.artist.name}</span>
+                <span class="artist-main" style="color: ${artistColor}">${cur.artist.name}</span>
                 <span class="title-main">${cur.title}</span>`;
 
             let hHtml = "";
