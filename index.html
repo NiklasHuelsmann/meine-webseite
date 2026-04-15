@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Radio APPS</title>
+    <title>Brian-Radio Pro News-Detect</title>
     <style>
         :root { 
             --bg-global: #050505; 
@@ -11,6 +11,7 @@
             --accent: #00d2ff; 
             --highlight: #00f2c3; 
             --ad-color: #ffcc00; 
+            --news-color: #ffffff; /* Weiß für Nachrichten */
         }
 
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -78,7 +79,9 @@
         .artist { font-weight: bold; font-size: 15px; display: block; color: #fff; }
         .title { color: #aaa; font-size: 13px; }
 
+        /* Spezialfarben */
         .is-ad { color: var(--ad-color) !important; font-weight: 900; }
+        .is-news { color: var(--news-color) !important; font-weight: 900; text-shadow: 0 0 10px var(--accent); }
 
         #moreBtn { 
             background: rgba(255,255,255,0.05); border: 1px solid #444; color: #fff; 
@@ -134,7 +137,7 @@
         <div class="station-info-box">
             <div id="stDesc">Suche einen Sender.</div>
             <span id="hoerer">0 Hörer live</span>
-            <div class="ver-tag">Version 82.1|Build</div>
+            <div class="ver-tag">Version 82.2 | Pro Build</div>
         </div>
     </div>
 
@@ -200,18 +203,37 @@
             document.getElementById('hoerer').innerText = h + " Hörer live";
 
             const current = l[0];
-            const isAd = current.type === "ad" || current.artist.name.toLowerCase().includes("werbung") || current.artist.name.toLowerCase().includes("laut.fm");
+            const lowerArtist = current.artist.name.toLowerCase();
+            const lowerTitle = current.title.toLowerCase();
             
-            const icon = isAd ? "📢" : "🔊";
-            const artistDisplay = isAd ? "WERBUNG" : current.artist.name;
-            const adClass = isAd ? "is-ad" : "";
+            // Erkennung für Nachrichten
+            const isNews = lowerArtist.includes("nachrichten") || lowerArtist.includes("news") || lowerTitle.includes("zeitfunk") || lowerTitle.includes("nachrichten");
+            // Erkennung für Werbung (wenn es keine Nachrichten sind)
+            const isAd = !isNews && (current.type === "ad" || lowerArtist.includes("werbung") || lowerArtist.includes("laut.fm"));
+            
+            let icon = "🔊";
+            let artistDisplay = current.artist.name;
+            let titleDisplay = current.title;
+            let statusClass = "";
+
+            if (isNews) {
+                icon = "📰";
+                artistDisplay = "NACHRICHTEN";
+                titleDisplay = "Aktuelle Meldungen";
+                statusClass = "is-news";
+            } else if (isAd) {
+                icon = "📢";
+                artistDisplay = "WERBUNG";
+                titleDisplay = "Gleich geht es weiter...";
+                statusClass = "is-ad";
+            }
 
             document.getElementById('currentSongArea').innerHTML = `
                 <div class="song-entry now-playing">
                     <div class="icon-cell">${icon}</div>
                     <div class="song-info">
-                        <span class="artist ${adClass}">${artistDisplay}</span>
-                        <span class="title">${isAd ? 'Gleich geht es weiter...' : current.title}</span>
+                        <span class="artist ${statusClass}">${artistDisplay}</span>
+                        <span class="title">${titleDisplay}</span>
                     </div>
                 </div>`;
 
