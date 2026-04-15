@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>RadioApps</title>
+    <title>Brian-Radio Hybrid History</title>
     <style>
         :root { 
             --bg-global: #050505; 
@@ -35,9 +35,12 @@
             border-right: 1px solid #222;
         }
 
+        /* Smartphone Modus */
         @media (max-width: 700px) {
-            .app { flex-direction: column; max-width: 500px; }
-            .side-history { display: none; }
+            .app { flex-direction: column; max-width: 500px; overflow-y: auto; }
+            .main-player { overflow: visible; height: auto; }
+            .side-history { width: 100%; border-left: none; border-top: 1px solid #333; height: auto; padding-bottom: 100px; }
+            body { overflow-y: auto; } /* Erlaubt langes Scrollen am Handy */
         }
         
         .main-player {
@@ -54,11 +57,12 @@
         .search-area { 
             background: rgba(255,255,255,0.07); 
             border-radius: 12px; display: flex; padding: 10px; border: 1px solid #333; margin-bottom: 10px; 
+            align-items: center;
         }
-        .search-area input { background: transparent; border: none; color: #fff; width: 100%; outline: none; }
+        .search-area input { background: transparent; border: none; color: #fff; width: 100%; outline: none; font-size: 16px; }
 
         .scroll-content { 
-            flex: 1; overflow-y: auto; padding: 0 20px 40px; scrollbar-width: none; 
+            flex: 1; overflow-y: auto; padding: 0 20px 20px; scrollbar-width: none; 
             -webkit-overflow-scrolling: touch;
         }
         .scroll-content::-webkit-scrollbar { display: none; }
@@ -73,35 +77,35 @@
         }
 
         .song-entry { 
-            display: flex; gap: 12px; margin-bottom: 10px; padding: 10px;
+            display: flex; gap: 12px; margin-bottom: 10px; padding: 12px;
             background: rgba(255,255,255,0.03); border-radius: 12px; font-size: 14px;
         }
         .artist { font-weight: bold; color: #fff; display: block; }
         .title { color: #999; }
 
+        #moreBtn { 
+            background: rgba(255,255,255,0.05); border: 1px solid #333; color: #fff; 
+            font-weight: bold; padding: 15px; width: 100%; border-radius: 12px;
+            cursor: pointer; margin: 10px 0 20px;
+        }
+
         .side-history {
-            width: 300px;
+            width: 320px;
             background: rgba(0,0,0,0.2);
             display: flex;
             flex-direction: column;
             padding: 20px;
             overflow-y: auto;
         }
-        .side-history h3 { font-size: 16px; color: var(--accent); border-bottom: 1px solid #333; padding-bottom: 10px; }
+        .side-history h3 { font-size: 16px; color: var(--accent); border-bottom: 1px solid #333; padding-bottom: 10px; margin-top: 0; }
 
-        /* Dock mit Lautsprecher und Prozentzahl */
-        .dock { padding: 15px 25px; background: #000; border-top: 1px solid #222; }
+        /* Festes Dock unten */
+        .dock { padding: 15px 25px; background: #000; border-top: 1px solid #222; position: sticky; bottom: 0; z-index: 100; }
         .vol-row { display: flex; align-items: center; gap: 15px; }
-        input[type=range] { flex: 1; cursor: pointer; }
-        #volPerc { 
-            font-family: monospace; 
-            width: 45px; 
-            text-align: right; 
-            font-weight: bold; 
-            color: var(--accent); 
-        }
+        input[type=range] { flex: 1; }
+        #volPerc { font-family: monospace; width: 45px; text-align: right; color: var(--accent); font-weight: bold; }
         
-        .footer-info { padding: 15px; background: rgba(0,0,0,0.3); border-radius: 15px; margin-top: 20px; font-size: 13px; }
+        .footer-info { padding: 15px; background: rgba(0,0,0,0.3); border-radius: 15px; margin-top: 20px; text-align: center; }
     </style>
 </head>
 <body>
@@ -126,25 +130,28 @@
             </div>
 
             <div id="songList"></div>
+            <button id="moreBtn" onclick="toggleMore()">Mehr anzeigen</button>
             
             <div class="footer-info">
-                <div id="stDesc">Wähle einen Sender.</div>
-                <span id="hoerer" style="color:var(--highlight); font-weight:bold; font-size:11px;">0 HÖRER LIVE</span><br>
-                <small style="color:#444;">Version 78.1</small>
+                <div id="stDesc">Deine Musik-History wird unten gespeichert.</div>
+                <span id="hoerer" style="color:var(--highlight); font-weight:bold;">0 HÖRER LIVE</span><br>
+                <small style="color:#444;">Version 78.5 | Hybrid History</small>
             </div>
-        </div>
-
-        <div class="dock">
-            <div class="vol-row">
-                <span>🔈</span>
-                <input type="range" id="vol" min="0" max="1" step="0.01" value="0.8">
-                <span id="volPerc">80%</span> </div>
         </div>
     </div>
 
-    <div class="side-history">
-        <h3>Song Verlauf</h3>
+    <div class="side-history" id="sideHistory">
+        <h3>Titelsuche / Verlauf</h3>
+        <p style="font-size: 10px; color: #555; margin-bottom: 15px;">Songs dieser Sitzung:</p>
         <div id="historyList"></div>
+    </div>
+
+    <div class="dock">
+        <div class="vol-row">
+            <span>🔈</span>
+            <input type="range" id="vol" min="0" max="1" step="0.01" value="0.8">
+            <span id="volPerc">80%</span>
+        </div>
     </div>
 </div>
 
@@ -152,14 +159,14 @@
     const au = new Audio();
     let currentSlug = "";
     let historyArr = [];
+    let showAll = false;
 
+    window.onload = () => { document.getElementById('sIn').value = ""; };
     setInterval(() => { document.getElementById('uhr').innerText = new Date().toLocaleTimeString('de-DE'); }, 1000);
 
-    // Lautstärke Update inklusive Prozentzahl-Ziffern
     document.getElementById('vol').oninput = (e) => { 
-        const val = e.target.value;
-        au.volume = val; 
-        document.getElementById('volPerc').innerText = Math.round(val * 100) + "%";
+        au.volume = e.target.value; 
+        document.getElementById('volPerc').innerText = Math.round(e.target.value * 100) + "%";
     };
 
     function startManualSearch() {
@@ -179,6 +186,12 @@
         else { au.pause(); document.getElementById('pBtn').innerHTML = "▶"; }
     }
 
+    function toggleMore() {
+        showAll = !showAll;
+        document.getElementById('moreBtn').innerText = showAll ? "Weniger anzeigen" : "Mehr anzeigen";
+        updateUI();
+    }
+
     async function updateUI() {
         if(!currentSlug) return;
         try {
@@ -193,22 +206,25 @@
             document.getElementById('hoerer').innerText = h + " PERSONEN LIVE";
             document.getElementById('mainImg').src = s.images.station_640x640.replace('http://', 'https://');
 
+            // Aktuelle Liste (oben)
             let html = "";
-            l.slice(0, 3).forEach((song, i) => {
+            const limit = showAll ? 10 : 3;
+            l.slice(0, limit).forEach((song, i) => {
                 html += `<div class="song-entry">
-                    <div>${i === 0 ? '🎵' : '•'}</div>
+                    <div style="color:var(--accent)">${i === 0 ? '▶' : '•'}</div>
                     <div><span class="artist">${song.artist.name}</span><span class="title">${song.title}</span></div>
                 </div>`;
                 
+                // History Management (unten/seite)
                 const songId = song.artist.name + " - " + song.title;
                 if(!historyArr.includes(songId)) {
                     historyArr.unshift(songId);
                     const div = document.createElement('div');
                     div.className = 'song-entry';
                     div.style.fontSize = '12px';
+                    div.style.background = 'rgba(255,255,255,0.01)';
                     div.innerHTML = `<div><span class="artist">${song.artist.name}</span><span class="title">${song.title}</span></div>`;
-                    const list = document.getElementById('historyList');
-                    list.insertBefore(div, list.firstChild);
+                    document.getElementById('historyList').prepend(div);
                 }
             });
             document.getElementById('songList').innerHTML = html;
