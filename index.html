@@ -3,130 +3,76 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Radio APPS</title>
+    <title>Brian-Radio Pro v82.7</title>
     <style>
         :root { 
-            --bg-global: #050505; 
-            --bg-app: #1a1d23;    
-            --accent: #00d2ff; 
-            --highlight: #00f2c3; 
-            --ad-color: #ffcc00; 
-            --news-color: #ffffff;
-            --live-color: #ff00ff;
+            --bg-global: #050505; --bg-app: #1a1d23; --accent: #00d2ff; 
+            --highlight: #00f2c3; --ad-color: #ffcc00; --news-color: #ffffff; --live-color: #ff00ff;
         }
-
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-
-        body { 
-            background-color: var(--bg-global); color: #fff; 
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; 
-            margin: 0; display: flex; justify-content: center; height: 100vh; overflow: hidden; 
-        }
-
+        body { background-color: var(--bg-global); color: #fff; font-family: sans-serif; margin: 0; display: flex; justify-content: center; height: 100vh; overflow: hidden; }
         .app { width: 100%; max-width: 500px; display: flex; flex-direction: column; background-color: var(--bg-app); }
-        header { padding: 15px 20px 10px; text-align: center; flex-shrink: 0; }
+        header { padding: 15px 20px 10px; text-align: center; }
         .uhr { font-family: monospace; font-size: 16px; color: var(--accent); margin-bottom: 10px; font-weight: bold; }
-        
-        .search-area { 
-            background: rgba(255,255,255,0.07); border-radius: 12px; display: flex; 
-            padding: 10px 15px; border: 1px solid #333; margin-bottom: 15px; align-items: center;
-        }
+        .search-area { background: rgba(255,255,255,0.07); border-radius: 12px; display: flex; padding: 10px 15px; border: 1px solid #333; margin-bottom: 15px; align-items: center; }
         .search-area input { background: transparent; border: none; color: #fff; width: 100%; font-size: 16px; outline: none; }
-        
-        #stNameDisplay { font-size: 20px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 5px; }
-
-        .scroll-content { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 0 20px 30px; scrollbar-width: none; }
-        .scroll-content::-webkit-scrollbar { display: none; }
-
+        #stNameDisplay { font-size: 20px; font-weight: 800; text-transform: uppercase; }
+        .scroll-content { flex: 1; overflow-y: auto; padding: 0 20px 30px; scrollbar-width: none; }
         .hero-area { display: flex; flex-direction: column; align-items: center; padding: 10px 0 20px; }
-        .img-container { width: 240px; height: 240px; margin-bottom: 20px; }
-        #mainImg { width: 100%; height: 100%; border-radius: 25px; object-fit: cover; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
-        
-        #pBtn { width: 75px; height: 75px; border-radius: 50%; border: none; background: #fff; color: #000; font-size: 30px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
-
-        .section-title { font-size: 20px; font-weight: bold; font-style: italic; margin: 25px 0 15px; display: block; color: #fff; }
-        
-        .song-entry { display: flex; gap: 15px; margin-bottom: 12px; padding: 5px 0; align-items: center; }
-        .now-playing { border-bottom: 1px solid #333; padding-bottom: 15px; margin-bottom: 20px; }
-        
-        .icon-cell { min-width: 35px; display: flex; justify-content: center; font-size: 24px; color: var(--highlight); }
+        #mainImg { width: 240px; height: 240px; border-radius: 25px; object-fit: cover; box-shadow: 0 10px 30px rgba(0,0,0,0.5); margin-bottom: 20px; }
+        #pBtn { width: 75px; height: 75px; border-radius: 50%; border: none; background: #fff; font-size: 30px; cursor: pointer; }
+        .section-title { font-size: 20px; font-weight: bold; font-style: italic; margin: 25px 0 15px; display: block; }
+        .song-entry { display: flex; gap: 15px; margin-bottom: 12px; align-items: center; }
+        .now-playing { border-bottom: 1px solid #333; padding-bottom: 15px; }
+        .icon-cell { min-width: 35px; text-align: center; font-size: 24px; color: var(--highlight); }
         .time-cell { min-width: 50px; font-size: 13px; color: #777; font-family: monospace; }
-        
-        .song-info { flex: 1; overflow: hidden; }
-        .artist { font-weight: bold; font-size: 15px; display: block; color: #fff; }
+        .song-info { flex: 1; }
+        .artist { font-weight: bold; font-size: 15px; display: block; }
         .title { color: #aaa; font-size: 13px; }
-
         .is-ad { color: var(--ad-color) !important; font-weight: 900; }
         .is-news { color: var(--news-color) !important; font-weight: 900; }
         .is-live { color: var(--live-color) !important; font-weight: 900; }
-
-        #moreBtn { background: rgba(255,255,255,0.05); border: 1px solid #444; color: #fff; padding: 12px; width: 100%; border-radius: 10px; cursor: pointer; font-size: 14px; margin: 10px 0 25px; }
-
-        .station-info-box { background: rgba(0,0,0,0.3); border-radius: 15px; padding: 20px; margin-top: 20px; border: 1px solid #222; text-align: center; }
-        #stDesc { font-size: 14px; color: #bbb; line-height: 1.5; margin-bottom: 10px; text-align: left; }
-        #hoerer { color: var(--highlight); font-weight: bold; font-size: 13px; display: block; margin-bottom: 5px; }
-        .ver-tag { font-size: 10px; color: #444; text-transform: uppercase; letter-spacing: 1px; }
-
+        #moreBtn { background: rgba(255,255,255,0.05); border: 1px solid #444; color: #fff; padding: 12px; width: 100%; border-radius: 10px; margin: 10px 0 25px; cursor: pointer; }
+        .station-info-box { background: rgba(0,0,0,0.3); border-radius: 15px; padding: 20px; border: 1px solid #222; text-align: center; }
+        #hoerer { color: var(--highlight); font-weight: bold; font-size: 13px; display: block; }
+        .ver-tag { font-size: 10px; color: #444; margin-top: 5px; }
         .dock { padding: 15px 25px 35px; background: #000; border-top: 1px solid #222; }
         .vol-row { display: flex; align-items: center; gap: 15px; }
         input[type=range] { flex: 1; accent-color: var(--accent); }
-        #volPerc { font-family: monospace; width: 45px; text-align: right; color: var(--accent); font-weight: bold; }
     </style>
 </head>
 <body>
-
 <div class="app">
     <header>
         <div id="uhr" class="uhr">00:00:00</div>
-        <div class="search-area">
-            <input type="text" id="sIn" placeholder="Sender suchen..." autocomplete="off" onkeydown="if(event.key==='Enter') startManualSearch()">
-            <span onclick="startManualSearch()" style="cursor:pointer; font-size: 18px;">🔍</span>
-        </div>
+        <div class="search-area"><input type="text" id="sIn" placeholder="Sender suchen..." onkeydown="if(event.key==='Enter') startManualSearch()"></div>
         <div id="stNameDisplay">BEREIT</div>
     </header>
-
     <div class="scroll-content">
         <div class="hero-area">
-            <div class="img-container">
-                <img id="mainImg" src="https://laut.fm/images/station_640x640.png">
-            </div>
+            <img id="mainImg" src="https://laut.fm/images/station_640x640.png">
             <button id="pBtn" onclick="toggle()">▶</button>
         </div>
-
         <span class="section-title">Jetzt läuft</span>
         <div id="currentSongArea"></div>
         <span class="section-title" style="font-size: 16px; opacity: 0.6;">Zuletzt gelaufen</span>
         <div id="songHistory"></div>
         <button id="moreBtn" onclick="toggleMore()">Mehr anzeigen</button>
-
         <div class="station-info-box">
-            <div id="stDesc">Wähle einen Sender.</div>
+            <div id="stDesc"></div>
             <span id="hoerer">0 Hörer live</span>
-            <div class="ver-tag">Version 82.6 | Pro Build</div>
+            <div class="ver-tag">Version 82.7 | Pro Build</div>
         </div>
     </div>
-
     <div class="dock">
-        <div class="vol-row">
-            <span>🔈</span>
-            <input type="range" id="vol" min="0" max="1" step="0.01" value="0.8">
-            <span id="volPerc">80%</span>
-        </div>
+        <div class="vol-row">🔈<input type="range" id="vol" min="0" max="1" step="0.01" value="0.8"><span id="volPerc">80%</span></div>
     </div>
 </div>
-
 <script>
     const au = new Audio();
-    let currentSlug = ""; 
-    let showAll = false;
-    let updateTimer = null;
-
+    let currentSlug = "", showAll = false, updateTimer = null;
     setInterval(() => { document.getElementById('uhr').innerText = new Date().toLocaleTimeString('de-DE'); }, 1000);
-
-    document.getElementById('vol').oninput = (e) => { 
-        au.volume = e.target.value; 
-        document.getElementById('volPerc').innerText = Math.round(e.target.value * 100) + "%";
-    };
+    document.getElementById('vol').oninput = (e) => { au.volume = e.target.value; document.getElementById('volPerc').innerText = Math.round(e.target.value * 100) + "%"; };
 
     function startManualSearch() {
         const val = document.getElementById('sIn').value.trim();
@@ -134,10 +80,8 @@
         currentSlug = val.toLowerCase().replace(/[^a-z0-9-]/g, '');
         au.src = "https://stream.laut.fm/" + currentSlug;
         au.play().then(() => { document.getElementById('pBtn').innerHTML = "⏸"; });
-        updateUI();
-        if(updateTimer) clearInterval(updateTimer);
-        updateTimer = setInterval(updateUI, 8000);
-        document.activeElement.blur();
+        updateUI(); if(updateTimer) clearInterval(updateTimer);
+        updateTimer = setInterval(updateUI, 5000); // 5 Sekunden Takt für extrem schnelle Erkennung
     }
 
     function toggle() {
@@ -147,11 +91,7 @@
         updateUI();
     }
 
-    function toggleMore() {
-        showAll = !showAll;
-        document.getElementById('moreBtn').innerText = showAll ? "Weniger anzeigen" : "Mehr anzeigen";
-        updateUI();
-    }
+    function toggleMore() { showAll = !showAll; updateUI(); }
 
     async function updateUI() {
         if(!currentSlug) return;
@@ -161,43 +101,31 @@
                 fetch("https://api.laut.fm/station/" + currentSlug + "/last_songs").then(r => r.json()),
                 fetch("https://api.laut.fm/station/" + currentSlug + "/listeners").then(r => r.text())
             ]);
-
             document.getElementById('stNameDisplay').innerText = s.display_name;
-            document.getElementById('mainImg').src = s.images.station_640x640.replace('http://', 'https://');
+            document.getElementById('mainImg').src = s.images.station_640x640;
             document.getElementById('stDesc').innerText = s.description || "";
             document.getElementById('hoerer').innerText = h + " Hörer live";
 
-            const current = l[0];
-            const artist = current.artist.name.toLowerCase();
-            const title = current.title.toLowerCase();
+            const cur = l[0];
+            const art = (cur.artist.name || "").toLowerCase();
+            const tit = (cur.title || "").toLowerCase();
+
+            // DIE REKLAME-FANG-LOGIK
+            const isReklame = art.includes("reklame") || tit.includes("reklame") || art.includes("audio-reklame");
+            const isNews = !isReklame && (art.includes("nachrichten") || tit.includes("nachrichten") || art.includes("news") || tit.includes("news") || tit.includes("zeitfunk"));
+            const isLive = !isReklame && !isNews && (art.includes("moderation") || tit.includes("talk") || art.includes("live") || cur.type === "station_voice");
+            const isAd = !isReklame && !isNews && !isLive && (cur.type === "ad" || art.includes("werbung") || art.includes("laut.fm") || art.includes("ad-server"));
+
+            let ico = "🔊", aD = cur.artist.name, tD = cur.title, cls = "";
+            if (isReklame) { ico = "📢"; aD = "REKLAME"; tD = "Gleich geht es weiter..."; cls = "is-ad"; }
+            else if (isNews) { ico = "📰"; aD = "NACHRICHTEN"; tD = "Aktuelle Meldungen"; cls = "is-news"; }
+            else if (isLive) { ico = "🎤"; aD = "MODERATION"; tD = "Live am Mikrofon"; cls = "is-live"; }
+            else if (isAd) { ico = "📢"; aD = "WERBUNG"; tD = "Gleich geht es weiter..."; cls = "is-ad"; }
+
+            document.getElementById('currentSongArea').innerHTML = `<div class="song-entry now-playing"><div class="icon-cell">${ico}</div><div class="song-info"><span class="artist ${cls}">${aD}</span><span class="title">${tD}</span></div></div>`;
             
-            // LOGIK-UPDATE: ERKENNUNG VON REKLAME
-            const isReklame = artist.includes("reklame") || title.includes("reklame");
-            const isNews = !isReklame && (artist.includes("nachrichten") || title.includes("nachrichten") || artist.includes("news") || title.includes("news") || title.includes("zeitfunk"));
-            const isLive = !isReklame && !isNews && (artist.includes("moderation") || title.includes("moderation") || artist.includes("talk") || artist.includes("live") || current.type === "station_voice");
-            const isAd = !isReklame && !isNews && !isLive && (current.type === "ad" || artist.includes("werbung") || artist.includes("laut.fm") || artist.includes("ad-server"));
-            
-            let icon = "🔊", artistDisp = current.artist.name, titleDisp = current.title, cls = "";
-
-            if (isReklame) {
-                icon = "📢"; artistDisp = "REKLAME"; titleDisp = "Gleich geht es weiter..."; cls = "is-ad";
-            } else if (isNews) {
-                icon = "📰"; artistDisp = "NACHRICHTEN"; titleDisp = "Aktuelle Meldungen"; cls = "is-news";
-            } else if (isLive) {
-                icon = "🎤"; artistDisp = "MODERATION"; titleDisp = "Live am Mikrofon"; cls = "is-live";
-            } else if (isAd) {
-                icon = "📢"; artistDisp = "WERBUNG"; titleDisp = "Gleich geht es weiter..."; cls = "is-ad";
-            }
-
-            document.getElementById('currentSongArea').innerHTML = `
-                <div class="song-entry now-playing">
-                    <div class="icon-cell">${icon}</div>
-                    <div class="song-info"><span class="artist ${cls}">${artistDisp}</span><span class="title">${titleDisp}</span></div>
-                </div>`;
-
             let hist = "";
-            const lim = showAll ? 10 : 4;
-            l.slice(1, lim).forEach(song => {
+            l.slice(1, showAll ? 10 : 4).forEach(song => {
                 const time = new Date(song.started_at).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
                 hist += `<div class="song-entry"><div class="time-cell">${time}</div><div class="song-info"><span class="artist">${song.artist.name}</span><span class="title">${song.title}</span></div></div>`;
             });
