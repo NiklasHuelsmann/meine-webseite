@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Radio Player Original Look v91.2</title>
+    <title>Radio Player Pro v91.4</title>
     <style>
         :root { 
             --bg-app: #1e2538; 
@@ -16,23 +16,19 @@
         body { background-color: #0d111a; margin: 0; display: flex; justify-content: center; height: 100vh; color: var(--text-main); font-family: -apple-system, sans-serif; overflow: hidden; }
         .app { width: 100%; max-width: 480px; height: 100%; background-color: var(--bg-app); display: flex; flex-direction: column; position: relative; }
         
-        /* Schlanker Header */
         .top-nav { height: 50px; display: flex; align-items: center; justify-content: space-between; padding: 0 15px; border-bottom: 1px solid var(--line); }
         #stNameHeader { font-size: 14px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; }
 
         .scroll-area { flex: 1; overflow-y: auto; scrollbar-width: none; }
         .scroll-area::-webkit-scrollbar { display: none; }
 
-        /* Großer Banner Look */
         .hero { padding: 0; text-align: center; position: relative; }
-        #mainImg { width: 100%; aspect-ratio: 16/9; object-fit: cover; border-bottom: 2px solid var(--accent-green); }
+        #mainImg { width: 100%; aspect-ratio: 16/9; object-fit: cover; border-bottom: 2px solid var(--accent-green); background: #161a24; }
         
-        /* Floating Buttons wie im Original */
         .main-controls { display: flex; align-items: center; justify-content: center; gap: 40px; margin-top: -30px; position: relative; z-index: 10; }
         .btn-round { width: 65px; height: 65px; border-radius: 50%; background: var(--accent-green); border: none; font-size: 28px; color: #1e2538; cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.4); }
         .icon-side { background: none; border: none; color: var(--accent-green); font-size: 22px; cursor: pointer; }
 
-        /* Song-Sektionen flächig */
         .content-section { padding: 25px 20px; border-top: 1px solid var(--line); }
         .section-title { font-style: italic; font-size: 24px; font-weight: 900; margin-bottom: 15px; display: block; }
 
@@ -43,42 +39,48 @@
         .track-tit { font-size: 14px; color: var(--text-dim); display: block; margin-top: 2px; }
         .speaker-active { color: var(--accent-green); font-size: 18px; width: 45px; text-align: center; }
 
-        /* Footer Info & Vol */
         .footer-area { padding: 20px; background: rgba(0,0,0,0.2); }
         .loc-box { display: flex; align-items: center; gap: 8px; color: var(--accent-green); font-weight: bold; margin-bottom: 15px; }
         .vol-box { display: flex; align-items: center; gap: 15px; margin-top: 10px; }
         #volSlider { flex: 1; accent-color: var(--accent-green); height: 4px; cursor: pointer; }
         .hoerer-badge { background: rgba(0,250,217,0.1); color: var(--accent-green); padding: 5px 12px; border-radius: 4px; font-size: 12px; font-weight: bold; display: inline-block; margin-top: 10px; }
+
+        #searchOverlay { display: none; position: absolute; top: 0; left: 0; width: 100%; height: 50px; background: #161a24; z-index: 100; align-items: center; padding: 0 15px; }
+        #sInput { flex: 1; height: 35px; background: #1e2538; border: 1px solid var(--accent-green); border-radius: 4px; color: #fff; padding: 0 10px; outline: none; }
     </style>
 </head>
-<body>
+<body onload="initApp()">
 
 <div class="app">
     <div class="top-nav">
-        <span id="stNameHeader">RADIO PLAYER</span>
-        <span onclick="openSearch()" style="cursor:pointer; color:var(--accent-green); font-size:20px;">🔍</span>
+        <span id="stNameHeader">LADE...</span>
+        <span onclick="toggleSearch()" style="cursor:pointer; color:var(--accent-green); font-size:20px;">🔍</span>
+    </div>
+
+    <div id="searchOverlay">
+        <input type="text" id="sInput" placeholder="Sender suchen..." onkeydown="if(event.key==='Enter') execSearch()">
+        <button onclick="toggleSearch()" style="background:none; border:none; color:#fff; margin-left:10px;">✕</button>
     </div>
 
     <div class="scroll-area">
         <div class="hero">
-            <img id="mainImg" src="https://laut.fm/images/station_640x640.png">
+            <img id="mainImg" src="">
             <div class="main-controls">
                 <button class="icon-side" onclick="shareStation()">🔗</button>
-                <button id="pBtn" class="btn-round" onclick="toggle()">▶</button>
-                <div style="width:24px"></div> </div>
+                <button id="pBtn" class="btn-round" onclick="togglePlay()">▶</button>
+                <div style="width:24px"></div>
+            </div>
         </div>
 
         <div class="content-section">
             <span class="section-title">Jetzt läuft</span>
-            <div id="trackList">
-                </div>
+            <div id="trackList"></div>
             <div id="moreBtn" style="color:var(--accent-green); text-align:center; padding:15px; font-weight:bold; cursor:pointer;" onclick="toggleHistory()">mehr Songs anzeigen</div>
         </div>
 
         <div class="footer-area">
-            <span id="footerSlogan" class="section-title" style="font-size:22px;">Dein Tag, Dein Sound.</span>
-            <div class="loc-box"><span>📍</span><span id="stLoc">Lade...</span></div>
-            <div id="stDesc" style="font-size:14px; color:var(--text-dim); line-height:1.5;"></div>
+            <span id="footerSlogan" class="section-title" style="font-size:22px;">...</span>
+            <div class="loc-box"><span>📍</span><span id="stLoc">...</span></div>
             <div id="hoerer" class="hoerer-badge">0 HÖRER</div>
 
             <div class="vol-box">
@@ -91,50 +93,67 @@
 </div>
 
 <script>
+    // HIER DEINEN SENDER-NAMEN EINTRAGEN (z.B. "gold-oldies")
+    const DEFAULT_STATION = "gold-oldies"; 
+
     const au = new Audio(); au.volume = 0.8; 
-    let slug = ""; let histFull = false; let uiInterval;
+    let currentSlug = ""; let histFull = false; let uiInterval;
+
+    function initApp() {
+        startStation(DEFAULT_STATION, false); // Lädt Daten, spielt aber nicht sofort (wegen Browser-Regeln)
+    }
 
     function changeVol(val) { au.volume = val; }
-    function openSearch() { let s = prompt("Sender-Kurzname (Slug):"); if(s) startSearch(s); }
+    function toggleSearch() { 
+        const el = document.getElementById('searchOverlay');
+        el.style.display = (el.style.display === 'flex') ? 'none' : 'flex';
+        if(el.style.display === 'flex') document.getElementById('sInput').focus();
+    }
 
-    async function startSearch(val) {
-        slug = val.toLowerCase().replace(/[^a-z0-9-]/g, ''); 
-        au.src = "https://stream.laut.fm/" + slug;
-        au.play(); document.getElementById('pBtn').innerHTML = "⏸"; 
+    function execSearch() {
+        const val = document.getElementById('sInput').value.trim();
+        if(val) { startStation(val, true); toggleSearch(); }
+    }
+
+    async function startStation(slug, autoPlay) {
+        currentSlug = slug.toLowerCase().replace(/[^a-z0-9-]/g, ''); 
+        au.src = "https://stream.laut.fm/" + currentSlug;
+        if(autoPlay) {
+            au.play();
+            document.getElementById('pBtn').innerHTML = "⏸";
+        }
         updateUI(); 
         if(uiInterval) clearInterval(uiInterval);
         uiInterval = setInterval(updateUI, 10000);
     }
 
-    function toggle() {
-        if(!slug) { openSearch(); return; }
-        au.paused ? (au.play(), document.getElementById('pBtn').innerHTML = "⏸") : (au.pause(), document.getElementById('pBtn').innerHTML = "▶");
+    function togglePlay() {
+        if(au.paused) { au.play(); document.getElementById('pBtn').innerHTML = "⏸"; }
+        else { au.pause(); document.getElementById('pBtn').innerHTML = "▶"; }
     }
 
     function toggleHistory() { histFull = !histFull; updateUI(); }
 
     async function updateUI() {
-        if(!slug) return;
+        if(!currentSlug) return;
         try {
             const [s, l, h] = await Promise.all([
-                fetch(`https://api.laut.fm/station/${slug}`).then(r => r.json()),
-                fetch(`https://api.laut.fm/station/${slug}/last_songs`).then(r => r.json()),
-                fetch(`https://api.laut.fm/station/${slug}/listeners`).then(r => r.text())
+                fetch(`https://api.laut.fm/station/${currentSlug}`).then(r => r.json()),
+                fetch(`https://api.laut.fm/station/${currentSlug}/last_songs`).then(r => r.json()),
+                fetch(`https://api.laut.fm/station/${currentSlug}/listeners`).then(r => r.text())
             ]);
 
             document.getElementById('stNameHeader').innerText = s.display_name;
             document.getElementById('mainImg').src = s.images.station_640x640;
             document.getElementById('stLoc').innerText = s.city || "Radio";
-            document.getElementById('stDesc').innerText = s.description || "";
             document.getElementById('hoerer').innerText = h + " HÖRER";
-            document.getElementById('footerSlogan').innerText = s.page_title || "Dein Tag, Dein Sound.";
+            document.getElementById('footerSlogan').innerText = s.page_title || "Dein Sound.";
 
             let listHtml = "";
             l.forEach((song, i) => {
                 if(!histFull && i > 3) return;
                 const isCurrent = i === 0;
                 const time = new Date(song.started_at).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
-                
                 listHtml += `
                 <div class="track-entry">
                     ${isCurrent ? '<div class="speaker-active">🔊</div>' : `<div class="track-time">${time}</div>`}
@@ -145,11 +164,10 @@
                 </div>`;
             });
             document.getElementById('trackList').innerHTML = listHtml;
-            document.getElementById('moreBtn').innerText = histFull ? "weniger anzeigen" : "mehr Songs anzeigen";
         } catch(e) {}
     }
 
-    async function shareStation() { if(slug) navigator.share({ url: `https://laut.fm/${slug}` }); }
+    async function shareStation() { if(currentSlug) navigator.share({ url: `https://laut.fm/${currentSlug}` }); }
 </script>
 </body>
 </html>
