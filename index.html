@@ -3,15 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Radio App FINALE v88.7</title>
+    <title>Radio App ULTIMATE v88.9</title>
     <style>
         :root { 
             --bg-dark: #0c0e14; 
             --bg-card: #161a24;
             --accent-green: #00e699;
             --accent-pink: #ff00ff;
-            --accent-yellow: #ffd700;
-            --accent-blue: #00d9ff;
+            --accent-yellow: #ffd700; /* Werbung */
+            --accent-blue: #00d9ff;   /* Nachrichten */
             --text-main: #ffffff;
             --text-dim: #717b8a;
         }
@@ -20,10 +20,12 @@
         
         .app { width: 100%; max-width: 500px; display: flex; flex-direction: column; background-color: var(--bg-dark); position: relative; }
         
-        .app-bar { height: 60px; display: flex; align-items: center; justify-content: space-between; padding: 0 20px; z-index: 1001; }
-        #sysTime { font-family: monospace; color: var(--accent-green); font-weight: bold; }
-        .search-trigger { font-size: 22px; color: var(--accent-green); cursor: pointer; padding: 10px; }
+        /* Status Bar */
+        .status-bar { height: 40px; display: flex; align-items: center; justify-content: space-between; padding: 0 15px; z-index: 1001; }
+        #sysTime { font-family: monospace; color: var(--text-dim); font-size: 13px; font-weight: bold; }
+        .search-trigger { font-size: 20px; color: var(--accent-green); cursor: pointer; padding: 5px; }
 
+        /* Suchbox */
         #searchBox { 
             display: none; 
             position: absolute; 
@@ -40,16 +42,18 @@
         .scroll-area { flex: 1; overflow-y: auto; scrollbar-width: none; }
         .scroll-area::-webkit-scrollbar { display: none; }
 
-        .hero { padding: 10px 20px 20px; text-align: center; }
+        /* Zentrales Design */
+        .hero { padding: 0 20px 20px; text-align: center; display: flex; flex-direction: column; align-items: center; }
         #stNameDisplay { font-size: 20px; font-weight: 800; margin-bottom: 5px; text-transform: uppercase; color: #fff; letter-spacing: 1px; min-height: 24px; }
         #modBadge { display: none; background: var(--accent-pink); color: white; font-size: 11px; font-weight: bold; padding: 2px 8px; border-radius: 4px; text-transform: uppercase; width: fit-content; margin: 0 auto 15px; }
 
         #mainImg { width: 280px; height: 280px; border-radius: 8px; object-fit: cover; box-shadow: 0 20px 40px rgba(0,0,0,0.6); margin-bottom: 20px; background: #1a202c; }
         
-        .controls { display: flex; align-items: center; justify-content: center; gap: 25px; margin-bottom: 10px; }
-        #pBtn { width: 75px; height: 75px; border-radius: 50%; background: var(--accent-green); border: none; font-size: 30px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; }
+        .controls { display: flex; align-items: center; justify-content: center; gap: 25px; margin-bottom: 20px; width: 100%; }
+        #pBtn { width: 75px; height: 75px; border-radius: 50%; background: var(--accent-green); border: none; font-size: 30px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; box-shadow: 0 10px 20px rgba(0, 230, 153, 0.2); }
+        .btn-side { background: none; border: none; color: var(--text-dim); font-size: 22px; cursor: pointer; }
 
-        /* Was läuft Sektion */
+        /* Was läuft Box */
         .now-playing-card { background: var(--bg-card); border-radius: 12px; padding: 20px; margin: 0 20px 20px; }
         .card-label { color: var(--text-dim); font-size: 11px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px; display: block; }
         .track-now-container { display: flex; align-items: flex-start; gap: 12px; }
@@ -62,23 +66,14 @@
         .h-time { width: 50px; color: var(--text-dim); font-size: 11px; }
         .h-art { color: var(--accent-green); font-weight: 600; }
 
-        /* Footer mit Mehr-Button */
-        .footer { padding: 30px 25px 60px; background: #080a0e; }
+        /* Footer */
+        .footer { padding: 30px 25px 60px; background: #080a0e; margin-top: 20px;}
         .vol-container { display: flex; align-items: center; gap: 15px; margin-bottom: 25px; background: rgba(255,255,255,0.03); padding: 12px; border-radius: 10px; }
-        #volSlider { flex: 1; -webkit-appearance: none; background: #232a37; height: 4px; border-radius: 2px; }
+        #volSlider { flex: 1; -webkit-appearance: none; background: #232a37; height: 4px; border-radius: 2px; outline: none;}
         #volSlider::-webkit-slider-thumb { -webkit-appearance: none; width: 16px; height: 16px; background: var(--accent-green); border-radius: 50%; }
         
         #stSlogan { font-size: 18px; font-weight: 800; margin-bottom: 6px; }
-        #stDesc { 
-            color: var(--text-dim); 
-            font-size: 14px; 
-            line-height: 1.5;
-            display: -webkit-box;
-            -webkit-line-clamp: 3;
-            -webkit-box-orient: vertical;
-            overflow: hidden;
-            margin-bottom: 8px;
-        }
+        #stDesc { color: var(--text-dim); font-size: 14px; line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; margin-bottom: 8px; }
         #stDesc.expanded { -webkit-line-clamp: unset; }
         #moreBtn { color: var(--accent-green); font-size: 12px; font-weight: bold; cursor: pointer; text-transform: uppercase; display: none; margin-bottom: 20px; }
         .hoerer { display: none; padding: 6px 12px; background: rgba(0,230,153,0.1); color: var(--accent-green); border-radius: 4px; font-weight: bold; font-size: 11px; }
@@ -87,7 +82,11 @@
 <body>
 
 <div class="app">
-    <div class="app-bar"><div id="sysTime">00:00</div><div class="search-trigger" onclick="openSearch()">🔍</div></div>
+    <div class="status-bar">
+        <div id="sysTime">00:00</div>
+        <div class="search-trigger" onclick="openSearch()">🔍</div>
+    </div>
+
     <div id="searchBox">
         <input type="text" id="sIn" placeholder="Sendername..." onkeydown="if(event.key==='Enter') startSearch()">
         <div class="close-btn" onclick="closeSearch()">✕</div>
@@ -99,9 +98,9 @@
             <div id="modBadge">LIVE MODERATION</div>
             <img id="mainImg" src="https://laut.fm/images/station_640x640.png">
             <div class="controls">
-                <button style="background:none;border:none;color:var(--text-dim);font-size:22px;" onclick="shareStation()">🔗</button>
+                <button class="btn-side" onclick="shareStation()">🔗</button>
                 <button id="pBtn" onclick="toggle()">▶</button>
-                <div style="width:40px;"></div>
+                <div style="width: 30px;"></div>
             </div>
         </div>
 
@@ -123,10 +122,11 @@
                 <input type="range" id="volSlider" min="0" max="1" step="0.01" value="0.8" oninput="setVol(this.value)">
             </div>
             <div id="stSlogan"></div>
-            <div class="location" id="stLocArea" style="margin-bottom:10px; font-size:12px; font-weight:bold; color:var(--accent-green);"></div>
+            <div class="location" id="stLocArea" style="margin-bottom:15px; font-size:12px; font-weight:bold; color:var(--accent-green);"></div>
             <div id="stDesc"></div>
             <div id="moreBtn" onclick="toggleDesc()">Mehr anzeigen</div>
             <div class="hoerer" id="hoerer">0 HÖRER</div>
+            <div style="text-align: center; font-size: 8px; margin-top: 40px; opacity: 0.1; letter-spacing: 2px;">V88.9 FINAL-SAFE</div>
         </div>
     </div>
 </div>
@@ -141,10 +141,8 @@
     function openSearch() { document.getElementById('sIn').value = ""; document.getElementById('searchBox').style.display = 'flex'; document.getElementById('sIn').focus(); }
     function closeSearch() { document.getElementById('searchBox').style.display = 'none'; }
     function toggleDesc() { 
-        const d = document.getElementById('stDesc');
-        const b = document.getElementById('moreBtn');
-        d.classList.toggle('expanded');
-        b.innerText = d.classList.contains('expanded') ? "Weniger anzeigen" : "Mehr anzeigen";
+        const d = document.getElementById('stDesc'); const b = document.getElementById('moreBtn');
+        d.classList.toggle('expanded'); b.innerText = d.classList.contains('expanded') ? "Weniger anzeigen" : "Mehr anzeigen";
     }
 
     async function startSearch() {
@@ -181,16 +179,21 @@
             const d = document.getElementById('stDesc');
             d.innerText = s.description || "";
             document.getElementById('moreBtn').style.display = (s.description && s.description.length > 100) ? "block" : "none";
-            
             document.getElementById('hoerer').innerText = h + " HÖRER";
             document.getElementById('hoerer').style.display = "inline-block";
 
             const cur = l[0];
             let color = "var(--accent-green)";
-            if(cur.type === "gold") color = "var(--accent-yellow)";
-            if(cur.type === "news") color = "var(--accent-blue)";
-            if(cur.type === "pink" || cur.type === "moderation") { color = "var(--accent-pink)"; document.getElementById('modBadge').style.display = "block"; }
-            else { document.getElementById('modBadge').style.display = "none"; }
+            
+            // DIE WICHTIGE FARB-LOGIK
+            if(cur.type === "gold") color = "var(--accent-yellow)"; // Werbung
+            if(cur.type === "news") color = "var(--accent-blue)";   // News
+            if(cur.type === "pink" || cur.type === "moderation") { 
+                color = "var(--accent-pink)"; 
+                document.getElementById('modBadge').style.display = "block"; 
+            } else { 
+                document.getElementById('modBadge').style.display = "none"; 
+            }
 
             document.getElementById('currentSongArea').innerHTML = `<span class="artist-main" style="color:${color}">${cur.artist.name}</span><span class="title-main">${cur.title}</span>`;
 
