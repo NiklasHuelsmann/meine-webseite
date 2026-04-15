@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Radio App REAL LOOK v89.0</title>
+    <title>Radio App COMPLETE v89.3</title>
     <style>
         :root { 
-            --bg-dark: #121826; /* Dunkles Blau-Grau aus image_1.png */
-            --bg-footer: #0a0e1a; /* Etwas dunklerer Footer aus image_2.png */
-            --accent-green: #00bf8e; /* Das Grün aus den Bildern */
+            --bg-dark: #121826; 
+            --bg-footer: #0a0e1a; 
+            --accent-green: #00bf8e;
             --accent-pink: #ff00ff;
             --accent-yellow: #ffd700;
             --accent-blue: #00d9ff;
@@ -16,19 +16,15 @@
             --text-dim: #717b8a;
         }
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        body { background-color: var(--bg-dark); color: var(--text-main); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; margin: 0; display: flex; justify-content: center; height: 100vh; overflow: hidden; }
+        body { background-color: var(--bg-dark); color: var(--text-main); font-family: -apple-system, sans-serif; margin: 0; display: flex; justify-content: center; height: 100vh; overflow: hidden; }
         
         .app { width: 100%; max-width: 500px; display: flex; flex-direction: column; background-color: var(--bg-dark); position: relative; }
         
-        /* Status Bar & Navi oben */
-        .top-nav { height: 100px; padding: 20px; z-index: 1001; }
-        .status-bar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; font-size: 13px; font-weight: bold; color: var(--text-dim); }
-        .nav-bar { display: flex; align-items: center; justify-content: space-between; color: var(--text-dim); }
-        .nav-arrow { font-size: 24px; color: var(--accent-green); cursor: pointer; padding-right: 15px;}
+        .top-nav { height: 60px; display: flex; align-items: center; justify-content: space-between; padding: 0 20px; z-index: 1001; }
+        #sysTime { font-family: monospace; color: var(--text-dim); font-size: 14px; font-weight: bold; }
         #stNameDisplay { font-size: 15px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; flex: 1; text-align: center; }
         .search-trigger { font-size: 20px; color: var(--accent-green); cursor: pointer; padding: 5px; }
 
-        /* Suchbox */
         #searchBox { display: none; position: absolute; top: 0; left: 0; width: 100%; height: 65px; background: #1a202c; z-index: 2000; align-items: center; padding: 0 15px; border-bottom: 2px solid var(--accent-green); }
         #sIn { flex: 1; height: 40px; background: #232a37; border: none; border-radius: 8px; color: #fff; padding: 0 15px; font-size: 16px; outline: none; }
         .close-btn { margin-left: 10px; color: var(--accent-green); font-weight: bold; cursor: pointer; padding: 10px; }
@@ -36,70 +32,48 @@
         .scroll-area { flex: 1; overflow-y: auto; scrollbar-width: none; }
         .scroll-area::-webkit-scrollbar { display: none; }
 
-        /* Zentraler Hero Bereich */
-        .hero { padding: 0 20px 20px; text-align: center; display: flex; flex-direction: column; align-items: center; }
-        #modBadge { display: none; background: var(--accent-pink); color: white; font-size: 11px; font-weight: bold; padding: 2px 8px; border-radius: 4px; text-transform: uppercase; width: fit-content; margin-bottom: 10px; }
-        
-        /* Rundes Logo-Bild */
-        #mainImgContainer { width: 250px; height: 250px; border-radius: 50%; padding: 10px; background: rgba(0,0,0,0.3); margin-bottom: 25px; display: flex; align-items: center; justify-content: center;}
+        .hero { padding: 20px 20px; text-align: center; display: flex; flex-direction: column; align-items: center; }
+        #modBadge { display: none; background: var(--accent-pink); color: white; font-size: 11px; font-weight: bold; padding: 2px 8px; border-radius: 4px; text-transform: uppercase; margin-bottom: 10px; }
+        #mainImgContainer { width: 240px; height: 240px; border-radius: 50%; padding: 10px; background: rgba(0,0,0,0.2); margin-bottom: 25px; display: flex; align-items: center; justify-content: center;}
         #mainImg { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; }
         
         .controls { display: flex; align-items: center; justify-content: center; gap: 30px; margin-bottom: 25px; width: 100%; }
-        #pBtn { width: 60px; height: 60px; border-radius: 50%; background: var(--accent-green); border: none; font-size: 24px; color: #fff; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; box-shadow: 0 5px 15px rgba(0, 191, 142, 0.3); }
-        .btn-side { background: none; border: none; color: var(--accent-green); font-size: 22px; cursor: pointer; padding: 5px; }
+        #pBtn { width: 65px; height: 65px; border-radius: 50%; background: var(--accent-green); border: none; font-size: 26px; color: #fff; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; }
+        .btn-side { background: none; border: none; color: var(--accent-green); font-size: 22px; cursor: pointer; }
 
-        /* Jetzt läuft */
-        .now-playing-section { padding: 0 20px 20px; }
+        .now-playing-section { padding: 0 20px 30px; border-bottom: 1px solid rgba(255,255,255,0.05); }
         .section-label { color: var(--text-main); font-size: 17px; font-weight: bold; margin-bottom: 15px; display: block; }
         .track-now-container { display: flex; align-items: flex-start; gap: 15px; }
-        .speaker-icon { font-size: 20px; color: var(--accent-green); margin-top: 5px;}
+        .speaker-icon { font-size: 20px; color: var(--accent-green); }
         .artist-main { font-size: 18px; font-weight: 600; display: block; margin-bottom: 2px; }
         .title-main { font-size: 16px; color: #fff; display: block; opacity: 0.9; }
 
-        /* Historie */
-        .section-content { padding: 0 20px; }
+        .footer { padding: 30px 20px 60px; background: var(--bg-footer); }
+        #stSlogan { font-size: 18px; font-weight: bold; margin-bottom: 8px; }
+        .location-area { display: flex; align-items: center; gap: 8px; color: var(--accent-green); font-size: 12px; font-weight: bold; margin-bottom: 15px; }
+        
+        /* Mehr Anzeigen Logik */
+        #stDesc { color: var(--text-main); font-size: 14px; line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; margin-bottom: 8px; }
+        #stDesc.expanded { -webkit-line-clamp: unset; }
+        #moreBtnDesc { color: var(--accent-green); font-size: 12px; font-weight: bold; cursor: pointer; text-transform: uppercase; display: none; margin-bottom: 25px; }
+
+        .program-label { color: var(--text-main); font-size: 17px; font-weight: bold; margin-bottom: 20px; display: block; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 20px; }
         .history-item { display: flex; padding: 12px 0; border-bottom: 1px solid rgba(255,255,255,0.03); font-size: 14px; align-items: center; }
-        .h-time { width: 50px; color: var(--text-dim); font-size: 11px; font-weight: 500; font-family: monospace; }
-        .h-info { display: flex; flex-direction: column; gap: 2px;}
-        .h-art { color: var(--accent-green); font-weight: 600; font-size: 15px; }
-        .h-tit { color: var(--text-main); font-size: 14px;}
+        .h-time { width: 50px; color: var(--text-dim); font-size: 11px; }
+        .h-info { display: flex; flex-direction: column; }
+        .h-art { color: var(--accent-green); font-weight: 600; font-size: 14px; }
+        .h-tit { color: var(--text-main); font-size: 13px; opacity: 0.8; }
         
-        #moreBtn { color: var(--accent-green); font-size: 14px; font-weight: bold; cursor: pointer; text-transform: uppercase; margin: 20px 0; text-align: center; display: none; }
-
-        /* Footer */
-        .footer { padding: 30px 20px 80px; background: var(--bg-footer); margin-top: 20px;}
-        
-        .footer-info { display: flex; flex-direction: column; gap: 10px; margin-bottom: 25px;}
-        #stSlogan { font-size: 18px; font-weight: bold; color: var(--text-main); line-height: 1.3; }
-        .location-area { display: flex; align-items: center; gap: 8px; color: var(--accent-green); font-size: 12px; font-weight: bold; }
-        .loc-icon { font-size: 16px; }
-        #stDesc { color: var(--text-main); font-size: 14px; line-height: 1.5; margin-bottom: 20px; }
-        
-        .program-label { color: var(--text-main); font-size: 17px; font-weight: bold; margin-bottom: 15px; }
-        
-        .hoerer { display: none; padding: 6px 12px; background: rgba(0,191,142,0.1); color: var(--accent-green); border-radius: 4px; font-weight: bold; font-size: 11px; }
-
-        /* Bottom Navi */
-        .bottom-nav { height: 60px; background: rgba(0,0,0,0.5); border-top: 1px solid rgba(255,255,255,0.05); position: absolute; bottom: 0; left: 0; width: 100%; display: flex; align-items: center; justify-content: space-around; padding: 0 10px; z-index: 1002; }
-        .b-nav-item { display: flex; flex-direction: column; align-items: center; color: var(--text-dim); text-decoration: none; cursor: pointer; }
-        .b-nav-item.active { color: var(--accent-green); }
-        .b-nav-icon { font-size: 20px; margin-bottom: 2px; }
-        .b-nav-text { font-size: 11px; font-weight: 500;}
+        .hoerer { display: none; margin-top: 20px; padding: 6px 12px; background: rgba(0,191,142,0.1); color: var(--accent-green); border-radius: 4px; font-weight: bold; font-size: 11px; width: fit-content; }
     </style>
 </head>
 <body>
 
 <div class="app">
     <div class="top-nav">
-        <div class="status-bar">
-            <div>00:25</div>
-            <div>5G 📶 55%🔋</div>
-        </div>
-        <div class="nav-bar">
-            <span class="nav-arrow" onclick="closeApp()">←</span>
-            <div id="stNameDisplay">Sendername...</div>
-            <div class="search-trigger" onclick="openSearch()">🔍</div>
-        </div>
+        <div id="sysTime">00:00</div>
+        <div id="stNameDisplay"></div>
+        <div class="search-trigger" onclick="openSearch()">🔍</div>
     </div>
 
     <div id="searchBox">
@@ -109,14 +83,13 @@
 
     <div class="scroll-area">
         <div class="hero">
-            <div id="modBadge">LIVE MODERATION</div>
-            <div id="mainImgContainer">
-                <img id="mainImg" src="https://laut.fm/images/station_640x640.png">
-            </div>
+            <div id="modBadge">LIVE BERATUNG</div>
+            <div id="mainImgContainer"><img id="mainImg" src="https://laut.fm/images/station_640x640.png"></div>
             <div class="controls">
                 <button class="btn-side" onclick="shareStation()">🔗</button>
                 <button id="pBtn" onclick="toggle()">▶</button>
-                <div style="width: 32px;"></div> </div>
+                <div style="width: 30px;"></div>
+            </div>
         </div>
 
         <div class="now-playing-section">
@@ -130,36 +103,35 @@
             </div>
         </div>
 
-        <div class="section-content" id="songHistory"></div>
-        <div id="moreBtn">mehr Songs anzeigen</div>
-
         <div class="footer">
-            <div class="footer-info">
-                <div id="stSlogan">Slogan...</div>
-                <div class="location-area">
-                    <span class="loc-icon">📍</span>
-                    <span id="stLocArea">Standort...</span>
-                </div>
-                <div id="stDesc">Beschreibung...</div>
-            </div>
-            <div class="program-label">Programm</div>
+            <div id="stSlogan"></div>
+            <div class="location-area"><span>📍</span><span id="stLocArea"></span></div>
+            
+            <div id="stDesc"></div>
+            <div id="moreBtnDesc" onclick="toggleDesc()">Mehr anzeigen</div>
+            
+            <span class="program-label">Programm</span>
+            <div id="songHistory"></div>
+            
             <div class="hoerer" id="hoerer">0 HÖRER</div>
         </div>
-    </div>
-
-    <div class="bottom-nav">
-        <div class="b-nav-item active"><span class="b-nav-icon">🏠</span><span class="b-nav-text">Home</span></div>
-        <div class="b-nav-item"><span class="b-nav-icon">➕</span><span class="b-nav-text">Hinzufügen</span></div>
-        <div class="b-nav-item"><span class="b-nav-icon">🔍</span><span class="b-nav-text">Suchen</span></div>
     </div>
 </div>
 
 <script>
     const au = new Audio(); au.volume = 0.8;
-    let currentSlug = "", currentStationName = "", updateTimer = null;
+    let currentSlug = "";
 
-    function closeApp() { alert("← App schließen (Demomodus)"); }
-    function setVol(val) { au.volume = val; }
+    function updateClock() { document.getElementById('sysTime').innerText = new Date().toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' }); }
+    setInterval(updateClock, 1000); updateClock();
+
+    function toggleDesc() {
+        const d = document.getElementById('stDesc');
+        const b = document.getElementById('moreBtnDesc');
+        d.classList.toggle('expanded');
+        b.innerText = d.classList.contains('expanded') ? "Weniger anzeigen" : "Mehr anzeigen";
+    }
+
     function openSearch() { document.getElementById('sIn').value = ""; document.getElementById('searchBox').style.display = 'flex'; document.getElementById('sIn').focus(); }
     function closeSearch() { document.getElementById('searchBox').style.display = 'none'; }
 
@@ -170,8 +142,7 @@
         au.src = "https://stream.laut.fm/" + currentSlug;
         au.play().then(() => { document.getElementById('pBtn').innerHTML = "⏸"; });
         closeSearch(); updateUI();
-        if(updateTimer) clearInterval(updateTimer);
-        updateTimer = setInterval(updateUI, 5000);
+        setInterval(updateUI, 5000);
     }
 
     function toggle() {
@@ -194,20 +165,20 @@
             document.getElementById('stSlogan').innerText = s.page_title || s.display_name;
             document.getElementById('stLocArea').innerText = s.city || "RADIO-NETZWERK";
             
-            document.getElementById('stDesc').innerText = s.description || "";
+            const desc = document.getElementById('stDesc');
+            desc.innerText = s.description || "";
+            document.getElementById('moreBtnDesc').style.display = (s.description && s.description.length > 120) ? "block" : "none";
+            
             document.getElementById('hoerer').innerText = h + " HÖRER";
             document.getElementById('hoerer').style.display = "inline-block";
 
             const cur = l[0];
             let color = "var(--accent-green)";
-            
-            // TYP-ERKENNUNG FÜR FARBE (Werbung, News, Mod)
-            if(cur.type === "gold") color = "var(--accent-yellow)"; // Werbung
-            if(cur.type === "news") color = "var(--accent-blue)";   // News
+            if(cur.type === "gold") color = "var(--accent-yellow)";
+            if(cur.type === "news") color = "var(--accent-blue)";
             if(cur.type === "pink" || cur.type === "moderation") { 
                 color = "var(--accent-pink)"; 
                 document.getElementById('modBadge').style.display = "block"; 
-                document.getElementById('modBadge').innerText = "LIVE BERATUNG";
             } else { 
                 document.getElementById('modBadge').style.display = "none"; 
             }
@@ -215,19 +186,18 @@
             document.getElementById('currentSongArea').innerHTML = `<span class="artist-main" style="color:${color}">${cur.artist.name}</span><span class="title-main">${cur.title}</span>`;
 
             let hHtml = "";
-            l.slice(1, 6).forEach(song => {
+            l.slice(1, 8).forEach(song => {
                 const time = new Date(song.started_at).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
                 hHtml += `<div class="history-item"><div class="h-time">${time}</div><div class="h-info"><span class="h-art">${song.artist.name}</span><span class="h-tit">${song.title}</span></div></div>`;
             });
             document.getElementById('songHistory').innerHTML = hHtml;
-            document.getElementById('moreBtn').style.display = (l.length > 6) ? "block" : "none";
         } catch(e) {}
     }
 
     async function shareStation() {
         if(!currentSlug) return;
         const url = `https://laut.fm/${currentSlug}`;
-        if (navigator.share) await navigator.share({ title: currentStationName, url: url });
+        if (navigator.share) await navigator.share({ url: url });
         else window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(url)}`);
     }
 </script>
