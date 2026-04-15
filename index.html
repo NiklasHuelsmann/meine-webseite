@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Radio App Final v88.3</title>
+    <title>Radio App Final v88.4</title>
     <style>
         :root { 
             --bg-dark: #0c0e14; 
@@ -116,7 +116,7 @@
             <div class="location" id="stLocArea"></div>
             <div id="stDesc"></div>
             <div class="hoerer" id="hoerer">0 HÖRER</div>
-            <div style="text-align: center; font-size: 8px; margin-top: 40px; opacity: 0.2; letter-spacing: 2px;">V88.3 CLEAN-SEARCH</div>
+            <div style="text-align: center; font-size: 8px; margin-top: 40px; opacity: 0.2; letter-spacing: 2px;">V88.4 SMART-LOCATION</div>
         </div>
     </div>
 </div>
@@ -132,14 +132,12 @@
     setInterval(updateClock, 1000); updateClock();
 
     function setVol(val) { au.volume = val; }
-
     function openSearch() { 
         const input = document.getElementById('sIn');
-        input.value = ""; // Suchfeld wird bei jedem Öffnen geleert
+        input.value = ""; 
         document.getElementById('searchBox').style.display = 'flex'; 
         input.focus(); 
     }
-
     function closeSearch() { document.getElementById('searchBox').style.display = 'none'; }
 
     async function shareStation() {
@@ -183,7 +181,11 @@
             document.getElementById('stNameDisplay').innerText = s.display_name;
             document.getElementById('mainImg').src = s.images.station_640x640;
             document.getElementById('stSlogan').innerText = s.page_title || s.display_name;
-            document.getElementById('stLocArea').innerHTML = "📍 " + (s.city || "Internet").toUpperCase();
+            
+            // Verbesserte Standort-Logik
+            let cityDisplay = s.city ? s.city.toUpperCase() : "RADIO-NETZWERK";
+            document.getElementById('stLocArea').innerHTML = "📍 " + cityDisplay;
+            
             document.getElementById('stDesc').innerText = s.description || "";
             
             const hoererBox = document.getElementById('hoerer');
