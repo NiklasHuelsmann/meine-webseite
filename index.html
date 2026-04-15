@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Brian-Radio Pro v82.5</title>
+    <title>Brian-Radio Pro v82.6</title>
     <style>
         :root { 
             --bg-global: #050505; 
@@ -57,7 +57,7 @@
         .title { color: #aaa; font-size: 13px; }
 
         .is-ad { color: var(--ad-color) !important; font-weight: 900; }
-        .is-news { color: var(--news-color) !important; font-weight: 900; text-shadow: 0 0 8px rgba(255,255,255,0.5); }
+        .is-news { color: var(--news-color) !important; font-weight: 900; }
         .is-live { color: var(--live-color) !important; font-weight: 900; }
 
         #moreBtn { background: rgba(255,255,255,0.05); border: 1px solid #444; color: #fff; padding: 12px; width: 100%; border-radius: 10px; cursor: pointer; font-size: 14px; margin: 10px 0 25px; }
@@ -102,7 +102,7 @@
         <div class="station-info-box">
             <div id="stDesc">Wähle einen Sender.</div>
             <span id="hoerer">0 Hörer live</span>
-            <div class="ver-tag">Version 82.5 | Pro Build</div>
+            <div class="ver-tag">Version 82.6 | Pro Build</div>
         </div>
     </div>
 
@@ -136,7 +136,7 @@
         au.play().then(() => { document.getElementById('pBtn').innerHTML = "⏸"; });
         updateUI();
         if(updateTimer) clearInterval(updateTimer);
-        updateTimer = setInterval(updateUI, 8000); // Noch schnelleres Update: 8 Sek
+        updateTimer = setInterval(updateUI, 8000);
         document.activeElement.blur();
     }
 
@@ -171,15 +171,18 @@
             const artist = current.artist.name.toLowerCase();
             const title = current.title.toLowerCase();
             
-            // VERBESSERTE ERKENNUNG
-            const isNews = artist.includes("nachrichten") || title.includes("nachrichten") || artist.includes("news") || title.includes("news") || title.includes("zeitfunk") || title.includes("wetter");
-            const isLive = artist.includes("moderation") || title.includes("moderation") || artist.includes("talk") || title.includes("talk") || artist.includes("live") || title.includes("live") || current.type === "station_voice";
-            const isAd = !isNews && !isLive && (current.type === "ad" || artist.includes("werbung") || artist.includes("laut.fm") || artist.includes("ad-server") || title.includes("promotion"));
+            // LOGIK-UPDATE: ERKENNUNG VON REKLAME
+            const isReklame = artist.includes("reklame") || title.includes("reklame");
+            const isNews = !isReklame && (artist.includes("nachrichten") || title.includes("nachrichten") || artist.includes("news") || title.includes("news") || title.includes("zeitfunk"));
+            const isLive = !isReklame && !isNews && (artist.includes("moderation") || title.includes("moderation") || artist.includes("talk") || artist.includes("live") || current.type === "station_voice");
+            const isAd = !isReklame && !isNews && !isLive && (current.type === "ad" || artist.includes("werbung") || artist.includes("laut.fm") || artist.includes("ad-server"));
             
             let icon = "🔊", artistDisp = current.artist.name, titleDisp = current.title, cls = "";
 
-            if (isNews) {
-                icon = "📰"; artistDisp = "NACHRICHTEN"; titleDisp = current.title.includes("News") ? current.title : "Aktuelle Meldungen"; cls = "is-news";
+            if (isReklame) {
+                icon = "📢"; artistDisp = "REKLAME"; titleDisp = "Gleich geht es weiter..."; cls = "is-ad";
+            } else if (isNews) {
+                icon = "📰"; artistDisp = "NACHRICHTEN"; titleDisp = "Aktuelle Meldungen"; cls = "is-news";
             } else if (isLive) {
                 icon = "🎤"; artistDisp = "MODERATION"; titleDisp = "Live am Mikrofon"; cls = "is-live";
             } else if (isAd) {
