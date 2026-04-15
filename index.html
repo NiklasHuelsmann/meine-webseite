@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Radio App Final v88.1</title>
+    <title>Radio App Final v88.3</title>
     <style>
         :root { 
             --bg-dark: #0c0e14; 
             --accent-green: #00e699;
-            --accent-pink: #ff00ff; /* Farbe für Moderation/Beratung */
+            --accent-pink: #ff00ff;
             --text-main: #ffffff;
             --text-dim: #717b8a;
         }
@@ -39,20 +39,7 @@
 
         .hero { padding: 10px 20px 20px; text-align: center; }
         #stNameDisplay { font-size: 20px; font-weight: 800; margin-bottom: 5px; text-transform: uppercase; color: #fff; letter-spacing: 1px; min-height: 24px; }
-        
-        /* Moderations-Label */
-        #modBadge { 
-            display: none; 
-            background: var(--accent-pink); 
-            color: white; 
-            font-size: 11px; 
-            font-weight: bold; 
-            padding: 2px 8px; 
-            border-radius: 4px; 
-            text-transform: uppercase; 
-            width: fit-content; 
-            margin: 0 auto 15px;
-        }
+        #modBadge { display: none; background: var(--accent-pink); color: white; font-size: 11px; font-weight: bold; padding: 2px 8px; border-radius: 4px; text-transform: uppercase; width: fit-content; margin: 0 auto 15px; }
 
         #mainImg { width: 280px; height: 280px; border-radius: 8px; object-fit: cover; box-shadow: 0 20px 40px rgba(0,0,0,0.6); margin-bottom: 20px; background: #1a202c; }
         
@@ -78,9 +65,9 @@
         #volSlider::-webkit-slider-thumb { -webkit-appearance: none; width: 18px; height: 18px; background: var(--accent-green); border-radius: 50%; cursor: pointer; border: 2px solid var(--bg-dark); }
         
         #stSlogan { font-size: 18px; font-weight: 800; margin-bottom: 6px; color: #fff; }
-        .location { color: var(--accent-green); font-size: 13px; margin-bottom: 15px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; }
-        #stDesc { color: var(--text-dim); line-height: 1.6; font-size: 14px; margin-bottom: 25px; }
-        .hoerer { display: inline-block; padding: 6px 14px; background: rgba(0,230,153,0.1); color: var(--accent-green); border-radius: 4px; font-weight: bold; font-size: 11px; text-transform: uppercase; }
+        .location { color: var(--accent-green); font-size: 13px; margin-bottom: 15px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; min-height: 15px; }
+        #stDesc { color: var(--text-dim); line-height: 1.6; font-size: 14px; margin-bottom: 25px; min-height: 20px; }
+        .hoerer { display: none; padding: 6px 14px; background: rgba(0,230,153,0.1); color: var(--accent-green); border-radius: 4px; font-weight: bold; font-size: 11px; text-transform: uppercase; }
     </style>
 </head>
 <body>
@@ -92,15 +79,14 @@
     </div>
 
     <div id="searchBox">
-        <input type="text" id="sIn" placeholder="Sender suchen..." onkeydown="if(event.key==='Enter') startSearch()">
+        <input type="text" id="sIn" placeholder="Sendername eingeben..." onkeydown="if(event.key==='Enter') startSearch()">
         <div class="close-btn" onclick="closeSearch()">✕</div>
     </div>
 
     <div class="scroll-area">
         <div class="hero">
             <div id="stNameDisplay"></div>
-            <div id="modBadge">MODERATION</div>
-            
+            <div id="modBadge">LIVE MODERATION</div>
             <img id="mainImg" src="https://laut.fm/images/station_640x640.png">
             <div class="controls">
                 <button class="btn-side" onclick="shareStation()">🔗</button>
@@ -127,10 +113,10 @@
                 <span style="font-size: 16px;">🔊</span>
             </div>
             <div id="stSlogan"></div>
-            <div class="location">📍 <span id="stLoc"></span></div>
+            <div class="location" id="stLocArea"></div>
             <div id="stDesc"></div>
-            <div class="hoerer" id="hoerer" style="display:none;">0 HÖRER</div>
-            <div style="text-align: center; font-size: 8px; margin-top: 40px; opacity: 0.2; letter-spacing: 2px;">V88.1 MOD-FIX</div>
+            <div class="hoerer" id="hoerer">0 HÖRER</div>
+            <div style="text-align: center; font-size: 8px; margin-top: 40px; opacity: 0.2; letter-spacing: 2px;">V88.3 CLEAN-SEARCH</div>
         </div>
     </div>
 </div>
@@ -146,7 +132,14 @@
     setInterval(updateClock, 1000); updateClock();
 
     function setVol(val) { au.volume = val; }
-    function openSearch() { document.getElementById('searchBox').style.display = 'flex'; document.getElementById('sIn').focus(); }
+
+    function openSearch() { 
+        const input = document.getElementById('sIn');
+        input.value = ""; // Suchfeld wird bei jedem Öffnen geleert
+        document.getElementById('searchBox').style.display = 'flex'; 
+        input.focus(); 
+    }
+
     function closeSearch() { document.getElementById('searchBox').style.display = 'none'; }
 
     async function shareStation() {
@@ -190,16 +183,16 @@
             document.getElementById('stNameDisplay').innerText = s.display_name;
             document.getElementById('mainImg').src = s.images.station_640x640;
             document.getElementById('stSlogan').innerText = s.page_title || s.display_name;
-            document.getElementById('stLoc').innerText = (s.city || "Internet").toUpperCase();
+            document.getElementById('stLocArea').innerHTML = "📍 " + (s.city || "Internet").toUpperCase();
             document.getElementById('stDesc').innerText = s.description || "";
-            document.getElementById('hoerer').innerText = h + " HÖRER";
-            document.getElementById('hoerer').style.display = "inline-block";
+            
+            const hoererBox = document.getElementById('hoerer');
+            hoererBox.innerText = h + " HÖRER";
+            hoererBox.style.display = "inline-block";
 
             const cur = l[0];
-            // Check für Moderation/Beratung
             if(cur.type === "pink" || cur.type === "moderation") {
                 document.getElementById('modBadge').style.display = "block";
-                document.getElementById('modBadge').innerText = "LIVE MODERATION";
             } else {
                 document.getElementById('modBadge').style.display = "none";
             }
