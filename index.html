@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Radio App v86.0 Sync</title>
+    <title>Radio App v86.5 Stable</title>
     <style>
         :root { 
             --bg-dark: #0e121a; 
@@ -18,49 +18,52 @@
         
         .app { width: 100%; max-width: 500px; display: flex; flex-direction: column; background-color: var(--bg-dark); position: relative; }
         
-        /* App Bar mit System-Uhr */
-        .app-bar { height: 70px; display: flex; align-items: center; justify-content: space-between; padding: 20px 20px 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        /* App Bar */
+        .app-bar { height: 60px; display: flex; align-items: center; justify-content: space-between; padding: 10px 20px; border-bottom: 1px solid rgba(255,255,255,0.05); z-index: 10; }
         .sys-time { font-family: monospace; font-size: 14px; color: var(--accent-green); font-weight: bold; }
-        #stNameHeader { font-size: 14px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; color: var(--text-dim); }
-        .search-trigger { font-size: 22px; color: var(--accent-green); cursor: pointer; }
+        .search-trigger { font-size: 24px; color: var(--accent-green); cursor: pointer; }
 
-        /* Suchfeld */
-        .search-box { padding: 15px 20px; display: none; background: var(--bg-card); position: absolute; top: 70px; width: 100%; z-index: 100; border-bottom: 2px solid var(--accent-green); }
-        .search-box.active { display: block; }
-        .search-box input { width: 100%; background: #2a3142; border: none; padding: 12px; color: #fff; border-radius: 8px; outline: none; font-size: 16px; }
+        /* Suchfeld Overlay */
+        .search-box { padding: 10px 20px; display: none; background: var(--bg-card); position: absolute; top: 0; left: 0; width: 100%; z-index: 1000; height: 65px; align-items: center; border-bottom: 2px solid var(--accent-green); }
+        .search-box.active { display: flex; }
+        .search-box input { flex: 1; background: #2a3142; border: none; padding: 12px; color: #fff; border-radius: 8px; outline: none; font-size: 16px; }
 
         .scroll-area { flex: 1; overflow-y: auto; scrollbar-width: none; }
         .scroll-area::-webkit-scrollbar { display: none; }
 
-        /* Hero Bereich */
+        /* Hero Bereich mit Name über Logo */
         .hero { padding: 20px; text-align: center; }
-        #mainImg { width: 280px; height: 280px; border-radius: 15px; object-fit: cover; box-shadow: 0 15px 45px rgba(0,0,0,0.5); margin-bottom: 25px; border: 1px solid #222; }
+        #stNameDisplay { font-size: 24px; font-weight: 900; color: #fff; margin-bottom: 15px; text-transform: uppercase; letter-spacing: 1px; }
+        #mainImg { width: 280px; height: 280px; border-radius: 15px; object-fit: cover; box-shadow: 0 15px 45px rgba(0,0,0,0.5); margin-bottom: 25px; border: 1px solid #222; background: #1a202c; }
         
-        .controls-row { display: flex; align-items: center; justify-content: center; gap: 35px; margin-bottom: 20px; }
-        .icon-btn { font-size: 24px; color: var(--text-dim); cursor: pointer; transition: 0.2s; }
-        .icon-btn:active { color: var(--accent-green); }
-        #pBtn { width: 75px; height: 75px; border-radius: 50%; background: var(--accent-green); border: none; color: #000; font-size: 32px; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 20px rgba(0, 230, 153, 0.3); }
+        /* Play Button mittig */
+        #pBtn { width: 80px; height: 80px; border-radius: 50%; background: var(--accent-green); border: none; color: #000; font-size: 35px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; box-shadow: 0 0 25px rgba(0, 230, 153, 0.4); transition: transform 0.1s; }
+        #pBtn:active { transform: scale(0.9); }
 
-        /* Player Info */
-        .section-now { padding: 20px; }
-        .track-display { display: flex; align-items: flex-start; gap: 15px; background: rgba(255,255,255,0.03); padding: 15px; border-radius: 12px; margin-bottom: 20px; }
-        .speaker-icon { font-size: 24px; color: var(--accent-green); }
-        .track-info .artist { font-size: 19px; font-weight: bold; display: block; margin-bottom: 3px; }
+        /* Player Info Anzeige */
+        .section-now { padding: 0 20px 20px; }
+        .track-display { display: flex; align-items: flex-start; gap: 15px; background: rgba(255,255,255,0.03); padding: 15px; border-radius: 12px; border-left: 4px solid var(--accent-green); margin-bottom: 15px; }
+        .track-info .artist { font-size: 19px; font-weight: bold; display: block; }
         .track-info .title { font-size: 16px; color: var(--text-dim); display: block; }
 
-        /* Dynamische Sender-Infos */
-        .station-footer { padding: 30px 20px; background: #161b26; border-radius: 20px 20px 0 0; }
-        #stSlogan { font-size: 22px; font-style: italic; font-weight: bold; margin-bottom: 15px; line-height: 1.2; color: #fff; }
-        .location { color: var(--text-dim); display: flex; align-items: center; gap: 8px; margin-bottom: 15px; font-size: 14px; }
-        #stDesc { font-size: 14px; color: #8a94a7; line-height: 1.6; margin-bottom: 25px; }
-        .hoerer-box { display: inline-block; padding: 6px 12px; background: rgba(0,230,153,0.1); color: var(--accent-green); border-radius: 20px; font-weight: bold; font-size: 13px; }
+        /* Historie */
+        .history-title { font-size: 12px; color: var(--text-dim); text-transform: uppercase; margin: 25px 0 10px; font-weight: bold; padding-left: 5px; }
+        .history-item { display: flex; padding: 12px 5px; border-top: 1px solid rgba(255,255,255,0.05); }
+        .h-time { width: 50px; font-size: 12px; color: #555; }
+        .h-info .h-art { font-size: 14px; font-weight: bold; color: #ccc; display: block; }
+        .h-info .h-tit { font-size: 13px; color: #777; display: block; }
         
-        .ver-tag { font-size: 9px; color: #333; text-align: center; margin-top: 30px; letter-spacing: 2px; }
+        .more-btn { color: var(--accent-green); font-size: 14px; font-weight: bold; padding: 15px; cursor: pointer; text-align: center; width: 100%; border: none; background: transparent; }
 
-        /* Logik-Farben */
+        /* Footer mit dynamischen Infos */
+        .station-footer { padding: 30px 20px; background: #161b26; border-radius: 25px 25px 0 0; }
+        #stSlogan { font-size: 20px; font-style: italic; font-weight: bold; margin-bottom: 10px; }
+        .location { color: var(--text-dim); font-size: 14px; margin-bottom: 10px; display: flex; align-items: center; gap: 5px; }
+        .hoerer-box { display: inline-block; padding: 6px 12px; background: rgba(0,230,153,0.1); color: var(--accent-green); border-radius: 20px; font-weight: bold; font-size: 13px; }
+        .ver-tag { font-size: 9px; color: #333; text-align: center; margin: 20px 0; letter-spacing: 2px; }
+
         .is-ad { color: var(--ad-gold) !important; }
         .is-live { color: #ff00ff !important; }
-        .is-news { color: #ffffff !important; text-decoration: underline; }
     </style>
 </head>
 <body>
@@ -68,7 +71,7 @@
 <div class="app">
     <div class="app-bar">
         <div id="sysTime" class="sys-time">00:00</div>
-        <div id="stNameHeader">SENDER WÄHLEN</div>
+        <div style="font-size: 11px; color: var(--text-dim); font-weight: bold; letter-spacing: 1px;">LAUT.FM PLAYER</div>
         <div class="search-trigger" onclick="toggleSearch()">🔍</div>
     </div>
 
@@ -78,66 +81,75 @@
 
     <div class="scroll-area">
         <div class="hero">
+            <div id="stNameDisplay">BEREIT</div>
             <img id="mainImg" src="https://laut.fm/images/station_640x640.png">
-            <div class="controls-row">
-                <div class="icon-btn" onclick="share()">🔗</div>
+            <div>
                 <button id="pBtn" onclick="toggle()">▶</button>
-                <div class="icon-btn" onclick="alert('Favorit gespeichert!')">❤</div>
             </div>
         </div>
 
         <div class="section-now">
             <div class="track-display">
-                <div class="speaker-icon" id="speakIco">🔊</div>
+                <div style="font-size:24px; color:var(--accent-green)">🔊</div>
                 <div class="track-info" id="currentSongArea">
-                    <span class="artist">BEREIT</span>
-                    <span class="title">Suche starten...</span>
+                    <span class="artist">RADIO STARTEN</span>
+                    <span class="title">Tippe oben auf die Lupe</span>
                 </div>
             </div>
+
+            <div class="history-title">Zuletzt gelaufen</div>
             <div id="songHistory"></div>
+            <button id="moreBtn" class="more-btn" onclick="toggleMore()" style="display:none;">Mehr anzeigen</button>
         </div>
 
         <div class="station-footer">
-            <div id="stSlogan">Willkommen bei deiner Radio App</div>
-            <div class="location">
-                <span>📍</span> <span id="stLoc">Automatische Ortung...</span>
-            </div>
-            <div id="stDesc">Hier erscheint die Senderbeschreibung, sobald ein Stream geladen wurde.</div>
+            <div id="stSlogan">Warte auf Senderwahl</div>
+            <div class="location">📍 <span id="stLoc">Internet</span></div>
+            <div id="stDesc" style="font-size: 14px; color: #8a94a7; line-height: 1.5;">Suche einen Sender, um den Live-Stream zu starten.</div>
             <div class="hoerer-box" id="hoerer">0 Hörer online</div>
-            <div class="ver-tag">VERSION 86.0 | SYSTEM SYNC ACTIVE</div>
+            <div class="ver-tag">VERSION 86.5 | STABLE PLAYER</div>
         </div>
     </div>
 </div>
 
 <script>
+    // Audio-Engine Initialisierung
     const au = new Audio();
     au.volume = 0.8;
-    let currentSlug = "", updateTimer = null, lastHash = "";
+    let currentSlug = "", updateTimer = null, lastHash = "", isExpanded = false;
 
-    // Echtzeit-Uhr (Sommer/Winterzeit automatisch)
+    // Uhrzeit Sync (Systemzeit)
     function updateClock() {
-        const now = new Date();
-        document.getElementById('sysTime').innerText = now.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
+        document.getElementById('sysTime').innerText = new Date().toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
     }
     setInterval(updateClock, 1000);
     updateClock();
 
     function toggleSearch() { 
         const sb = document.getElementById('searchBox');
-        sb.classList.toggle('active');
-        if(sb.classList.contains('active')) document.getElementById('sIn').focus();
+        sb.style.display = (sb.style.display === 'flex') ? 'none' : 'flex';
+        if(sb.style.display === 'flex') document.getElementById('sIn').focus();
     }
 
+    // Sender starten
     async function startManualSearch() {
         const val = document.getElementById('sIn').value.trim();
         if(!val) return;
         currentSlug = val.toLowerCase().replace(/[^a-z0-9-]/g, '');
+        
+        // Player Reset & Start
+        au.pause();
         au.src = "https://stream.laut.fm/" + currentSlug;
-        au.play().then(() => { document.getElementById('pBtn').innerHTML = "⏸"; });
+        au.play().then(() => { 
+            document.getElementById('pBtn').innerHTML = "⏸"; 
+        }).catch(err => {
+            console.log("Autoplay blockiert oder Sender falsch.");
+        });
+
         toggleSearch();
         updateUI();
         if(updateTimer) clearInterval(updateTimer);
-        updateTimer = setInterval(updateUI, 4000);
+        updateTimer = setInterval(updateUI, 4000); // Alle 4 Sek checken (Reklame/News)
     }
 
     function toggle() {
@@ -146,11 +158,10 @@
         else { au.pause(); document.getElementById('pBtn').innerHTML = "▶"; }
     }
 
-    function share() {
-        if(currentSlug) {
-            navigator.clipboard.writeText("https://laut.fm/" + currentSlug);
-            alert("Sender-Link kopiert!");
-        }
+    function toggleMore() {
+        isExpanded = !isExpanded;
+        document.getElementById('moreBtn').innerText = isExpanded ? "Weniger anzeigen" : "Mehr anzeigen";
+        updateUI();
     }
 
     async function updateUI() {
@@ -162,42 +173,43 @@
                 fetch("https://api.laut.fm/station/" + currentSlug + "/listeners").then(r => r.text())
             ]);
 
-            const cur = l[0];
-            const currentHash = cur.artist.name + cur.title + h;
-            if(currentHash === lastHash) return;
-            lastHash = currentHash;
-
-            // Sender Daten syncen
+            // Sender Infos syncen
+            document.getElementById('stNameDisplay').innerText = s.display_name.toUpperCase();
             document.getElementById('mainImg').src = s.images.station_640x640;
-            document.getElementById('stNameHeader').innerText = s.display_name.toUpperCase();
-            document.getElementById('stSlogan').innerText = s.page_title || "Dein Sound, dein Radio.";
-            document.getElementById('stLoc').innerText = (s.city && s.city !== "null") ? s.city : "Internet";
-            document.getElementById('stDesc').innerText = s.description || "Keine Beschreibung verfügbar.";
+            document.getElementById('stSlogan').innerText = s.page_title || s.display_name;
+            document.getElementById('stLoc').innerText = s.city || "Internet";
+            document.getElementById('stDesc').innerText = s.description || "";
             document.getElementById('hoerer').innerText = h + " Hörer online";
 
+            const cur = l[0];
             const art = (cur.artist.name || "").toLowerCase();
             const tit = (cur.title || "").toLowerCase();
             
-            // Logik-Filter (Werbung, News, Moderation)
-            const isReklame = art.includes("reklame") || tit.includes("reklame") || art.includes("audio") || art.includes("werbung") || cur.type === "ad";
-            const isNews = !isReklame && (art.includes("nachrichten") || tit.includes("news") || tit.includes("zeitfunk"));
+            // Reklame / News / Moderation Logik
+            const isReklame = art.includes("reklame") || tit.includes("reklame") || art.includes("audio") || cur.type === "ad";
+            const isNews = !isReklame && (art.includes("nachrichten") || tit.includes("news"));
             const isLive = !isReklame && !isNews && (art.includes("moderation") || art.includes("live") || art.includes("beratung"));
 
             let aD = cur.artist.name, tD = cur.title, cls = "";
             if(isReklame) { aD = "WERBUNG"; tD = "Gleich geht's weiter..."; cls = "is-ad"; }
-            else if(isNews) { aD = "NACHRICHTEN"; tD = "Aktueller Service"; cls = "is-news"; }
-            else if(isLive) { aD = "MODERATION"; tD = "Live im Studio"; cls = "is-live"; }
+            else if(isNews) { aD = "NACHRICHTEN"; tD = "Aktueller Service"; }
+            else if(isLive) { aD = "LIVE-MODERATION"; tD = "Wir sind am Mikrofon"; cls = "is-live"; }
 
-            document.getElementById('currentSongArea').innerHTML = `<span class="artist ${cls}">${aD}</span><span class="title">${tD}</span>`;
+            document.getElementById('currentSongArea').innerHTML = `
+                <span class="artist ${cls}">${aD}</span>
+                <span class="title">${tD}</span>`;
 
-            // Historie (die letzten 3)
+            // Historie (Zuletzt gelaufen)
             let hHtml = "";
-            l.slice(1, 4).forEach(song => {
-                hHtml += `<div style="font-size:13px; color:#555; margin-bottom:5px;">• ${song.artist.name} - ${song.title}</div>`;
+            const historyList = isExpanded ? l.slice(1, 10) : l.slice(1, 4);
+            historyList.forEach(song => {
+                const time = new Date(song.started_at).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
+                hHtml += `<div class="history-item"><div class="h-time">${time}</div><div class="h-info"><span class="h-art">${song.artist.name}</span><span class="h-tit">${song.title}</span></div></div>`;
             });
             document.getElementById('songHistory').innerHTML = hHtml;
+            document.getElementById('moreBtn').style.display = l.length > 3 ? "block" : "none";
 
-        } catch(e) { console.log("Sync Error"); }
+        } catch(e) { console.log("Update Fehler"); }
     }
 </script>
 </body>
