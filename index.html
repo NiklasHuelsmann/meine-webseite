@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Brian-Radio Pro Live-Detect</title>
+    <title>Brian-Radio Ultra Detect v82.4</title>
     <style>
         :root { 
             --bg-global: #050505; 
@@ -12,7 +12,7 @@
             --highlight: #00f2c3; 
             --ad-color: #ffcc00; 
             --news-color: #ffffff;
-            --live-color: #ff00ff; /* Violett für Moderation */
+            --live-color: #ff00ff;
         }
 
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -80,7 +80,6 @@
         .artist { font-weight: bold; font-size: 15px; display: block; color: #fff; }
         .title { color: #aaa; font-size: 13px; }
 
-        /* Spezialfarben für Status */
         .is-ad { color: var(--ad-color) !important; font-weight: 900; }
         .is-news { color: var(--news-color) !important; font-weight: 900; text-shadow: 0 0 10px var(--accent); }
         .is-live { color: var(--live-color) !important; font-weight: 900; }
@@ -137,9 +136,9 @@
         <button id="moreBtn" onclick="toggleMore()">Mehr anzeigen</button>
 
         <div class="station-info-box">
-            <div id="stDesc">Suche einen Sender.</div>
+            <div id="stDesc">Wähle einen Sender.</div>
             <span id="hoerer">0 Hörer live</span>
-            <div class="ver-tag">Version 82.3 | Pro Build</div>
+            <div class="ver-tag">Version 82.4 | Pro Build</div>
         </div>
     </div>
 
@@ -173,7 +172,7 @@
         au.play().then(() => { document.getElementById('pBtn').innerHTML = "⏸"; });
         updateUI();
         if(updateTimer) clearInterval(updateTimer);
-        updateTimer = setInterval(updateUI, 15000);
+        updateTimer = setInterval(updateUI, 10000); // Schnelleres Update (alle 10 Sek)
         document.activeElement.blur();
     }
 
@@ -201,21 +200,28 @@
 
             document.getElementById('stNameDisplay').innerText = s.display_name;
             document.getElementById('mainImg').src = s.images.station_640x640.replace('http://', 'https://');
-            document.getElementById('stDesc').innerText = s.description || "Keine Beschreibung.";
+            document.getElementById('stDesc').innerText = s.description || "";
             document.getElementById('hoerer').innerText = h + " Hörer live";
 
             const current = l[0];
             const lowerArtist = current.artist.name.toLowerCase();
             const lowerTitle = current.title.toLowerCase();
             
-            // 1. Erkennung für Nachrichten
+            // 1. Nachrichten-Check
             const isNews = lowerArtist.includes("nachrichten") || lowerArtist.includes("news") || lowerTitle.includes("zeitfunk");
             
-            // 2. Erkennung für Moderation / Sprecher
+            // 2. Moderations-Check
             const isLive = lowerArtist.includes("moderation") || lowerArtist.includes("talk") || lowerTitle.includes("live") || current.type === "station_voice";
             
-            // 3. Erkennung für Werbung
-            const isAd = !isNews && !isLive && (current.type === "ad" || lowerArtist.includes("werbung") || lowerArtist.includes("laut.fm"));
+            // 3. Verstärkter Werbe-Check (sucht jetzt nach mehr Begriffen)
+            const isAd = !isNews && !isLive && (
+                current.type === "ad" || 
+                lowerArtist.includes("werbung") || 
+                lowerArtist.includes("ad-server") || 
+                lowerArtist.includes("laut.fm") || 
+                lowerTitle.includes("promotion") ||
+                lowerArtist === "werbespot"
+            );
             
             let icon = "🔊";
             let artistDisplay = current.artist.name;
@@ -223,20 +229,11 @@
             let statusClass = "";
 
             if (isLive) {
-                icon = "🎤";
-                artistDisplay = "MODERATION";
-                titleDisplay = "Live am Mikrofon";
-                statusClass = "is-live";
+                icon = "🎤"; artistDisplay = "MODERATION"; titleDisplay = "Live am Mikrofon"; statusClass = "is-live";
             } else if (isNews) {
-                icon = "📰";
-                artistDisplay = "NACHRICHTEN";
-                titleDisplay = "Aktuelle Meldungen";
-                statusClass = "is-news";
+                icon = "📰"; artistDisplay = "NACHRICHTEN"; titleDisplay = "Aktuelle Meldungen"; statusClass = "is-news";
             } else if (isAd) {
-                icon = "📢";
-                artistDisplay = "WERBUNG";
-                titleDisplay = "Gleich geht es weiter...";
-                statusClass = "is-ad";
+                icon = "📢"; artistDisplay = "WERBUNG"; titleDisplay = "Gleich geht es weiter..."; statusClass = "is-ad";
             }
 
             document.getElementById('currentSongArea').innerHTML = `
