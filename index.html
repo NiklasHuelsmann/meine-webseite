@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Brian-Radio Pro News-Detect</title>
+    <title>Brian-Radio Pro Live-Detect</title>
     <style>
         :root { 
             --bg-global: #050505; 
@@ -11,7 +11,8 @@
             --accent: #00d2ff; 
             --highlight: #00f2c3; 
             --ad-color: #ffcc00; 
-            --news-color: #ffffff; /* Weiß für Nachrichten */
+            --news-color: #ffffff;
+            --live-color: #ff00ff; /* Violett für Moderation */
         }
 
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -72,16 +73,17 @@
         .song-entry { display: flex; gap: 15px; margin-bottom: 12px; padding: 5px 0; align-items: center; }
         .now-playing { border-bottom: 1px solid #333; padding-bottom: 15px; margin-bottom: 20px; }
         
-        .icon-cell { min-width: 30px; display: flex; justify-content: center; font-size: 22px; color: var(--highlight); }
+        .icon-cell { min-width: 35px; display: flex; justify-content: center; font-size: 24px; color: var(--highlight); }
         .time-cell { min-width: 50px; font-size: 13px; color: #777; font-family: monospace; }
         
         .song-info { flex: 1; overflow: hidden; }
         .artist { font-weight: bold; font-size: 15px; display: block; color: #fff; }
         .title { color: #aaa; font-size: 13px; }
 
-        /* Spezialfarben */
+        /* Spezialfarben für Status */
         .is-ad { color: var(--ad-color) !important; font-weight: 900; }
         .is-news { color: var(--news-color) !important; font-weight: 900; text-shadow: 0 0 10px var(--accent); }
+        .is-live { color: var(--live-color) !important; font-weight: 900; }
 
         #moreBtn { 
             background: rgba(255,255,255,0.05); border: 1px solid #444; color: #fff; 
@@ -137,7 +139,7 @@
         <div class="station-info-box">
             <div id="stDesc">Suche einen Sender.</div>
             <span id="hoerer">0 Hörer live</span>
-            <div class="ver-tag">Version 82.2 | Pro Build</div>
+            <div class="ver-tag">Version 82.3 | Pro Build</div>
         </div>
     </div>
 
@@ -206,17 +208,26 @@
             const lowerArtist = current.artist.name.toLowerCase();
             const lowerTitle = current.title.toLowerCase();
             
-            // Erkennung für Nachrichten
-            const isNews = lowerArtist.includes("nachrichten") || lowerArtist.includes("news") || lowerTitle.includes("zeitfunk") || lowerTitle.includes("nachrichten");
-            // Erkennung für Werbung (wenn es keine Nachrichten sind)
-            const isAd = !isNews && (current.type === "ad" || lowerArtist.includes("werbung") || lowerArtist.includes("laut.fm"));
+            // 1. Erkennung für Nachrichten
+            const isNews = lowerArtist.includes("nachrichten") || lowerArtist.includes("news") || lowerTitle.includes("zeitfunk");
+            
+            // 2. Erkennung für Moderation / Sprecher
+            const isLive = lowerArtist.includes("moderation") || lowerArtist.includes("talk") || lowerTitle.includes("live") || current.type === "station_voice";
+            
+            // 3. Erkennung für Werbung
+            const isAd = !isNews && !isLive && (current.type === "ad" || lowerArtist.includes("werbung") || lowerArtist.includes("laut.fm"));
             
             let icon = "🔊";
             let artistDisplay = current.artist.name;
             let titleDisplay = current.title;
             let statusClass = "";
 
-            if (isNews) {
+            if (isLive) {
+                icon = "🎤";
+                artistDisplay = "MODERATION";
+                titleDisplay = "Live am Mikrofon";
+                statusClass = "is-live";
+            } else if (isNews) {
                 icon = "📰";
                 artistDisplay = "NACHRICHTEN";
                 titleDisplay = "Aktuelle Meldungen";
