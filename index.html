@@ -3,82 +3,50 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Radio Professional v117.0</title>
+    <title>Radio Professional v117.1 - FIXED</title>
     <style>
         :root { --accent: #007aff; --bg: #090c10; --card: #161b22; --white: #f0f6fc; }
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; }
-        body { 
-            background: var(--bg); color: var(--white); font-family: -apple-system, sans-serif; 
-            margin: 0; display: flex; flex-direction: column; height: 100vh; overflow: hidden;
-        }
+        body { background: var(--bg); color: var(--white); font-family: -apple-system, sans-serif; margin: 0; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
 
-        /* HEADER & SEARCH */
-        .header { 
-            height: 75px; background: #000; border-bottom: 2px solid var(--accent); 
-            display: flex; align-items: center; padding: 0 20px; justify-content: space-between;
-        }
+        /* HEADER */
+        .header { height: 75px; background: #000; border-bottom: 2px solid var(--accent); display: flex; align-items: center; padding: 0 20px; justify-content: space-between; }
         #liveTime { font-size: 20px; font-weight: 900; color: var(--accent); min-width: 100px; }
         
         .search-container { position: relative; flex: 1; max-width: 500px; display: flex; align-items: center; gap: 8px; }
-        #query { 
-            flex: 1; padding: 12px 15px; border-radius: 8px; border: none; font-size: 16px; 
-            font-weight: bold; background: #fff; color: #000;
-        }
+        #query { flex: 1; padding: 12px 15px; border-radius: 8px; border: none; font-size: 16px; font-weight: bold; background: #fff; color: #000; }
         .search-btn { background: var(--accent); border: none; color: white; padding: 12px 18px; border-radius: 8px; cursor: pointer; font-size: 18px; }
 
+        /* RESULT LIST - JETZT MIT HÖHERER PRIORITÄT */
         #results { 
             position: absolute; top: 55px; left: 0; width: 100%; background: #fff; 
-            border-radius: 8px; color: #333; display: none; z-index: 9999; 
-            box-shadow: 0 15px 40px rgba(0,0,0,0.8); max-height: 300px; overflow-y: auto;
+            border-radius: 8px; color: #333; display: none; z-index: 10000; 
+            box-shadow: 0 15px 40px rgba(0,0,0,0.8); max-height: 350px; overflow-y: auto; border: 2px solid var(--accent);
         }
         .res-item { padding: 12px; border-bottom: 1px solid #eee; display: flex; align-items: center; gap: 10px; cursor: pointer; }
         .res-item:hover { background: #f0f7ff; }
-        .res-item img { width: 40px; height: 40px; border-radius: 5px; }
+        .res-item img { width: 40px; height: 40px; border-radius: 5px; object-fit: cover; }
 
         /* MAIN CONTENT */
         .content { flex: 1; display: flex; overflow-y: auto; flex-wrap: wrap; }
-
-        /* PLAYER SECTION */
-        .player-box { 
-            flex: 1; min-width: 350px; padding: 30px; display: flex; flex-direction: column; 
-            align-items: center; border-right: 1px solid #30363d; text-align: center;
-        }
-        .studio-display { 
-            width: 280px; height: 280px; border: 5px solid var(--accent); border-radius: 45px; 
-            padding: 8px; background: #000; position: relative; margin-bottom: 20px;
-            box-shadow: 0 15px 45px rgba(0,122,255,0.2);
-        }
+        .player-box { flex: 1; min-width: 350px; padding: 30px; display: flex; flex-direction: column; align-items: center; border-right: 1px solid #30363d; text-align: center; }
+        .studio-display { width: 280px; height: 280px; border: 5px solid var(--accent); border-radius: 45px; padding: 8px; background: #000; position: relative; margin-bottom: 20px; }
         #mainCover { width: 100%; height: 100%; border-radius: 36px; object-fit: cover; }
-        #studioIco { 
-            position: absolute; inset: 8px; border-radius: 36px; background: rgba(0,122,255,0.5); 
-            display: none; align-items: center; justify-content: center; font-size: 110px; backdrop-filter: blur(5px);
-        }
+        #studioIco { position: absolute; inset: 8px; border-radius: 36px; background: rgba(0,122,255,0.5); display: none; align-items: center; justify-content: center; font-size: 110px; backdrop-filter: blur(5px); color: white; }
 
-        #playBtn { 
-            width: 85px; height: 85px; border-radius: 50%; background: var(--accent); 
-            border: none; color: white; font-size: 40px; cursor: pointer; margin-bottom: 20px;
-        }
+        #playBtn { width: 85px; height: 85px; border-radius: 50%; background: var(--accent); border: none; color: white; font-size: 40px; cursor: pointer; margin-bottom: 20px; }
         .badge { background: #000; border: 2px solid var(--accent); color: var(--accent); padding: 7px 20px; border-radius: 20px; font-weight: 900; margin-bottom: 10px; }
         #stBio { font-size: 13px; color: #8b949e; line-height: 1.5; max-width: 320px; }
 
-        /* HISTORY SECTION */
         .history-box { flex: 1; min-width: 350px; padding: 30px; }
-        .song-row { 
-            display: flex; align-items: center; gap: 15px; padding: 15px; 
-            background: var(--card); border-radius: 18px; margin-bottom: 12px; border: 1px solid #30363d;
-        }
+        .song-row { display: flex; align-items: center; gap: 15px; padding: 15px; background: var(--card); border-radius: 18px; margin-bottom: 12px; border: 1px solid #30363d; }
         .song-row.active { border-color: var(--accent); background: rgba(0,122,255,0.1); }
         .song-time { font-size: 12px; color: var(--accent); font-weight: bold; width: 50px; }
         .song-info { flex: 1; overflow: hidden; }
         .song-info b { display: block; font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .song-info span { font-size: 13px; color: #8b949e; }
         .album-art { width: 50px; height: 50px; border-radius: 10px; object-fit: cover; }
 
-        @media (max-width: 800px) {
-            .content { flex-direction: column; }
-            .player-box { border-right: none; border-bottom: 1px solid #30363d; }
-            body { overflow-y: auto; }
-        }
+        @media (max-width: 800px) { .content { flex-direction: column; } .player-box { border-right: none; border-bottom: 1px solid #30363d; } }
     </style>
 </head>
 <body onload="init()">
@@ -99,9 +67,9 @@
             <div id="studioIco"></div>
         </div>
         <button id="playBtn" onclick="togglePlay()" disabled>▶</button>
-        <div id="lsnCount" class="badge">STUDIO OFFLINE</div>
+        <div id="lsnCount" class="badge">STUDIO BEREIT</div>
         <h2 id="stName" style="margin: 5px 0;">BEREIT</h2>
-        <div id="stBio">Gib einen Sendernamen ein und drücke Enter oder die Lupe.</div>
+        <div id="stBio">Tippe oben einen Sendernamen ein.</div>
     </section>
 
     <section class="history-box">
@@ -116,44 +84,41 @@
     const input = document.getElementById('query');
     const resBox = document.getElementById('results');
 
+    // Proxy zur Umgehung von CORS-Blockaden
+    const proxy = "https://api.allorigins.win/raw?url=";
+
     function init() {
-        // Uhrzeit-Update
         setInterval(() => {
-            const now = new Date();
-            document.getElementById('liveTime').innerText = now.toLocaleTimeString('de-DE');
+            document.getElementById('liveTime').innerText = new Date().toLocaleTimeString('de-DE');
         }, 1000);
 
-        // Suche beim Tippen
         input.addEventListener('input', () => fetchResults());
-        
-        // Suche bei ENTER
-        input.addEventListener('keypress', (e) => {
-            if(e.key === 'Enter') performSearch();
-        });
+        input.addEventListener('keypress', (e) => { if(e.key === 'Enter') performSearch(); });
     }
 
     async function fetchResults() {
         const v = input.value.trim();
         if(v.length < 2) { resBox.style.display = 'none'; return; }
-        const r = await fetch(`https://api.laut.fm/search/stations?query=${encodeURIComponent(v)}`);
-        const d = await r.json();
-        if(d.items) {
-            resBox.innerHTML = d.items.slice(0, 8).map(s => `
-                <div class="res-item" onclick="startStation('${s.name}')">
-                    <img src="${s.images.station_80x80}">
-                    <b>${s.display_name}</b>
-                </div>`).join('');
-            resBox.style.display = 'block';
-        }
+        try {
+            const r = await fetch(`${proxy}${encodeURIComponent('https://api.laut.fm/search/stations?query=' + v)}`);
+            const d = await r.json();
+            if(d.items && d.items.length > 0) {
+                resBox.innerHTML = d.items.slice(0, 10).map(s => `
+                    <div class="res-item" onclick="startStation('${s.name}')">
+                        <img src="${s.images.station_80x80}">
+                        <b>${s.display_name}</b>
+                    </div>`).join('');
+                resBox.style.display = 'block';
+            }
+        } catch(e) { console.error("Suche fehlgeschlagen"); }
     }
 
     function performSearch() {
-        // Wählt das erste Ergebnis der Liste aus und startet es
-        const firstResult = resBox.querySelector('.res-item');
-        if(firstResult) {
-            firstResult.click();
-        } else {
-            alert("Bitte tippe zuerst einen Sendernamen ein.");
+        const first = resBox.querySelector('.res-item');
+        if(first) { first.click(); } 
+        else { 
+            // Falls die Liste leer ist, versuchen wir den Namen direkt zu laden
+            if(input.value.length > 2) startStation(input.value.toLowerCase().replace(/\s/g, ''));
         }
     }
 
@@ -164,7 +129,7 @@
         document.getElementById('playBtn').disabled = false;
         
         audio.src = `https://stream.laut.fm/${currentStation}`;
-        audio.play().catch(e => console.log("Play blockiert"));
+        audio.play().catch(() => { alert("Bitte klicke einmal auf die Seite, um den Ton zu erlauben."); });
         document.getElementById('playBtn').innerHTML = "⏸";
         
         refreshData();
@@ -181,13 +146,13 @@
         if(!currentStation) return;
         try {
             const [info, songs, lsn] = await Promise.all([
-                fetch(`https://api.laut.fm/station/${currentStation}`).then(r => r.json()),
-                fetch(`https://api.laut.fm/station/${currentStation}/last_songs`).then(r => r.json()),
-                fetch(`https://api.laut.fm/station/${currentStation}/listeners`).then(r => r.text())
+                fetch(`${proxy}${encodeURIComponent('https://api.laut.fm/station/' + currentStation)}`).then(r => r.json()),
+                fetch(`${proxy}${encodeURIComponent('https://api.laut.fm/station/' + currentStation + '/last_songs')}`).then(r => r.json()),
+                fetch(`${proxy}${encodeURIComponent('https://api.laut.fm/station/' + currentStation + '/listeners')}`).then(r => r.text())
             ]);
 
             document.getElementById('stName').innerText = info.display_name;
-            document.getElementById('stBio').innerText = info.description || "Ein laut.fm Radio.";
+            document.getElementById('stBio').innerText = info.description || "Radio Station";
             document.getElementById('lsnCount').innerText = (lsn.includes('<') ? '0' : lsn) + " HÖRER LIVE";
 
             const overlay = document.getElementById('studioIco');
@@ -200,10 +165,9 @@
                 let ico = "";
                 const check = (s.artist.name + s.title).toLowerCase();
 
-                // Studio-Logo Logik
                 if(check.includes("nachrichten") || check.includes("news")) {
                     ico = "📰"; if(isNow) { overlay.innerText = "📰"; overlay.style.display = "flex"; }
-                } else if(check.includes("moderation") || check.includes("ident") || check.includes("studio")) {
+                } else if(check.includes("moderation") || check.includes("ident")) {
                     ico = "🎙️"; if(isNow) { overlay.innerText = "🎙️"; overlay.style.display = "flex"; }
                 }
 
