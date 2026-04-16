@@ -3,80 +3,66 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Radio Pro v115.07 - Ultra Clarity</title>
+    <title>Radio Ultimate v115.11 - All-In-One Master</title>
     <style>
         :root { 
             --bg-app: #1e2538; --bg-card: #283044; --accent-main: #00fad9; 
             --text-main: #ffffff; --text-dim: #cbd5e0;
             --status-yellow: #ffcc00; --status-blue: #007bff; --status-red: #ff3b3b;
         }
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        body { background-color: #0d111a; margin: 0; display: flex; justify-content: center; height: 100vh; color: var(--text-main); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; overflow: hidden; }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; }
+        body { background-color: #0d111a; margin: 0; display: flex; justify-content: center; height: 100vh; color: var(--text-main); font-family: -apple-system, system-ui, sans-serif; overflow: hidden; }
         
-        .app { width: 100%; max-width: 800px; height: 100vh; background-color: var(--bg-app); display: flex; flex-direction: column; position: relative; }
+        .app { width: 100%; max-width: 800px; height: 100vh; background-color: var(--bg-app); display: flex; flex-direction: column; position: relative; border-left: 1px solid rgba(255,255,255,0.05); border-right: 1px solid rgba(255,255,255,0.05); }
         
-        /* Header */
-        .top-nav { height: 50px; display: flex; align-items: center; justify-content: space-between; padding: 0 15px; flex-shrink: 0; }
-        #sysTime { font-size: 14px; font-weight: bold; letter-spacing: 1px; }
-        .icon-btn-large { font-size: 26px; color: var(--accent-main); cursor: pointer; }
+        /* Header Bereich */
+        .top-nav { height: 60px; display: flex; align-items: center; justify-content: space-between; padding: 0 20px; flex-shrink: 0; }
+        #sysTime { font-size: 16px; font-weight: 800; letter-spacing: 1px; }
+        .icon-btn-large { font-size: 28px; color: var(--accent-main); cursor: pointer; filter: drop-shadow(0 0 5px rgba(0,250,217,0.3)); }
         
         /* Suche */
-        #searchOverlay { display: none; position: absolute; top: 10px; left: 50%; transform: translateX(-50%); width: 92%; height: 55px; background: var(--bg-card); z-index: 100; align-items: center; padding: 0 15px; border-radius: 28px; border: 2px solid var(--accent-main); box-shadow: 0 10px 30px rgba(0,0,0,0.6); }
-        #sInput { flex: 1; background: transparent; border: none; color: #fff; outline: none; font-size: 18px; }
+        #searchOverlay { display: none; position: absolute; top: 10px; left: 50%; transform: translateX(-50%); width: 92%; height: 60px; background: var(--bg-card); z-index: 100; align-items: center; padding: 0 20px; border-radius: 30px; border: 2px solid var(--accent-main); box-shadow: 0 15px 40px rgba(0,0,0,0.8); }
+        #sInput { flex: 1; background: transparent; border: none; color: #fff; font-size: 20px; font-weight: 600; }
 
-        .main-content { flex: 1; overflow-y: auto; scrollbar-width: none; }
+        .main-content { flex: 1; overflow-y: auto; scrollbar-width: none; padding-bottom: 30px; }
         .main-content::-webkit-scrollbar { display: none; }
         
-        .hero { padding: 10px 0; text-align: center; }
-        #stNameHeader { font-size: clamp(22px, 7vw, 30px); font-weight: 900; color: #fff; text-transform: uppercase; margin: 0; letter-spacing: 1px; }
-        #stPageTitle { font-size: 14px; color: var(--accent-main); margin-bottom: 12px; display: block; font-weight: bold; }
-        #mainImg { width: 165px; height: 165px; border-radius: 22px; object-fit: cover; background: #333; box-shadow: 0 12px 35px rgba(0,0,0,0.6); border: 2px solid rgba(255,255,255,0.1); }
+        /* Hero (Logo & Play) */
+        .hero { padding: 15px 0; text-align: center; }
+        #stNameHeader { font-size: 32px; font-weight: 900; color: #fff; text-transform: uppercase; margin: 0 0 5px; letter-spacing: 1px; }
+        #stPageTitle { font-size: 15px; color: var(--accent-main); margin-bottom: 12px; display: block; font-weight: 700; }
+        #mainImg { width: 180px; height: 180px; border-radius: 30px; object-fit: cover; background: #333; box-shadow: 0 15px 45px rgba(0,0,0,0.7); border: 2px solid rgba(255,255,255,0.15); }
         
-        .controls { display: flex; align-items: center; justify-content: center; gap: 25px; margin: 15px 0; }
-        #pBtn { width: 68px; height: 68px; border-radius: 50%; background: var(--accent-main); border: none; font-size: 30px; color: #1e2538; cursor: pointer; box-shadow: 0 6px 20px rgba(0, 250, 217, 0.3); }
+        .controls { display: flex; align-items: center; justify-content: center; gap: 30px; margin: 15px 0; }
+        #pBtn { width: 75px; height: 75px; border-radius: 50%; background: var(--accent-main); border: none; font-size: 32px; color: #1e2538; cursor: pointer; box-shadow: 0 8px 25px rgba(0, 250, 217, 0.4); display: flex; align-items: center; justify-content: center; }
         
-        /* Song Liste Header */
-        .list-header { font-size: 24px; font-weight: 900; color: #ffffff; margin: 15px 18px 10px; text-transform: uppercase; letter-spacing: 0.5px; }
+        /* Song Liste */
+        .list-header { font-size: 26px; font-weight: 900; color: #ffffff; margin: 20px 20px 12px; text-transform: uppercase; }
+        #nowPlayingBox { margin: 0 15px; }
         
-        #nowPlayingBox { margin: 0 12px; }
+        /* Design wie auf Foto: Links Icon, Mitte Text, Rechts Cover */
+        .track-entry { display: flex; align-items: center; gap: 15px; padding: 14px 18px; border-radius: 20px; margin-bottom: 12px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.05); }
+        .track-entry.current { border-left: 8px solid var(--accent-main); background: rgba(255,255,255,0.12); }
         
-        /* Layout wie auf dem Foto: Icon - Text - Cover */
-        .track-entry { display: flex; align-items: center; gap: 12px; padding: 12px 15px; border-radius: 16px; margin-bottom: 10px; background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.05); }
-        .track-entry.current { border-left: 6px solid var(--accent-main); background: rgba(255,255,255,0.12); }
-        
-        .left-meta { width: 45px; display: flex; justify-content: center; align-items: center; flex-shrink: 0; }
-        .status-icon { font-size: 24px; }
-        .track-time { font-size: 11px; color: var(--accent-main); font-weight: 900; }
+        .left-meta { width: 55px; display: flex; justify-content: center; align-items: center; flex-shrink: 0; }
+        .track-time { font-size: 13px; color: #ffffff; font-weight: 800; background: rgba(0,0,0,0.4); padding: 5px 10px; border-radius: 10px; }
 
         .track-details { flex: 1; overflow: hidden; }
-        .track-art { font-size: 18px; font-weight: 900; color: #ffffff; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 2px; }
-        .track-tit { font-size: 14px; font-weight: 600; color: var(--text-dim); display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .track-art { font-size: 20px; font-weight: 900; color: #ffffff; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 2px; }
+        .track-tit { font-size: 16px; font-weight: 600; color: var(--text-dim); display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         
-        .track-cover { width: 52px; height: 52px; border-radius: 10px; object-fit: cover; background: #000; flex-shrink: 0; box-shadow: 0 4px 10px rgba(0,0,0,0.4); }
+        .track-cover { width: 60px; height: 60px; border-radius: 14px; object-fit: cover; background: #000; flex-shrink: 0; box-shadow: 0 5px 15px rgba(0,0,0,0.5); }
         
-        .speaker-anim { color: var(--accent-main); font-size: 24px; animation: pulse 1.2s infinite; }
-        @keyframes pulse { 0%, 100% { transform: scale(1); opacity: 0.8; } 50% { transform: scale(1.15); opacity: 1; } }
+        .speaker-anim { color: var(--accent-main); font-size: 28px; filter: drop-shadow(0 0 8px var(--accent-main)); animation: pulse 1.2s infinite ease-in-out; }
+        @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.15); } }
 
-        .more-songs-area { text-align: center; padding: 10px 0 20px; }
-        #btnToggleList { background: rgba(255,255,255,0.05); border: 2px solid var(--accent-main); color: var(--accent-main); padding: 10px 25px; border-radius: 25px; font-size: 12px; font-weight: bold; cursor: pointer; display: none; }
-
-        /* Footer - Erhöht für Smartphone-Tasten */
-        .fixed-footer { 
-            padding: 20px 18px calc(25px + env(safe-area-inset-bottom)); 
-            background: #111622; 
-            border-top: 2px solid rgba(255,255,255,0.1); 
-            flex-shrink: 0; 
-            box-shadow: 0 -10px 30px rgba(0,0,0,0.4);
-        }
+        /* Footer */
+        .fixed-footer { padding: 20px 20px calc(25px + env(safe-area-inset-bottom)); background: #111622; border-top: 3px solid rgba(255,255,255,0.05); flex-shrink: 0; }
         .footer-row { display: flex; justify-content: center; margin-bottom: 15px; }
-        .hoerer-badge { background: var(--accent-main); color: #1e2538; padding: 8px 28px; border-radius: 30px; font-size: 17px; font-weight: 900; box-shadow: 0 4px 15px rgba(0, 250, 217, 0.3); }
+        .hoerer-badge { background: var(--accent-main); color: #1e2538; padding: 10px 40px; border-radius: 40px; font-size: 18px; font-weight: 900; box-shadow: 0 5px 20px rgba(0, 250, 217, 0.3); }
         
-        #footerDesc { 
-            font-size: 15px; line-height: 1.5; text-align: center; color: #ffffff; 
-            background: rgba(255,255,255,0.08); padding: 15px; border-radius: 15px;
-            max-height: 100px; overflow-y: auto; font-weight: 600;
-        }
-        .version-tag { text-align: center; font-size: 11px; color: var(--text-dim); margin-top: 15px; text-transform: uppercase; letter-spacing: 2px; font-weight: bold; opacity: 0.8; }
+        #footerDesc { font-size: 16px; line-height: 1.6; text-align: center; color: #ffffff; background: rgba(255,255,255,0.07); padding: 18px; border-radius: 20px; max-height: 120px; overflow-y: auto; font-weight: 600; border: 1px solid rgba(255,255,255,0.1); }
+        .version-tag { text-align: center; font-size: 12px; color: var(--text-dim); margin-top: 18px; text-transform: uppercase; letter-spacing: 2px; font-weight: 800; }
     </style>
 </head>
 <body onload="initApp()">
@@ -87,54 +73,39 @@
     </div>
 
     <div id="searchOverlay">
-        <input type="text" id="sInput" placeholder="Sender suchen..." onkeydown="if(event.key==='Enter') execSearch()">
-        <button onclick="toggleSearch()" style="background:none; border:none; color:#fff; font-size: 26px;">✕</button>
+        <input type="text" id="sInput" placeholder="SENDER-NAME..." onkeydown="if(event.key==='Enter') execSearch()">
+        <button onclick="toggleSearch()" style="background:none; border:none; color:#fff; font-size: 30px; cursor:pointer;">✕</button>
     </div>
 
     <div class="main-content">
         <div class="hero">
-            <h1 id="stNameHeader">RADIO PLAYER</h1>
-            <span id="stPageTitle">WÄHLE DEINEN SOUND</span>
+            <h1 id="stNameHeader">RADIO MASTER</h1>
+            <span id="stPageTitle">READY</span>
             <img id="mainImg" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7">
             <div class="controls">
-                <div style="font-size: 24px; color: var(--accent-main); cursor:pointer" onclick="share()">🔗</div>
                 <button id="pBtn" onclick="togglePlay()">▶</button>
-                <div style="width:24px"></div>
             </div>
         </div>
 
         <div class="list-header">JETZT LÄUFT</div>
         <div id="nowPlayingBox">
-            <div id="trackList" style="text-align:center; padding: 25px; opacity:0.5; font-weight:bold;">Bitte Sender suchen...</div>
-        </div>
-
-        <div class="more-songs-area">
-            <button id="btnToggleList" onclick="toggleListSize()">9 SONGS ANZEIGEN</button>
+            <div id="trackList" style="text-align:center; padding: 40px; font-weight:800;">SENDER SUCHEN...</div>
         </div>
     </div>
 
     <div class="fixed-footer">
-        <div class="footer-row">
-            <div id="hoerer" class="hoerer-badge">0 HÖRER</div>
-        </div>
-        <div id="footerDesc">Suche einen laut.fm Sender über das Lupen-Symbol oben rechts.</div>
-        <div class="version-tag">VERSION V115.07 • FINAL BUILD</div>
+        <div class="footer-row"><div id="hoerer" class="hoerer-badge">0 HÖRER</div></div>
+        <div id="footerDesc">Suche einen Sender über die Lupe.</div>
+        <div class="version-tag">VERSION V115.11 • ULTIMATE MASTER</div>
     </div>
 </div>
 
 <script>
     const au = new Audio(); 
     let currentSlug = ""; 
-    let showFullList = false;
 
     function initApp() { 
         setInterval(() => { document.getElementById('sysTime').innerText = new Date().toLocaleTimeString('de-DE', {hour:'2-digit', minute:'2-digit'}); }, 1000); 
-    }
-
-    function toggleListSize() { 
-        showFullList = !showFullList; 
-        document.getElementById('btnToggleList').innerText = showFullList ? "WENIGER ANZEIGEN" : "9 SONGS ANZEIGEN";
-        updateUI(); 
     }
 
     function toggleSearch() { 
@@ -151,7 +122,6 @@
         currentSlug = slug.toLowerCase().replace(/[^a-z0-9-]/g, ''); 
         au.src = "https://stream.laut.fm/" + currentSlug;
         if(play) { au.play().catch(()=>{}); document.getElementById('pBtn').innerHTML = "⏸"; }
-        document.getElementById('btnToggleList').style.display = 'inline-block';
         updateUI();
         if(window.uiInterval) clearInterval(window.uiInterval);
         window.uiInterval = setInterval(updateUI, 8000);
@@ -175,16 +145,14 @@
             const hCount = await hRes.text();
 
             document.getElementById('stNameHeader').innerText = s.display_name;
-            document.getElementById('stPageTitle').innerText = s.page_title || "";
-            document.getElementById('footerDesc').innerText = s.description || "Keine Beschreibung verfügbar.";
+            document.getElementById('stPageTitle').innerText = s.page_title || "LIVE";
+            document.getElementById('footerDesc').innerText = s.description || "Willkommen!";
             document.getElementById('hoerer').innerText = (hCount.includes("<") ? "0" : hCount) + " HÖRER";
             document.getElementById('mainImg').src = s.images.station_640x640;
 
             let html = "";
-            const listLimit = showFullList ? 9 : 3;
-
             l.forEach((song, i) => {
-                if(i >= listLimit) return;
+                if(i >= 3) return;
                 const isCurrent = (i === 0);
                 let art = song.artist.name;
                 let tit = song.title;
@@ -192,23 +160,22 @@
                 
                 let img = song.image_640x640 || (song.artist && song.artist.image) || s.images.station_120x120;
                 let leftContent = `<div class="track-time">${new Date(song.started_at).toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'})}</div>`;
-                
-                if(isCurrent) {
-                    leftContent = `<div class="speaker-anim">🔊</div>`;
-                }
+                if(isCurrent) leftContent = `<div class="speaker-anim">🔊</div>`;
 
-                if(check.includes("reklame") || check.includes("werbung")) {
-                    leftContent = `<div class="status-icon" style="color:var(--status-blue)">📢</div>`; art = "REKLAME";
-                } else if(check.includes("news") || check.includes("nachrichten")) {
-                    leftContent = `<div class="status-icon" style="color:var(--status-yellow)">📰</div>`; art = "NEWS";
-                } else if(check.includes("moderation") || check.includes("live") || check.includes("spricht")) {
-                    leftContent = `<div class="status-icon" style="color:var(--status-red)">🎙️</div>`; art = "MODERATION";
+                // ERKENNUNG FÜR REKLAME, NEWS & MODERATION
+                if(check.includes("reklame") || check.includes("werbung") || check.includes("präsentiert von") || check.includes("spot") || check.includes("anzeige") || song.type === "gold" || song.type === "ads") {
+                    leftContent = `<div style="font-size:28px; color:var(--status-blue)">📢</div>`; 
+                    art = "REKLAME / SPOT";
+                } else if(check.includes("news") || check.includes("nachrichten") || check.includes("wetter") || check.includes("verkehr")) {
+                    leftContent = `<div style="font-size:28px; color:var(--status-yellow)">📰</div>`; 
+                    art = "NACHRICHTEN";
+                } else if(check.includes("moderation") || check.includes("spricht") || check.includes("studio") || check.includes("live-talk")) {
+                    leftContent = `<div style="font-size:28px; color:var(--status-red)">🎙️</div>`; 
+                    art = "MODERATION";
                 }
 
                 html += `<div class="track-entry ${isCurrent ? 'current' : ''}">
-                    <div class="left-meta">
-                        ${leftContent}
-                    </div>
+                    <div class="left-meta">${leftContent}</div>
                     <div class="track-details">
                         <span class="track-art">${art}</span>
                         <span class="track-tit">${tit}</span>
@@ -219,7 +186,6 @@
             document.getElementById('trackList').innerHTML = html;
         } catch(e) {}
     }
-    function share() { if(currentSlug) navigator.share({ url: `https://laut.fm/${currentSlug}` }); }
 </script>
 </body>
 </html>
