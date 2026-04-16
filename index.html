@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Radio Player Final Pro v92.00</title>
+    <title>Radio Player Pro v92.02</title>
     <style>
         :root { 
             --bg-app: #1e2538; --bg-card: #283044; --accent-main: #00fad9; 
@@ -16,41 +16,31 @@
         }
         body { background-color: #0d111a; margin: 0; display: flex; justify-content: center; height: 100vh; color: var(--text-main); font-family: sans-serif; overflow: hidden; transition: 0.3s; }
         .app { width: 100%; max-width: 500px; height: 100%; background-color: var(--bg-app); display: flex; flex-direction: column; transition: 0.3s; position: relative; }
-        
         .top-nav { height: 60px; display: flex; align-items: center; justify-content: space-between; padding: 0 20px; flex-shrink: 0; }
         #sysTime { font-size: 16px; font-weight: bold; }
         .nav-icons { display: flex; gap: 15px; }
         .icon-btn { font-size: 20px; color: var(--accent-main); cursor: pointer; }
-
-        #searchOverlay { 
-            display: none; position: absolute; top: 10px; left: 50%; transform: translateX(-50%);
-            width: 80%; max-width: 300px; height: 45px; background: var(--bg-card); 
-            z-index: 100; align-items: center; padding: 0 15px; border-radius: 25px;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.3); border: 1px solid var(--accent-main);
-        }
+        #searchOverlay { display: none; position: absolute; top: 10px; left: 50%; transform: translateX(-50%); width: 70%; max-width: 250px; height: 40px; background: var(--bg-card); z-index: 100; align-items: center; padding: 0 15px; border-radius: 20px; box-shadow: 0 5px 20px rgba(0,0,0,0.3); border: 1px solid var(--accent-main); }
         #sInput { flex: 1; background: transparent; border: none; height: 100%; color: var(--text-main); padding: 0 5px; outline: none; font-size: 14px; }
-
         .scroll-area { flex: 1; overflow-y: auto; scrollbar-width: none; }
         .scroll-area::-webkit-scrollbar { display: none; }
-        
         .hero { padding: 10px 0; text-align: center; }
-        #mainImg { width: 85%; aspect-ratio: 1/1; border-radius: 18px; object-fit: cover; box-shadow: 0 10px 30px rgba(0,0,0,0.4); }
-        
+        #mainImg { width: 75%; aspect-ratio: 1/1; border-radius: 15px; object-fit: cover; box-shadow: 0 8px 25px rgba(0,0,0,0.4); }
         .controls { display: flex; align-items: center; justify-content: center; gap: 25px; margin: 15px 0; }
         #pBtn { width: 70px; height: 70px; border-radius: 50%; background: var(--accent-main); border: none; font-size: 28px; color: #fff; cursor: pointer; }
-
         #nowPlayingBox { margin: 0 15px 15px; padding: 15px; border-radius: 15px; background: var(--bg-card); transition: 0.5s; }
         .label { font-style: italic; font-size: 22px; font-weight: 900; margin-bottom: 10px; display: block; }
         .track-entry { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-top: 1px solid var(--line); }
-        .track-cover { width: 45px; height: 45px; border-radius: 6px; object-fit: cover; }
+        .track-cover { width: 45px; height: 45px; border-radius: 6px; object-fit: cover; background: #000; }
         .track-details { flex: 1; overflow: hidden; }
         .track-art { font-size: 14px; font-weight: bold; display: block; }
         .track-tit { font-size: 12px; color: var(--text-dim); display: block; }
         .track-time { font-size: 11px; color: var(--accent-main); font-weight: bold; }
-
-        .footer-info { padding: 20px; background: rgba(0,0,0,0.05); }
+        .footer-info { padding: 15px 20px; background: rgba(0,0,0,0.1); border-top: 1px solid var(--line); }
+        .footer-slogan { font-style: italic; font-size: 18px; font-weight: 900; margin-bottom: 5px; color: var(--text-main); }
         .footer-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
-        .hoerer-badge { background: var(--accent-main); color: #fff; padding: 5px 10px; border-radius: 6px; font-size: 12px; font-weight: bold; }
+        .loc-info { font-size: 13px; color: var(--accent-main); font-weight: bold; }
+        .hoerer-badge { background: var(--accent-main); color: #fff; padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: bold; }
         .vol-area { display: flex; align-items: center; gap: 10px; }
         #volSlider { flex: 1; accent-color: var(--accent-main); cursor: pointer; }
         #volLabel { color: var(--accent-main); font-size: 13px; font-weight: bold; min-width: 35px; }
@@ -66,7 +56,7 @@
         </div>
     </div>
     <div id="searchOverlay">
-        <input type="text" id="sInput" placeholder="Sender suchen..." onkeydown="if(event.key==='Enter') execSearch()">
+        <input type="text" id="sInput" placeholder="Sender..." onkeydown="if(event.key==='Enter') execSearch()">
         <button onclick="toggleSearch()" style="background:none; border:none; color:var(--text-main); cursor:pointer;">✕</button>
     </div>
     <div class="scroll-area">
@@ -85,8 +75,9 @@
             <div style="color:var(--accent-main); text-align:center; padding-top:10px; font-size:11px; font-weight:bold; cursor:pointer;" onclick="histFull=!histFull;updateUI()">VERLAUF ANZEIGEN</div>
         </div>
         <div class="footer-info">
+            <div id="footerSlogan" class="footer-slogan">Dein Sound.</div>
             <div class="footer-row">
-                <div id="stLoc" style="font-weight:bold; font-size:14px; color:var(--accent-main)">📍 Online</div>
+                <div id="stLoc" class="loc-info">📍 Online</div>
                 <div id="hoerer" class="hoerer-badge">0 HÖRER</div>
             </div>
             <div class="vol-area">
@@ -107,10 +98,7 @@
         s.style.display = (s.style.display === 'flex') ? 'none' : 'flex'; 
         if(s.style.display === 'flex') { input.value = ""; input.focus(); }
     }
-    function execSearch() { 
-        const input = document.getElementById('sInput'); const v = input.value.trim(); 
-        if(v) { startStation(v, true); input.value = ""; toggleSearch(); } 
-    }
+    function execSearch() { const input = document.getElementById('sInput'); const v = input.value.trim(); if(v) { startStation(v, true); input.value = ""; toggleSearch(); } }
     async function startStation(slug, play) {
         currentSlug = slug.toLowerCase().replace(/[^a-z0-9-]/g, ''); au.src = "https://stream.laut.fm/" + currentSlug;
         if(play) { au.play(); document.getElementById('pBtn').innerHTML = "⏸"; }
@@ -129,18 +117,25 @@
             document.getElementById('mainImg').src = s.images.station_640x640;
             document.getElementById('stLoc').innerText = "📍 " + (s.city || "Radio");
             document.getElementById('hoerer').innerText = h + " HÖRER";
+            document.getElementById('footerSlogan').innerText = s.page_title || "Dein Sound.";
             let html = ""; let bgColor = "var(--bg-card)"; let accent = "var(--accent-main)";
             l.forEach((song, i) => {
                 if(!histFull && i > 3) return;
                 const isCurrent = (i === 0); let art = song.artist.name; let tit = song.title;
                 const check = (art + " " + tit).toLowerCase();
                 if(isCurrent) {
-                    if(tit.includes("START_AD_BREAK") || song.type === "gold") { bgColor = "var(--status-yellow)"; accent = "#000"; art = "WERBUNG"; tit = "Gleich geht's weiter..."; }
-                    else if(check.includes("news") || check.includes("nachrichten")) { bgColor = "var(--status-blue)"; accent = "#fff"; art = "NACHRICHTEN"; }
-                    else if(check.includes("moderation")) { bgColor = "var(--status-pink)"; accent = "#fff"; art = s.display_name; tit = "Moderation"; }
+                    // VERBESSERTE ERKENNUNG
+                    if(tit.includes("START_AD_BREAK") || song.type === "gold" || check.includes("werbung") || check.includes("advertisement")) { 
+                        bgColor = "var(--status-yellow)"; accent = "#000"; art = "WERBUNG"; tit = "Gleich geht's weiter..."; 
+                    } else if(check.includes("news") || check.includes("nachrichten") || check.includes("aktuell")) { 
+                        bgColor = "var(--status-blue)"; accent = "#fff"; art = "NACHRICHTEN"; 
+                    } else if(check.includes("moderation") || check.includes("live") || check.includes("show")) { 
+                        bgColor = "var(--status-pink)"; accent = "#fff"; art = s.display_name; tit = "Moderation"; 
+                    }
                 }
                 const time = new Date(song.started_at).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
-                html += `<div class="track-entry"><img class="track-cover" src="${song.image_640x640 || s.images.station_120x120}"><div class="track-details">
+                const songImg = song.image_640x640 ? song.image_640x640 : s.images.station_120x120;
+                html += `<div class="track-entry"><img class="track-cover" src="${songImg}"><div class="track-details">
                 <span class="track-art" style="color:${isCurrent && bgColor === 'var(--bg-card)' ? 'var(--accent-main)' : (isCurrent ? accent : 'var(--text-main)')}">${art}</span>
                 <span class="track-tit" style="color:${isCurrent && bgColor !== 'var(--bg-card)' ? accent : 'var(--text-dim)'}">${tit}</span></div><div class="track-time" style="color:${isCurrent && bgColor !== 'var(--bg-card)' ? accent : 'var(--accent-main)'}">${isCurrent ? 'JETZT' : time}</div></div>`;
             });
