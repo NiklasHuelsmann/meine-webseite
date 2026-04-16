@@ -3,84 +3,48 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Radio Ultimate v115.67 - Mobile App Style</title>
+    <title>Radio Ultimate v115.70 - App Expansion</title>
     <style>
         :root { --bg: #0a0e14; --panel: #161b26; --accent: #00fad9; --white: #fff; --dim: #94a3b8; }
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        
-        body { 
-            background: var(--bg); color: var(--white); font-family: 'Segoe UI', system-ui, sans-serif; 
-            margin: 0; padding: 0; height: 100vh; overflow: hidden; display: flex; justify-content: center;
-        }
-
+        body { background: var(--bg); color: var(--white); font-family: 'Segoe UI', sans-serif; margin: 0; height: 100vh; overflow: hidden; display: flex; justify-content: center; }
         .app { width: 100%; max-width: 1600px; height: 100vh; display: flex; flex-direction: column; background: var(--panel); }
         
-        /* HEADER - App Look */
-        .nav { 
-            height: 65px; display: flex; align-items: center; padding: 0 15px; 
-            background: #000; border-bottom: 2px solid var(--accent); gap: 10px; z-index: 5000;
-        }
-        .search-area { position: relative; flex: 1; }
-        #query { 
-            width: 100%; background: #242b38; border: 1px solid var(--accent); 
-            border-radius: 25px; padding: 8px 15px; color: #fff; outline: none; font-size: 16px;
-        }
-
-        #results { 
-            position: absolute; top: 55px; left: 0; width: 100%; background: #1c222d; 
-            border-radius: 15px; border: 1px solid var(--accent); display: none; z-index: 6000;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-        }
-        .res-item { padding: 15px; border-bottom: 1px solid #2d3748; cursor: pointer; display: flex; align-items: center; gap: 10px; }
+        /* HEADER */
+        .nav { height: 70px; display: flex; align-items: center; padding: 0 20px; background: #000; border-bottom: 2px solid var(--accent); gap: 15px; z-index: 5000; }
+        .search-area { position: relative; flex: 1; max-width: 600px; }
+        #query { width: 100%; background: #ffffff; border: none; border-radius: 6px; padding: 12px; color: #333; outline: none; font-size: 16px; }
+        #results { position: absolute; top: 55px; left: 0; width: 100%; background: #ffffff; border-radius: 0 0 8px 8px; display: none; z-index: 6000; color: #333; box-shadow: 0 15px 30px rgba(0,0,0,0.5); }
+        .res-item { padding: 12px; border-bottom: 1px solid #eee; cursor: pointer; display: flex; align-items: center; gap: 12px; }
 
         .main { flex: 1; display: flex; overflow: hidden; }
 
-        /* PLAYER (Links am PC, Oben am Handy) */
-        .player-zone { 
-            width: 400px; padding: 25px; display: flex; flex-direction: column; 
-            align-items: center; background: rgba(0,0,0,0.15); text-align: center;
-            border-right: 1px solid rgba(255,255,255,0.05); flex-shrink: 0;
-        }
-        
-        .cover-krenn { 
-            width: 320px; height: 320px; position: relative; margin-bottom: 15px; 
-            border: 3px solid var(--accent); border-radius: 40px; padding: 5px; background: #000;
-        }
+        /* PLAYER ZONE (LINKS) */
+        .player-zone { width: 420px; padding: 25px; display: flex; flex-direction: column; align-items: center; background: rgba(0,0,0,0.2); text-align: center; border-right: 1px solid rgba(255,255,255,0.05); flex-shrink: 0; }
+        .cover-krenn { width: 320px; height: 320px; position: relative; margin-bottom: 15px; border: 4px solid var(--accent); border-radius: 40px; padding: 6px; background: #000; }
         #bigCover { width: 100%; height: 100%; border-radius: 32px; object-fit: cover; }
-        #overlay { 
-            position: absolute; inset: 5px; background: rgba(0,0,0,0.6); 
-            border-radius: 32px; display: none; align-items: center; justify-content: center; font-size: 80px; 
+        #overlay { position: absolute; inset: 6px; background: rgba(0,0,0,0.6); border-radius: 32px; display: none; align-items: center; justify-content: center; font-size: 90px; }
+        #playBtn { width: 70px; height: 70px; border-radius: 50%; background: var(--accent); border: none; font-size: 30px; cursor: pointer; margin-bottom: 10px; }
+
+        /* LIST ZONE (RECHTS) */
+        .list-zone { flex: 1; overflow-y: auto; padding: 20px; }
+        .label { font-size: 11px; color: var(--accent); font-weight: 900; letter-spacing: 2px; text-transform: uppercase; margin: 20px 0 10px; display: block; }
+        .song-card { display: flex; align-items: center; gap: 15px; padding: 12px; background: #1e2533; border: 1px solid rgba(255,255,255,0.05); border-radius: 18px; margin-bottom: 10px; }
+        .song-card.now { border: 2px solid var(--accent); background: rgba(0,250,217,0.05); }
+
+        /* MOBILE ONLY STYLES */
+        .more-btn { 
+            display: none; width: 100%; padding: 15px; background: rgba(0,250,217,0.1); 
+            border: 1px dashed var(--accent); color: var(--accent); border-radius: 15px; 
+            font-weight: bold; cursor: pointer; margin-top: 10px; text-align: center;
         }
 
-        #playBtn { 
-            width: 70px; height: 70px; border-radius: 50%; background: var(--accent); 
-            border: none; font-size: 30px; cursor: pointer; margin-bottom: 10px;
-        }
-        #listeners { font-weight: bold; color: var(--accent); font-size: 13px; letter-spacing: 1px; }
-
-        /* PLAYLIST (Rechts am PC, Unten am Handy) */
-        .list-zone { flex: 1; overflow-y: auto; padding: 20px; background: rgba(255,255,255,0.02); }
-        .label { font-size: 10px; color: var(--accent); font-weight: 800; margin: 15px 0 10px; display: block; opacity: 0.7; }
-
-        .song-card { 
-            display: flex; align-items: center; gap: 12px; padding: 12px; 
-            background: #1e2533; border: 1px solid rgba(255,255,255,0.05); 
-            border-radius: 16px; margin-bottom: 8px;
-        }
-        .song-card.now { border: 1px solid var(--accent); background: rgba(0,250,217,0.08); }
-
-        /* MOBILE OPTIMIERUNG */
-        @media (max-width: 800px) {
+        @media (max-width: 900px) {
             .main { flex-direction: column; }
-            .player-zone { 
-                width: 100%; height: auto; border-right: none; 
-                border-bottom: 2px solid var(--accent); padding: 15px;
-            }
-            .cover-krenn { width: 160px; height: 160px; border-radius: 25px; margin-bottom: 10px; }
-            #bigCover { border-radius: 18px; }
-            #playBtn { width: 55px; height: 55px; font-size: 22px; margin-bottom: 5px; }
-            .list-zone { padding: 10px; }
-            #sName { font-size: 18px !important; margin: 5px 0 !important; }
+            .player-zone { width: 100%; border-right: none; padding: 15px; }
+            .cover-krenn { width: 180px; height: 180px; }
+            .more-btn { display: block; } /* Nur auf Smartphone zeigen */
+            .hidden-mobile { display: none; } /* Versteckt Songs initial auf Smartphone */
         }
     </style>
 </head>
@@ -88,9 +52,9 @@
 
 <div class="app">
     <header class="nav">
-        <div id="clock" style="font-size: 14px; font-weight: bold; color: var(--accent);">00:00</div>
+        <div id="clock" style="font-weight:bold; color:var(--accent);">00:00</div>
         <form class="search-area" onsubmit="handleSearch(event)">
-            <input type="text" id="query" placeholder="Sender suchen..." autocomplete="off">
+            <input type="text" id="query" placeholder="Suchen..." autocomplete="off">
             <div id="results"></div>
         </form>
     </header>
@@ -102,12 +66,13 @@
                 <div id="overlay"></div>
             </div>
             <button id="playBtn" onclick="togglePlay()" disabled>▶</button>
-            <h2 id="sName" style="margin:5px 0; font-size: 22px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%;">STATION</h2>
-            <div id="listeners">RADIO READY</div>
+            <h2 id="sName" style="margin:5px 0;">STATION</h2>
+            <div id="listeners" style="font-weight:bold; color:var(--accent);">BEREIT</div>
         </section>
 
-        <section class="list-zone" id="history">
-            <div style="text-align:center; opacity:0.2; margin-top:50px;">Suche starten...</div>
+        <section class="list-zone">
+            <div id="history"></div>
+            <div id="moreBtnArea"></div>
         </section>
     </main>
 </div>
@@ -115,24 +80,18 @@
 <script>
     const player = new Audio();
     let curID = "";
+    let showAllMobile = false;
     const qIn = document.getElementById('query');
     const rBox = document.getElementById('results');
 
     function init() {
-        setInterval(() => {
-            document.getElementById('clock').innerText = new Date().toLocaleTimeString('de-DE', {hour:'2-digit', minute:'2-digit'});
-        }, 1000);
-
+        setInterval(() => { document.getElementById('clock').innerText = new Date().toLocaleTimeString('de-DE', {hour:'2-digit', minute:'2-digit'}); }, 1000);
         qIn.addEventListener('input', async () => {
             const v = qIn.value.trim();
             if(v.length < 2) { rBox.style.display = 'none'; return; }
             const r = await fetch(`https://api.laut.fm/search/stations?query=${v}`).then(res => res.json());
             if(r.items) {
-                rBox.innerHTML = r.items.slice(0,6).map(s => `
-                    <div class="res-item" onclick="start('${s.name}')">
-                        <img src="${s.images.station_80x80}" style="width:30px;height:30px;border-radius:5px;">
-                        <b style="font-size:14px;">${s.display_name}</b>
-                    </div>`).join('');
+                rBox.innerHTML = r.items.slice(0,6).map(s => `<div class="res-item" onclick="start('${s.name}')"><img src="${s.images.station_80x80}"><b>${s.display_name}</b></div>`).join('');
                 rBox.style.display = 'block';
             }
         });
@@ -144,7 +103,7 @@
         curID = id;
         rBox.style.display = 'none';
         qIn.value = "";
-        qIn.blur(); // Schließt Handy-Tastatur
+        qIn.blur();
         document.getElementById('playBtn').disabled = false;
         player.src = `https://stream.laut.fm/${curID}`;
         player.play();
@@ -174,38 +133,50 @@
             const ov = document.getElementById('overlay');
             ov.style.display = "none";
 
-            let html = '<span class="label">LIVE ON AIR</span>';
+            let html = '<span class="label">Aktuell</span>';
             songs.forEach((s, i) => {
                 const isNow = i === 0;
                 const time = s.started_at.split(' ')[1].substring(0,5);
                 const cover = s.image_640x640 || info.images.station_640x640;
-                
                 let art = s.artist.name, tit = s.title, icon = "";
                 const check = (art + tit).toLowerCase();
 
-                if(check.includes("nachrichten") || check.includes("news")) {
-                    icon = "📰"; if(isNow) { ov.innerText = "📰"; ov.style.display = "flex"; art="NEWS"; }
-                } else if(check.includes("moderation") || check.includes("ident")) {
-                    icon = "🎙️"; if(isNow) { ov.innerText = "🎙️"; ov.style.display = "flex"; }
-                }
+                if(check.includes("nachrichten")) { icon = "📰"; if(isNow) { ov.innerText = "📰"; ov.style.display = "flex"; } }
+                else if(check.includes("moderation")) { icon = "🎙️"; if(isNow) { ov.innerText = "🎙️"; ov.style.display = "flex"; } }
 
                 if(isNow) document.getElementById('bigCover').src = cover;
 
+                // Mobile Logik: Verstecke Songs nach dem 3. vergangenen Titel
+                let mobileClass = (i > 3 && !showAllMobile) ? 'hidden-mobile' : '';
+
                 html += `
-                    ${i === 1 ? '<span class="label">VORHERIGE TITEL</span>' : ''}
-                    <div class="song-card ${isNow ? 'now' : ''}">
-                        <div style="color:var(--accent); font-weight:bold; width:40px; font-size:11px;">${time}</div>
-                        <div style="font-size:20px; width:25px;">${icon}</div>
+                    ${i === 1 ? '<span class="label">Zuletzt gelaufen</span>' : ''}
+                    <div class="song-card ${isNow ? 'now' : ''} ${mobileClass}">
+                        <div style="color:var(--accent); font-weight:bold; width:45px; font-size:12px;">${time}</div>
+                        <div style="font-size:20px; width:30px;">${icon}</div>
                         <div style="flex:1; overflow:hidden;">
-                            <b style="display:block; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; font-size:14px;">${art}</b>
-                            <span style="font-size:12px; color:var(--dim);">${tit}</span>
+                            <b style="display:block; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${art}</b>
+                            <span style="font-size:13px; color:var(--dim);">${tit}</span>
                         </div>
                         <img src="${cover}" style="width:40px; height:40px; border-radius:10px;">
-                    </div>
-                `;
+                    </div>`;
             });
+
             document.getElementById('history').innerHTML = html;
+            
+            // Button nur zeigen, wenn mehr als 3 Songs da sind und wir auf dem Handy sind
+            if(songs.length > 4 && !showAllMobile) {
+                document.getElementById('moreBtnArea').innerHTML = `<div class="more-btn" onclick="expandList()">+ ${songs.length - 4} weitere Songs anzeigen</div>`;
+            } else {
+                document.getElementById('moreBtnArea').innerHTML = "";
+            }
+
         } catch(e) {}
+    }
+
+    function expandList() {
+        showAllMobile = true;
+        update();
     }
 </script>
 </body>
