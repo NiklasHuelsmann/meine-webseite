@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Radio Ultimate v115.11 - All-In-One Master</title>
+    <title>Radio Ultimate Master v115.15</title>
     <style>
         :root { 
             --bg-app: #1e2538; --bg-card: #283044; --accent-main: #00fad9; 
@@ -11,117 +11,203 @@
             --status-yellow: #ffcc00; --status-blue: #007bff; --status-red: #ff3b3b;
         }
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; }
-        body { background-color: #0d111a; margin: 0; display: flex; justify-content: center; height: 100vh; color: var(--text-main); font-family: -apple-system, system-ui, sans-serif; overflow: hidden; }
+        body { 
+            background-color: #0d111a; margin: 0; height: 100vh; 
+            color: var(--text-main); font-family: -apple-system, system-ui, sans-serif; 
+            overflow: hidden; display: flex; justify-content: center; 
+        }
         
-        .app { width: 100%; max-width: 800px; height: 100vh; background-color: var(--bg-app); display: flex; flex-direction: column; position: relative; border-left: 1px solid rgba(255,255,255,0.05); border-right: 1px solid rgba(255,255,255,0.05); }
+        /* App-Container: Perfektes Maß für alle Geräte */
+        .app { 
+            width: 100%; max-width: 600px; height: 100vh; 
+            background-color: var(--bg-app); display: flex; flex-direction: column; 
+            position: relative; box-shadow: 0 0 60px rgba(0,0,0,0.6); 
+        }
         
-        /* Header Bereich */
-        .top-nav { height: 60px; display: flex; align-items: center; justify-content: space-between; padding: 0 20px; flex-shrink: 0; }
-        #sysTime { font-size: 16px; font-weight: 800; letter-spacing: 1px; }
-        .icon-btn-large { font-size: 28px; color: var(--accent-main); cursor: pointer; filter: drop-shadow(0 0 5px rgba(0,250,217,0.3)); }
+        /* FIXER HEADER: Bleibt beim Scrollen oben stehen */
+        .header-fixed { 
+            flex-shrink: 0; background: var(--bg-app); z-index: 10; 
+            padding-bottom: 5px; border-bottom: 1px solid rgba(255,255,255,0.05); 
+        }
+        .top-nav { height: 45px; display: flex; align-items: center; justify-content: space-between; padding: 0 15px; }
+        #sysTime { font-size: 14px; font-weight: 700; opacity: 0.9; letter-spacing: 0.5px; }
+        .icon-btn-large { font-size: 22px; color: var(--accent-main); cursor: pointer; transition: transform 0.2s; }
+        .icon-btn-large:active { transform: scale(0.9); }
         
-        /* Suche */
-        #searchOverlay { display: none; position: absolute; top: 10px; left: 50%; transform: translateX(-50%); width: 92%; height: 60px; background: var(--bg-card); z-index: 100; align-items: center; padding: 0 20px; border-radius: 30px; border: 2px solid var(--accent-main); box-shadow: 0 15px 40px rgba(0,0,0,0.8); }
-        #sInput { flex: 1; background: transparent; border: none; color: #fff; font-size: 20px; font-weight: 600; }
+        .hero { padding: 5px 0 10px; text-align: center; }
+        #stNameHeader { font-size: 24px; font-weight: 900; color: #fff; text-transform: uppercase; margin: 0; }
+        #stPageTitle { font-size: 12px; color: var(--accent-main); margin-bottom: 8px; display: block; font-weight: 700; opacity: 0.8; }
+        #mainImg { 
+            width: 130px; height: 130px; border-radius: 20px; object-fit: cover; 
+            background: #333; box-shadow: 0 8px 25px rgba(0,0,0,0.5); 
+            border: 2px solid rgba(255,255,255,0.1); 
+        }
+        
+        .controls { display: flex; align-items: center; justify-content: center; margin: 8px 0; }
+        #pBtn { 
+            width: 55px; height: 55px; border-radius: 50%; background: var(--accent-main); 
+            border: none; font-size: 24px; color: #1e2538; cursor: pointer; 
+            box-shadow: 0 4px 15px rgba(0, 250, 217, 0.4); display: flex; align-items: center; justify-content: center;
+        }
 
-        .main-content { flex: 1; overflow-y: auto; scrollbar-width: none; padding-bottom: 30px; }
-        .main-content::-webkit-scrollbar { display: none; }
+        /* SCROLL-BEREICH: Nur die Liste bewegt sich */
+        .scroll-content { 
+            flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; 
+            padding: 0 12px 20px; scrollbar-width: none; 
+        }
+        .scroll-content::-webkit-scrollbar { display: none; }
         
-        /* Hero (Logo & Play) */
-        .hero { padding: 15px 0; text-align: center; }
-        #stNameHeader { font-size: 32px; font-weight: 900; color: #fff; text-transform: uppercase; margin: 0 0 5px; letter-spacing: 1px; }
-        #stPageTitle { font-size: 15px; color: var(--accent-main); margin-bottom: 12px; display: block; font-weight: 700; }
-        #mainImg { width: 180px; height: 180px; border-radius: 30px; object-fit: cover; background: #333; box-shadow: 0 15px 45px rgba(0,0,0,0.7); border: 2px solid rgba(255,255,255,0.15); }
+        .list-header { 
+            font-size: 18px; font-weight: 900; color: #ffffff; 
+            margin: 15px 5px 10px; text-transform: uppercase; letter-spacing: 1px;
+        }
         
-        .controls { display: flex; align-items: center; justify-content: center; gap: 30px; margin: 15px 0; }
-        #pBtn { width: 75px; height: 75px; border-radius: 50%; background: var(--accent-main); border: none; font-size: 32px; color: #1e2538; cursor: pointer; box-shadow: 0 8px 25px rgba(0, 250, 217, 0.4); display: flex; align-items: center; justify-content: center; }
+        /* Track Einträge im Foto-Design */
+        .track-entry { 
+            display: flex; align-items: center; gap: 10px; padding: 10px 12px; 
+            border-radius: 15px; margin-bottom: 8px; background: rgba(255,255,255,0.05); 
+            border: 1px solid rgba(255,255,255,0.03); transition: background 0.3s;
+        }
+        .track-entry.current { border-left: 5px solid var(--accent-main); background: rgba(255,255,255,0.08); }
         
-        /* Song Liste */
-        .list-header { font-size: 26px; font-weight: 900; color: #ffffff; margin: 20px 20px 12px; text-transform: uppercase; }
-        #nowPlayingBox { margin: 0 15px; }
-        
-        /* Design wie auf Foto: Links Icon, Mitte Text, Rechts Cover */
-        .track-entry { display: flex; align-items: center; gap: 15px; padding: 14px 18px; border-radius: 20px; margin-bottom: 12px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.05); }
-        .track-entry.current { border-left: 8px solid var(--accent-main); background: rgba(255,255,255,0.12); }
-        
-        .left-meta { width: 55px; display: flex; justify-content: center; align-items: center; flex-shrink: 0; }
-        .track-time { font-size: 13px; color: #ffffff; font-weight: 800; background: rgba(0,0,0,0.4); padding: 5px 10px; border-radius: 10px; }
+        .left-meta { width: 45px; display: flex; justify-content: center; align-items: center; flex-shrink: 0; }
+        .track-time { 
+            font-size: 11px; color: #fff; font-weight: 800; 
+            background: rgba(0,0,0,0.3); padding: 3px 6px; border-radius: 6px; 
+        }
 
         .track-details { flex: 1; overflow: hidden; }
-        .track-art { font-size: 20px; font-weight: 900; color: #ffffff; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 2px; }
-        .track-tit { font-size: 16px; font-weight: 600; color: var(--text-dim); display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .track-art { font-size: 16px; font-weight: 800; color: #ffffff; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .track-tit { font-size: 13px; font-weight: 600; color: var(--text-dim); display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         
-        .track-cover { width: 60px; height: 60px; border-radius: 14px; object-fit: cover; background: #000; flex-shrink: 0; box-shadow: 0 5px 15px rgba(0,0,0,0.5); }
+        .track-cover { width: 48px; height: 48px; border-radius: 8px; object-fit: cover; background: #000; flex-shrink: 0; }
         
-        .speaker-anim { color: var(--accent-main); font-size: 28px; filter: drop-shadow(0 0 8px var(--accent-main)); animation: pulse 1.2s infinite ease-in-out; }
+        /* Live Animation */
+        .speaker-anim { color: var(--accent-main); font-size: 20px; animation: pulse 1.2s infinite ease-in-out; }
         @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.15); } }
 
-        /* Footer */
-        .fixed-footer { padding: 20px 20px calc(25px + env(safe-area-inset-bottom)); background: #111622; border-top: 3px solid rgba(255,255,255,0.05); flex-shrink: 0; }
-        .footer-row { display: flex; justify-content: center; margin-bottom: 15px; }
-        .hoerer-badge { background: var(--accent-main); color: #1e2538; padding: 10px 40px; border-radius: 40px; font-size: 18px; font-weight: 900; box-shadow: 0 5px 20px rgba(0, 250, 217, 0.3); }
-        
-        #footerDesc { font-size: 16px; line-height: 1.6; text-align: center; color: #ffffff; background: rgba(255,255,255,0.07); padding: 18px; border-radius: 20px; max-height: 120px; overflow-y: auto; font-weight: 600; border: 1px solid rgba(255,255,255,0.1); }
-        .version-tag { text-align: center; font-size: 12px; color: var(--text-dim); margin-top: 18px; text-transform: uppercase; letter-spacing: 2px; font-weight: 800; }
+        /* Mehr Songs Button */
+        .more-songs-area { text-align: center; padding: 10px 0; }
+        #btnToggleList { 
+            background: rgba(255,255,255,0.05); border: 2px solid var(--accent-main); 
+            color: var(--accent-main); padding: 8px 22px; border-radius: 20px; 
+            font-size: 11px; font-weight: 800; cursor: pointer; text-transform: uppercase;
+        }
+
+        /* FIXER FOOTER: Bleibt unten stehen */
+        .fixed-footer { 
+            flex-shrink: 0; padding: 12px 15px calc(12px + env(safe-area-inset-bottom)); 
+            background: #111622; border-top: 2px solid rgba(255,255,255,0.05); 
+        }
+        .footer-row { display: flex; justify-content: center; margin-bottom: 8px; }
+        .hoerer-badge { 
+            background: var(--accent-main); color: #1e2538; padding: 6px 25px; 
+            border-radius: 20px; font-size: 14px; font-weight: 900; 
+            box-shadow: 0 4px 12px rgba(0, 250, 217, 0.2); 
+        }
+        #footerDesc { 
+            font-size: 13px; text-align: center; color: #fff; 
+            background: rgba(255,255,255,0.05); padding: 10px; border-radius: 12px; 
+            max-height: 70px; overflow-y: auto; line-height: 1.4;
+        }
+        .version-tag { 
+            text-align: center; font-size: 9px; color: var(--text-dim); 
+            margin-top: 8px; text-transform: uppercase; font-weight: 800; letter-spacing: 1px;
+        }
+
+        /* Such-Overlay */
+        #searchOverlay { 
+            display: none; position: absolute; top: 8px; left: 50%; transform: translateX(-50%); 
+            width: 94%; height: 50px; background: var(--bg-card); z-index: 100; 
+            align-items: center; padding: 0 15px; border-radius: 25px; 
+            border: 2px solid var(--accent-main); box-shadow: 0 10px 30px rgba(0,0,0,0.7); 
+        }
+        #sInput { flex: 1; background: transparent; border: none; color: #fff; font-size: 16px; font-weight: 600; }
+        .close-search { background:none; border:none; color:#fff; font-size: 20px; cursor:pointer; padding-left: 10px; }
     </style>
 </head>
 <body onload="initApp()">
+
 <div class="app">
-    <div class="top-nav">
-        <div id="sysTime">00:00</div>
-        <div class="icon-btn-large" onclick="toggleSearch()">🔍</div>
-    </div>
-
-    <div id="searchOverlay">
-        <input type="text" id="sInput" placeholder="SENDER-NAME..." onkeydown="if(event.key==='Enter') execSearch()">
-        <button onclick="toggleSearch()" style="background:none; border:none; color:#fff; font-size: 30px; cursor:pointer;">✕</button>
-    </div>
-
-    <div class="main-content">
+    <div class="header-fixed">
+        <div class="top-nav">
+            <div id="sysTime">00:00</div>
+            <div class="icon-btn-large" onclick="toggleSearch()">🔍</div>
+        </div>
         <div class="hero">
             <h1 id="stNameHeader">RADIO MASTER</h1>
-            <span id="stPageTitle">READY</span>
+            <span id="stPageTitle">WÄHLE DEINEN SENDER</span>
             <img id="mainImg" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7">
             <div class="controls">
                 <button id="pBtn" onclick="togglePlay()">▶</button>
             </div>
         </div>
+    </div>
 
+    <div class="scroll-content">
         <div class="list-header">JETZT LÄUFT</div>
-        <div id="nowPlayingBox">
-            <div id="trackList" style="text-align:center; padding: 40px; font-weight:800;">SENDER SUCHEN...</div>
+        <div id="trackList">
+            <div style="text-align:center; padding: 30px; opacity:0.5; font-size: 14px;">Bitte Sender über Lupe suchen...</div>
+        </div>
+        <div class="more-songs-area">
+            <button id="btnToggleList" style="display:none;" onclick="toggleListSize()">9 SONGS ANZEIGEN</button>
         </div>
     </div>
 
     <div class="fixed-footer">
-        <div class="footer-row"><div id="hoerer" class="hoerer-badge">0 HÖRER</div></div>
-        <div id="footerDesc">Suche einen Sender über die Lupe.</div>
-        <div class="version-tag">VERSION V115.11 • ULTIMATE MASTER</div>
+        <div class="footer-row">
+            <div id="hoerer" class="hoerer-badge">0 HÖRER</div>
+        </div>
+        <div id="footerDesc">Gib einen Namen ein und starte den Stream.</div>
+        <div class="version-tag">VERSION V115.15 • FINAL MASTER BUILD</div>
+    </div>
+
+    <div id="searchOverlay">
+        <input type="text" id="sInput" placeholder="Sender suchen..." onkeydown="if(event.key==='Enter') execSearch()">
+        <button class="close-search" onclick="toggleSearch()">✕</button>
     </div>
 </div>
 
 <script>
     const au = new Audio(); 
     let currentSlug = ""; 
+    let showFullList = false;
 
+    // Zeit & Start
     function initApp() { 
-        setInterval(() => { document.getElementById('sysTime').innerText = new Date().toLocaleTimeString('de-DE', {hour:'2-digit', minute:'2-digit'}); }, 1000); 
+        setInterval(() => { 
+            document.getElementById('sysTime').innerText = new Date().toLocaleTimeString('de-DE', {hour:'2-digit', minute:'2-digit'}); 
+        }, 1000); 
     }
 
+    // Suche öffnen/schließen & Felder leeren
     function toggleSearch() { 
         const s = document.getElementById('searchOverlay'); 
-        s.style.display = (s.style.display === 'flex') ? 'none' : 'flex'; 
+        const input = document.getElementById('sInput');
+        if (s.style.display === 'flex') {
+            s.style.display = 'none';
+            input.value = ""; 
+        } else {
+            s.style.display = 'flex';
+            input.focus();
+        }
     }
     
     function execSearch() { 
         const input = document.getElementById('sInput'); 
-        if(input.value.trim()) { startStation(input.value.trim(), true); toggleSearch(); } 
+        const val = input.value.trim();
+        if(val) { 
+            startStation(val, true); 
+            input.value = ""; 
+            document.getElementById('searchOverlay').style.display = 'none'; 
+        } 
     }
     
     async function startStation(slug, play) {
         currentSlug = slug.toLowerCase().replace(/[^a-z0-9-]/g, ''); 
         au.src = "https://stream.laut.fm/" + currentSlug;
         if(play) { au.play().catch(()=>{}); document.getElementById('pBtn').innerHTML = "⏸"; }
+        document.getElementById('btnToggleList').style.display = 'inline-block';
         updateUI();
         if(window.uiInterval) clearInterval(window.uiInterval);
         window.uiInterval = setInterval(updateUI, 8000);
@@ -133,6 +219,13 @@
         else { au.pause(); document.getElementById('pBtn').innerHTML = "▶"; } 
     }
 
+    function toggleListSize() { 
+        showFullList = !showFullList; 
+        document.getElementById('btnToggleList').innerText = showFullList ? "WENIGER ANZEIGEN" : "9 SONGS ANZEIGEN";
+        updateUI(); 
+    }
+
+    // Update Logik mit News/Reklame Erkennung
     async function updateUI() {
         if(!currentSlug) return;
         try {
@@ -140,42 +233,42 @@
                 fetch(`https://api.laut.fm/station/${currentSlug}`).then(r => r.json()),
                 fetch(`https://api.laut.fm/station/${currentSlug}/last_songs`).then(r => r.json())
             ]);
-            
             const hRes = await fetch(`https://api.laut.fm/station/${currentSlug}/listeners`);
             const hCount = await hRes.text();
 
             document.getElementById('stNameHeader').innerText = s.display_name;
             document.getElementById('stPageTitle').innerText = s.page_title || "LIVE";
-            document.getElementById('footerDesc').innerText = s.description || "Willkommen!";
+            document.getElementById('footerDesc').innerText = s.description || "Viel Spaß beim Hören!";
             document.getElementById('hoerer').innerText = (hCount.includes("<") ? "0" : hCount) + " HÖRER";
             document.getElementById('mainImg').src = s.images.station_640x640;
 
             let html = "";
+            const limit = showFullList ? 9 : 3;
             l.forEach((song, i) => {
-                if(i >= 3) return;
+                if(i >= limit) return;
                 const isCurrent = (i === 0);
                 let art = song.artist.name;
                 let tit = song.title;
                 const check = (art + " " + tit).toLowerCase();
-                
                 let img = song.image_640x640 || (song.artist && song.artist.image) || s.images.station_120x120;
-                let leftContent = `<div class="track-time">${new Date(song.started_at).toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'})}</div>`;
-                if(isCurrent) leftContent = `<div class="speaker-anim">🔊</div>`;
+                
+                let left = `<div class="track-time">${new Date(song.started_at).toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'})}</div>`;
+                if(isCurrent) left = `<div class="speaker-anim">🔊</div>`;
 
-                // ERKENNUNG FÜR REKLAME, NEWS & MODERATION
-                if(check.includes("reklame") || check.includes("werbung") || check.includes("präsentiert von") || check.includes("spot") || check.includes("anzeige") || song.type === "gold" || song.type === "ads") {
-                    leftContent = `<div style="font-size:28px; color:var(--status-blue)">📢</div>`; 
+                // REKLAME, NEWS, MODERATION CHECK
+                if(check.includes("reklame") || check.includes("werbung") || check.includes("spot") || check.includes("anzeige") || song.type === "gold" || song.type === "ads") {
+                    left = `<div style="font-size:22px; color:var(--status-blue)">📢</div>`; 
                     art = "REKLAME / SPOT";
                 } else if(check.includes("news") || check.includes("nachrichten") || check.includes("wetter") || check.includes("verkehr")) {
-                    leftContent = `<div style="font-size:28px; color:var(--status-yellow)">📰</div>`; 
+                    left = `<div style="font-size:22px; color:var(--status-yellow)">📰</div>`; 
                     art = "NACHRICHTEN";
-                } else if(check.includes("moderation") || check.includes("spricht") || check.includes("studio") || check.includes("live-talk")) {
-                    leftContent = `<div style="font-size:28px; color:var(--status-red)">🎙️</div>`; 
+                } else if(check.includes("moderation") || check.includes("live") || check.includes("spricht") || check.includes("studio")) {
+                    left = `<div style="font-size:22px; color:var(--status-red)">🎙️</div>`; 
                     art = "MODERATION";
                 }
 
                 html += `<div class="track-entry ${isCurrent ? 'current' : ''}">
-                    <div class="left-meta">${leftContent}</div>
+                    <div class="left-meta">${left}</div>
                     <div class="track-details">
                         <span class="track-art">${art}</span>
                         <span class="track-tit">${tit}</span>
@@ -184,8 +277,9 @@
                 </div>`;
             });
             document.getElementById('trackList').innerHTML = html;
-        } catch(e) {}
+        } catch(e) { console.warn("API Offline?"); }
     }
 </script>
+
 </body>
 </html>
