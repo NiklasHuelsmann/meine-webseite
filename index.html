@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Radio Player Pro Final</title>
+    <title>Radio Player Pro v95.00</title>
     <style>
         :root { 
             --bg-app: #1e2538; --bg-card: #283044; --accent-main: #00fad9; 
@@ -13,7 +13,6 @@
         body { background-color: #0d111a; margin: 0; display: flex; justify-content: center; height: 100vh; color: var(--text-main); font-family: sans-serif; overflow: hidden; }
         .app { width: 100%; max-width: 500px; height: 100%; background-color: var(--bg-app); display: flex; flex-direction: column; position: relative; }
         
-        /* Header */
         .top-nav { height: 50px; display: flex; align-items: center; justify-content: space-between; padding: 0 15px; flex-shrink: 0; }
         #sysTime { font-size: 14px; font-weight: bold; }
         .icon-btn { font-size: 18px; color: var(--accent-main); cursor: pointer; }
@@ -24,7 +23,6 @@
         .scroll-area { flex: 1; overflow-y: auto; scrollbar-width: none; }
         .scroll-area::-webkit-scrollbar { display: none; }
         
-        /* Hero Bereich */
         .hero { padding: 15px 0; text-align: center; }
         #stNameHeader { font-size: 22px; font-weight: bold; margin-bottom: 12px; display: block; color: #fff; }
         #mainImg { width: 60%; aspect-ratio: 1/1; border-radius: 15px; object-fit: cover; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
@@ -32,8 +30,7 @@
         .controls { display: flex; align-items: center; justify-content: center; gap: 25px; margin: 15px 0; }
         #pBtn { width: 65px; height: 65px; border-radius: 50%; background: var(--accent-main); border: none; font-size: 26px; color: #1e2538; cursor: pointer; }
         
-        /* Song Liste */
-        #nowPlayingBox { margin: 0 15px 10px; padding: 12px; border-radius: 15px; background: var(--bg-card); transition: background 0.4s; }
+        #nowPlayingBox { margin: 0 15px 5px; padding: 12px; border-radius: 15px; background: var(--bg-card); transition: background 0.4s; }
         .track-entry { display: flex; align-items: center; gap: 12px; padding: 8px; border-radius: 10px; margin-bottom: 5px; background: rgba(0,0,0,0.2); }
         .track-cover { width: 45px; height: 45px; border-radius: 5px; object-fit: cover; }
         .track-details { flex: 1; overflow: hidden; }
@@ -41,11 +38,10 @@
         .track-tit { font-size: 12px; color: #eee; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .track-time { font-size: 11px; color: var(--accent-main); font-weight: bold; }
 
-        /* DER BUTTON AUS DEM SCREENSHOT */
-        .more-songs-btn { text-align: center; padding: 10px; margin-bottom: 15px; }
-        #btnMore { background: none; border: none; color: var(--accent-main); font-size: 14px; font-weight: bold; cursor: pointer; text-decoration: none; }
+        /* Der Button Bereich */
+        .more-songs-area { text-align: center; padding: 10px 10px 20px 10px; }
+        #btnToggleList { background: none; border: none; color: var(--accent-main); font-size: 14px; font-weight: bold; cursor: pointer; }
         
-        /* Footer */
         .footer-info { padding: 15px; background: rgba(0,0,0,0.3); border-top: 1px solid rgba(255,255,255,0.1); flex-shrink: 0; }
         #footerSlogan { font-size: 14px; text-align: center; margin-bottom: 10px; color: #fff; font-style: italic; }
         .footer-row { display: flex; justify-content: center; margin-bottom: 12px; }
@@ -83,8 +79,8 @@
             <div id="trackList"></div>
         </div>
 
-        <div class="more-songs-btn">
-            <button id="btnMore" onclick="window.open('https://laut.fm/'+currentSlug, '_blank')">mehr Songs anzeigen</button>
+        <div class="more-songs-area">
+            <button id="btnToggleList" onclick="toggleListSize()">mehr Songs anzeigen</button>
         </div>
     </div>
 
@@ -104,10 +100,17 @@
 <script>
     const DEFAULT_STATION = "niklas-fm"; const au = new Audio(); au.volume = 0.5;
     let currentSlug = ""; 
+    let showFullList = false;
 
     function initApp() { 
         startStation(DEFAULT_STATION, false); 
         setInterval(() => { document.getElementById('sysTime').innerText = new Date().toLocaleTimeString('de-DE', {hour:'2-digit', minute:'2-digit'}); }, 1000); 
+    }
+
+    function toggleListSize() {
+        showFullList = !showFullList;
+        document.getElementById('btnToggleList').innerText = showFullList ? "weniger anzeigen" : "mehr Songs anzeigen";
+        updateUI();
     }
 
     function changeVol(v) { au.volume = v / 100; document.getElementById('volLabel').innerText = v + "%"; }
@@ -134,20 +137,21 @@
             ]);
 
             document.getElementById('stNameHeader').innerText = s.display_name;
-            document.getElementById('footerSlogan').innerText = s.page_title || s.description || "Dein Tag, Dein Kumpel, Dein Sound.";
+            document.getElementById('footerSlogan').innerText = s.page_title || s.description || "Dein Sound.";
             document.getElementById('hoerer').innerText = h + " HÖRER";
             
             let html = "";
             let currentStatusColor = "var(--bg-card)";
+            // Genau 10 Songs wenn "mehr" geklickt wurde, sonst 4
+            const listLimit = showFullList ? 9 : 3; 
 
             l.forEach((song, i) => {
-                if(i > 4) return;
+                if(i > listLimit) return;
                 const isCurrent = (i === 0);
                 let art = song.artist.name;
                 let tit = song.title;
                 const check = (art + " " + tit).toLowerCase();
                 
-                // SOFORT-ERKENNUNG STATUS
                 if(check.includes("werbung") || song.type === "gold" || tit.includes("AD_BREAK")) {
                     if(isCurrent) { art = "WERBUNG"; tit = "Gleich geht's weiter..."; currentStatusColor = "var(--status-yellow)"; }
                 } else if(check.includes("news") || check.includes("nachrichten")) {
