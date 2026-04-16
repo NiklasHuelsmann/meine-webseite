@@ -3,11 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Radio Player Pro v91.4</title>
+    <title>Radio Player Full-Auto v91.5</title>
     <style>
         :root { 
             --bg-app: #1e2538; 
             --accent-green: #00fad9; 
+            --status-yellow: #ffb300; 
+            --status-blue: #00aaff;
+            --status-pink: #ff00ff;
             --text-main: #ffffff;
             --text-dim: #949fb1;
             --line: rgba(255,255,255,0.1);
@@ -16,7 +19,7 @@
         body { background-color: #0d111a; margin: 0; display: flex; justify-content: center; height: 100vh; color: var(--text-main); font-family: -apple-system, sans-serif; overflow: hidden; }
         .app { width: 100%; max-width: 480px; height: 100%; background-color: var(--bg-app); display: flex; flex-direction: column; position: relative; }
         
-        .top-nav { height: 50px; display: flex; align-items: center; justify-content: space-between; padding: 0 15px; border-bottom: 1px solid var(--line); }
+        .top-nav { height: 50px; display: flex; align-items: center; justify-content: space-between; padding: 0 15px; border-bottom: 1px solid var(--line); flex-shrink: 0; }
         #stNameHeader { font-size: 14px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; }
 
         .scroll-area { flex: 1; overflow-y: auto; scrollbar-width: none; }
@@ -29,7 +32,8 @@
         .btn-round { width: 65px; height: 65px; border-radius: 50%; background: var(--accent-green); border: none; font-size: 28px; color: #1e2538; cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.4); }
         .icon-side { background: none; border: none; color: var(--accent-green); font-size: 22px; cursor: pointer; }
 
-        .content-section { padding: 25px 20px; border-top: 1px solid var(--line); }
+        /* Dynamische Sektion für Werbung/News */
+        #nowBox { padding: 25px 20px; border-top: 1px solid var(--line); transition: background 0.5s ease; }
         .section-title { font-style: italic; font-size: 24px; font-weight: 900; margin-bottom: 15px; display: block; }
 
         .track-entry { display: flex; align-items: center; gap: 15px; padding: 14px 0; border-bottom: 1px solid var(--line); }
@@ -37,7 +41,7 @@
         .track-details { flex: 1; }
         .track-art { font-size: 17px; font-weight: bold; display: block; color: #fff; }
         .track-tit { font-size: 14px; color: var(--text-dim); display: block; margin-top: 2px; }
-        .speaker-active { color: var(--accent-green); font-size: 18px; width: 45px; text-align: center; }
+        #speakerIcon { color: var(--accent-green); font-size: 18px; width: 45px; text-align: center; }
 
         .footer-area { padding: 20px; background: rgba(0,0,0,0.2); }
         .loc-box { display: flex; align-items: center; gap: 8px; color: var(--accent-green); font-weight: bold; margin-bottom: 15px; }
@@ -53,7 +57,7 @@
 
 <div class="app">
     <div class="top-nav">
-        <span id="stNameHeader">LADE...</span>
+        <span id="stNameHeader">RADIO PLAYER</span>
         <span onclick="toggleSearch()" style="cursor:pointer; color:var(--accent-green); font-size:20px;">🔍</span>
     </div>
 
@@ -72,7 +76,7 @@
             </div>
         </div>
 
-        <div class="content-section">
+        <div id="nowBox" class="content-section">
             <span class="section-title">Jetzt läuft</span>
             <div id="trackList"></div>
             <div id="moreBtn" style="color:var(--accent-green); text-align:center; padding:15px; font-weight:bold; cursor:pointer;" onclick="toggleHistory()">mehr Songs anzeigen</div>
@@ -80,8 +84,11 @@
 
         <div class="footer-area">
             <span id="footerSlogan" class="section-title" style="font-size:22px;">...</span>
-            <div class="loc-box"><span>📍</span><span id="stLoc">...</span></div>
-            <div id="hoerer" class="hoerer-badge">0 HÖRER</div>
+            <div class="loc-row" style="display:flex; justify-content:space-between; align-items:center;">
+                <div class="loc-box"><span>📍</span><span id="stLoc">...</span></div>
+                <div id="hoerer" class="hoerer-badge">0 HÖRER</div>
+            </div>
+            <p id="stDesc" style="font-size:14px; color:var(--text-dim); line-height:1.5; margin-top:10px;"></p>
 
             <div class="vol-box">
                 <span style="font-size:10px; font-weight:bold; color:var(--accent-green)">VOL</span>
@@ -93,23 +100,19 @@
 </div>
 
 <script>
-    // HIER DEINEN SENDER-NAMEN EINTRAGEN (z.B. "gold-oldies")
+    // DEIN SENDER HIER EINTRAGEN
     const DEFAULT_STATION = "gold-oldies"; 
 
     const au = new Audio(); au.volume = 0.8; 
     let currentSlug = ""; let histFull = false; let uiInterval;
 
-    function initApp() {
-        startStation(DEFAULT_STATION, false); // Lädt Daten, spielt aber nicht sofort (wegen Browser-Regeln)
-    }
-
+    function initApp() { startStation(DEFAULT_STATION, false); }
     function changeVol(val) { au.volume = val; }
     function toggleSearch() { 
         const el = document.getElementById('searchOverlay');
         el.style.display = (el.style.display === 'flex') ? 'none' : 'flex';
         if(el.style.display === 'flex') document.getElementById('sInput').focus();
     }
-
     function execSearch() {
         const val = document.getElementById('sInput').value.trim();
         if(val) { startStation(val, true); toggleSearch(); }
@@ -118,13 +121,10 @@
     async function startStation(slug, autoPlay) {
         currentSlug = slug.toLowerCase().replace(/[^a-z0-9-]/g, ''); 
         au.src = "https://stream.laut.fm/" + currentSlug;
-        if(autoPlay) {
-            au.play();
-            document.getElementById('pBtn').innerHTML = "⏸";
-        }
+        if(autoPlay) { au.play(); document.getElementById('pBtn').innerHTML = "⏸"; }
         updateUI(); 
         if(uiInterval) clearInterval(uiInterval);
-        uiInterval = setInterval(updateUI, 10000);
+        uiInterval = setInterval(updateUI, 8000); // Check alle 8 Sek
     }
 
     function togglePlay() {
@@ -146,23 +146,50 @@
             document.getElementById('stNameHeader').innerText = s.display_name;
             document.getElementById('mainImg').src = s.images.station_640x640;
             document.getElementById('stLoc').innerText = s.city || "Radio";
+            document.getElementById('stDesc').innerText = s.description || "";
             document.getElementById('hoerer').innerText = h + " HÖRER";
             document.getElementById('footerSlogan').innerText = s.page_title || "Dein Sound.";
 
             let listHtml = "";
+            let currentBoxColor = "transparent";
+            let accentColor = "var(--accent-green)";
+
             l.forEach((song, i) => {
                 if(!histFull && i > 3) return;
                 const isCurrent = i === 0;
+                let art = song.artist.name;
+                let tit = song.title;
+                const checkString = (art + " " + tit).toLowerCase();
+
+                // --- LOGIK FÜR WERBUNG / NEWS / MODERATION ---
+                if(isCurrent) {
+                    if(tit.includes("START_AD_BREAK") || song.type === "gold") {
+                        currentBoxColor = "rgba(255, 179, 0, 0.2)"; 
+                        accentColor = "var(--status-yellow)";
+                        art = "REKLAME / WERBUNG"; tit = "Gleich geht's weiter...";
+                    } else if(checkString.includes("news") || checkString.includes("nachrichten")) {
+                        currentBoxColor = "rgba(0, 170, 255, 0.2)";
+                        accentColor = "var(--status-blue)";
+                        art = "NACHRICHTEN";
+                    } else if(checkString.includes("moderation") || checkString.includes("talk")) {
+                        currentBoxColor = "rgba(255, 0, 255, 0.2)";
+                        accentColor = "var(--status-pink)";
+                        art = s.display_name + " MODERATION";
+                    }
+                }
+
                 const time = new Date(song.started_at).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
                 listHtml += `
                 <div class="track-entry">
-                    ${isCurrent ? '<div class="speaker-active">🔊</div>' : `<div class="track-time">${time}</div>`}
+                    ${isCurrent ? `<div id="speakerIcon" style="color:${accentColor}">🔊</div>` : `<div class="track-time">${time}</div>`}
                     <div class="track-details">
-                        <span class="track-art">${song.artist.name}</span>
-                        <span class="track-tit">${song.title}</span>
+                        <span class="track-art" style="${isCurrent ? 'color:'+accentColor : ''}">${art}</span>
+                        <span class="track-tit">${tit}</span>
                     </div>
                 </div>`;
             });
+
+            document.getElementById('nowBox').style.backgroundColor = currentBoxColor;
             document.getElementById('trackList').innerHTML = listHtml;
         } catch(e) {}
     }
