@@ -3,146 +3,159 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Radio Ultimate v115.55</title>
+    <title>Radio Ultimate v115.62 - Grenzstein Edition</title>
     <style>
         :root { 
-            --bg-dark: #0a0e14; --bg-panel: #161b26; --accent: #00fad9; 
-            --white: #ffffff; --text-dim: #94a3b8;
+            --bg: #0a0e14; --panel: #161b26; --accent: #00fad9; 
+            --white: #ffffff; --dim: #94a3b8; --live: #ff4b2b;
         }
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        
         body { 
-            background-color: var(--bg-dark); margin: 0; height: 100vh; 
-            color: var(--white); font-family: 'Segoe UI', system-ui, sans-serif;
-            display: flex; justify-content: center; overflow: hidden;
+            background: var(--bg); color: var(--white); 
+            font-family: 'Segoe UI', system-ui, sans-serif; 
+            margin: 0; padding: 0; height: 100vh; overflow: hidden;
+            display: flex; justify-content: center;
         }
 
-        .app-shell { width: 100%; max-width: 1400px; height: 100vh; background-color: var(--bg-panel); display: flex; flex-direction: column; position: relative; }
+        .app { width: 100%; max-width: 1600px; height: 100vh; display: flex; flex-direction: column; background: var(--panel); }
 
-        /* SUCHE FIX */
-        .top-nav { height: 75px; display: flex; align-items: center; justify-content: space-between; padding: 0 20px; background: rgba(0,0,0,0.5); flex-shrink: 0; z-index: 2000; border-bottom: 1px solid var(--accent); }
-        .search-area { position: relative; flex: 1; max-width: 600px; margin: 0 15px; }
-        #query { width: 100%; background: rgba(255,255,255,0.05); border: 2px solid var(--accent); border-radius: 15px; padding: 12px 20px; color: #fff; outline: none; font-size: 16px; }
-        
-        #results { 
-            position: absolute; top: 65px; left: 0; width: 100%; background: #1c222d; 
-            border-radius: 12px; box-shadow: 0 15px 50px rgba(0,0,0,1); 
-            max-height: 400px; overflow-y: auto; display: none; z-index: 3000; border: 1px solid var(--accent);
+        /* NAV */
+        .nav { 
+            height: 70px; display: flex; align-items: center; padding: 0 20px; 
+            background: rgba(0,0,0,0.8); border-bottom: 2px solid var(--accent); 
+            gap: 15px; z-index: 2000; flex-shrink: 0;
         }
-        .res-item { padding: 12px; border-bottom: 1px solid rgba(255,255,255,0.05); cursor: pointer; display: flex; align-items: center; gap: 15px; }
-        .res-item:hover { background: var(--accent); color: #000; }
-        .res-img { width: 40px; height: 40px; border-radius: 8px; object-fit: cover; }
+        #clock { font-weight: bold; color: var(--accent); }
+        .search-area { position: relative; flex: 1; max-width: 500px; }
+        #query { width: 100%; background: rgba(255,255,255,0.07); border: 2px solid var(--accent); border-radius: 12px; padding: 10px; color: #fff; outline: none; }
+        #results { position: absolute; top: 55px; left: 0; width: 100%; background: #1c222d; border-radius: 8px; border: 1px solid var(--accent); display: none; z-index: 3000; }
+        .res-item { padding: 12px; border-bottom: 1px solid #2d3748; cursor: pointer; }
 
-        .main-view { flex: 1; display: flex; flex-direction: row; overflow: hidden; }
+        /* MAIN */
+        .main { flex: 1; display: flex; overflow: hidden; }
 
-        /* LISTE LINKS */
-        .list-zone { flex: 1; display: flex; flex-direction: column; overflow: hidden; padding: 20px; }
-        .scroll-list { flex: 1; overflow-y: auto; }
-        .song-item { display: flex; align-items: center; gap: 15px; padding: 12px; background: rgba(255,255,255,0.03); border-radius: 16px; margin-bottom: 10px; }
-        .song-item.active { background: rgba(0,250,217,0.1); border-left: 4px solid var(--accent); }
+        /* LISTE MIT GRENZSTEINEN */
+        .list-zone { flex: 1; overflow-y: auto; padding: 20px; border-right: 1px solid rgba(255,255,255,0.05); }
+        .section-label { 
+            font-size: 11px; font-weight: 900; letter-spacing: 2px; color: var(--accent); 
+            margin: 25px 0 15px; text-transform: uppercase; display: flex; align-items: center; gap: 10px;
+        }
+        .section-label::after { content: ""; flex: 1; height: 1px; background: rgba(0,250,217,0.2); }
 
-        /* PLAYER RECHTS (STAPEL-DESIGN) */
-        .player-side { width: 450px; padding: 30px; display: flex; flex-direction: column; align-items: center; background: rgba(0,0,0,0.2); border-left: 1px solid rgba(255,255,255,0.05); overflow-y: auto; }
+        /* PLAYER BEREICH */
+        .player-zone { width: 420px; padding: 30px; display: flex; flex-direction: column; align-items: center; background: rgba(0,0,0,0.2); text-align: center; }
         
-        .art-box { width: 300px; height: 300px; margin-bottom: 20px; flex-shrink: 0; }
-        #bigAlbumArt { width: 100%; height: 100%; border-radius: 35px; object-fit: cover; box-shadow: 0 20px 40px rgba(0,0,0,0.5); }
+        /* DER "GRENZSTEIN" FÜR DAS COVER */
+        .cover-wrap { 
+            width: 300px; height: 300px; position: relative; margin-bottom: 20px; 
+            border: 4px solid var(--accent); border-radius: 40px; padding: 5px; background: #000;
+            box-shadow: 0 15px 40px rgba(0,250,217,0.2);
+        }
+        #bigCover { width: 100%; height: 100%; border-radius: 32px; object-fit: cover; }
         
-        #playBtn { width: 70px; height: 70px; border-radius: 50%; background: var(--accent); border: none; font-size: 30px; cursor: pointer; margin-bottom: 20px; flex-shrink: 0; }
+        #overlay { position: absolute; inset: 5px; background: rgba(0,0,0,0.5); border-radius: 32px; display: none; align-items: center; justify-content: center; font-size: 80px; }
 
-        /* TEXT STAPEL UNTER PLAYER */
-        .info-stack { text-align: center; width: 100%; }
-        #s-display { font-size: 22px; font-weight: 900; margin: 10px 0 5px; color: #fff; }
-        #s-desc { font-size: 14px; color: var(--text-dim); margin-bottom: 15px; line-height: 1.4; padding: 0 10px; }
-        #listeners { font-size: 13px; font-weight: bold; color: var(--accent); background: rgba(0,250,217,0.1); padding: 5px 15px; border-radius: 20px; display: inline-block; margin-bottom: 20px; }
-        .ver-tag { font-size: 10px; opacity: 0.3; letter-spacing: 2px; text-transform: uppercase; margin-top: 10px; }
+        #playBtn { width: 75px; height: 75px; border-radius: 50%; background: var(--accent); border: none; font-size: 32px; cursor: pointer; margin-bottom: 15px; }
+
+        /* SONG CARDS ALS GRENZSTEINE */
+        .song-card { 
+            display: flex; align-items: center; gap: 12px; padding: 15px; 
+            background: #1e2533; border: 1px solid rgba(255,255,255,0.1); 
+            border-radius: 18px; margin-bottom: 12px; transition: 0.3s;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        }
+        .song-card.now { 
+            background: rgba(0,250,217,0.05); 
+            border: 2px solid var(--accent); 
+            box-shadow: 0 0 20px rgba(0,250,217,0.15);
+        }
+        
+        .live-dot { width: 10px; height: 10px; background: var(--live); border-radius: 50%; animation: pulse 1s infinite; }
+
+        @keyframes pulse { 0% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.2); opacity: 0.5; } 100% { transform: scale(1); opacity: 1; } }
 
         @media (max-width: 900px) {
-            .main-view { flex-direction: column-reverse; }
-            .player-side { width: 100%; border-left: none; border-bottom: 1px solid rgba(255,255,255,0.1); }
-            .art-box { width: 200px; height: 200px; }
+            .main { flex-direction: column; }
+            .player-zone { width: 100%; height: auto; padding: 15px; }
+            .cover-wrap { width: 180px; height: 180px; }
         }
     </style>
 </head>
 <body onload="init()">
 
-<div class="app-shell">
-    <header class="top-nav">
+<div class="app">
+    <header class="nav">
         <div id="clock">00:00</div>
         <div class="search-area">
             <input type="text" id="query" placeholder="Sender suchen..." autocomplete="off">
             <div id="results"></div>
         </div>
-        <div style="font-size: 20px; color: var(--accent);">📡</div>
     </header>
 
-    <main class="main-view">
-        <section class="list-zone">
-            <div class="scroll-list" id="listContent">
-                <div style="text-align:center; opacity:0.3; margin-top:100px;">Suche einen Sender aus</div>
+    <main class="main">
+        <section class="player-zone">
+            <div class="cover-wrap">
+                <img id="bigCover" src="https://api.laut.fm/station/default/images/station_640x640.png">
+                <div id="overlay"></div>
+            </div>
+            <button id="playBtn" onclick="togglePlay()" disabled>▶</button>
+            <div class="info-box">
+                <h2 id="sName" style="margin:0; font-size: 22px;">RADIO ULTIMATE</h2>
+                <div id="listeners" style="font-size:12px; color:var(--accent); margin-top:5px; font-weight: bold;"></div>
+                <div style="font-size:9px; opacity:0.2; margin-top:15px; letter-spacing: 1px;">v115.62 • GRENZSTEIN</div>
             </div>
         </section>
 
-        <section class="player-side">
-            <div class="art-box">
-                <img id="bigAlbumArt" src="https://api.laut.fm/station/default/images/station_640x640.png">
-            </div>
-            
-            <button id="playBtn" onclick="toggleAudio()" disabled>▶</button>
-            
-            <div class="info-stack">
-                <div id="s-display">RADIO READY</div>
-                <div id="s-desc">Wähle deinen Stream über die Suche</div>
-                <div id="listeners" style="display:none;">0 LIVE-HÖRER</div>
-                <div class="ver-tag">Version 115.55 • FIX</div>
+        <section class="list-zone">
+            <div id="historyContent">
+                <div style="text-align:center; opacity:0.2; margin-top:100px;">Bitte Sender wählen</div>
             </div>
         </section>
     </main>
 </div>
 
 <script>
-    const snd = new Audio();
+    const audio = new Audio();
     let currentStation = "";
-    const queryInput = document.getElementById('query');
-    const resultsDiv = document.getElementById('results');
+    const qIn = document.getElementById('query');
+    const rBox = document.getElementById('results');
 
     function init() {
         setInterval(() => {
-            document.getElementById('clock').innerText = new Date().toLocaleTimeString('de-DE', {hour:'2-digit', minute:'2-digit'});
+            const now = new Date();
+            document.getElementById('clock').innerText = now.toLocaleTimeString('de-DE', {hour:'2-digit', minute:'2-digit'});
         }, 1000);
 
-        queryInput.addEventListener('input', async () => {
-            const q = queryInput.value.trim();
-            if(q.length < 2) { resultsDiv.style.display = 'none'; return; }
-            const res = await fetch(`https://api.laut.fm/search/stations?query=${q}`).then(r => r.json());
-            if(res.items) {
-                resultsDiv.innerHTML = res.items.map(s => `
-                    <div class="res-item" onclick="selectStation('${s.name}')">
-                        <img class="res-img" src="${s.images.station_80x80}">
-                        <div style="font-weight:bold;">${s.display_name}</div>
-                    </div>
-                `).join('');
-                resultsDiv.style.display = 'block';
+        qIn.addEventListener('input', async () => {
+            const v = qIn.value.trim();
+            if(v.length < 2) { rBox.style.display = 'none'; return; }
+            const r = await fetch(`https://api.laut.fm/search/stations?query=${v}`).then(res => res.json());
+            if(r.items) {
+                rBox.innerHTML = r.items.slice(0,5).map(s => `<div class="res-item" onclick="play('${s.name}')"><b>${s.display_name}</b></div>`).join('');
+                rBox.style.display = 'block';
             }
         });
+
+        qIn.addEventListener('keydown', (e) => { if(e.key === 'Enter') { const f = rBox.querySelector('.res-item'); if(f) f.click(); } });
     }
 
-    async function selectStation(name) {
-        currentStation = name;
-        resultsDiv.style.display = 'none';
-        queryInput.value = "";
-        
+    async function play(id) {
+        currentStation = id;
+        rBox.style.display = 'none';
+        qIn.value = "";
         document.getElementById('playBtn').disabled = false;
-        snd.src = `https://stream.laut.fm/${currentStation}`;
-        snd.play().catch(() => {});
+        audio.src = `https://stream.laut.fm/${currentStation}`;
+        audio.play();
         document.getElementById('playBtn').innerHTML = "⏸";
-        
         update();
-        if(window.sync) clearInterval(window.sync);
-        window.sync = setInterval(update, 10000);
+        if(window.timer) clearInterval(window.timer);
+        window.timer = setInterval(update, 10000);
     }
 
-    function toggleAudio() {
-        if(snd.paused) { snd.play(); document.getElementById('playBtn').innerHTML = "⏸"; }
-        else { snd.pause(); document.getElementById('playBtn').innerHTML = "▶"; }
+    function togglePlay() {
+        if(audio.paused) { audio.play(); document.getElementById('playBtn').innerHTML = "⏸"; }
+        else { audio.pause(); document.getElementById('playBtn').innerHTML = "▶"; }
     }
 
     async function update() {
@@ -154,30 +167,46 @@
                 fetch(`https://api.laut.fm/station/${currentStation}/listeners`).then(r => r.text())
             ]);
 
-            document.getElementById('s-display').innerText = info.display_name;
-            document.getElementById('s-desc').innerText = info.description || info.format || "Keine Beschreibung verfügbar";
-            document.getElementById('listeners').innerText = (listeners.includes("<") ? "0" : listeners) + " LIVE-HÖRER";
-            document.getElementById('listeners').style.display = "inline-block";
+            document.getElementById('sName').innerText = info.display_name;
+            document.getElementById('listeners').innerText = (listeners.includes('<') ? '0' : listeners) + " HÖRER LIVE";
 
-            let html = "";
+            const ov = document.getElementById('overlay');
+            ov.style.display = "none";
+
+            let nowHtml = `<div class="section-label"><div class="live-dot"></div> Jetzt auf Sendung</div>`;
+            let pastHtml = `<div class="section-label">Zuletzt gelaufen</div>`;
+
             songs.forEach((s, i) => {
-                const isNow = (i === 0);
+                const isNow = i === 0;
                 const time = s.started_at.split(' ')[1].substring(0,5);
-                const cover = s.image_640x640 || s.image_170x170 || info.images.station_640x640;
-                if(isNow) document.getElementById('bigAlbumArt').src = cover;
+                const cover = s.image_640x640 || info.images.station_640x640;
+                let art = s.artist.name, tit = s.title, icon = "";
+                const check = (art + tit).toLowerCase();
 
-                html += `
-                    <div class="song-item ${isNow ? 'active' : ''}">
-                        <div class="song-time">${time}</div>
-                        <div class="song-meta">
-                            <span class="song-artist" style="font-weight:bold; display:block;">${s.artist.name}</span>
-                            <span class="song-title" style="font-size:12px; color:var(--text-dim);">${s.title}</span>
+                if(check.includes("nachrichten") || check.includes("news")) {
+                    icon = "📰"; if(isNow) { ov.innerText = "📰"; ov.style.display = "flex"; art="NEWS"; tit="NACHRICHTEN"; }
+                } else if(check.includes("moderation") || check.includes("ident") || check.includes("sprecher")) {
+                    icon = "🎙️"; if(isNow) { ov.innerText = "🎙️"; ov.style.display = "flex"; }
+                }
+
+                if(isNow) document.getElementById('bigCover').src = cover;
+
+                const card = `
+                    <div class="song-card ${isNow ? 'now' : ''}">
+                        <div style="font-size:12px; color:var(--accent); width:45px; font-weight:bold;">${time}</div>
+                        <div style="font-size:22px; width:30px;">${icon}</div>
+                        <div style="flex:1; overflow:hidden; padding-left: 5px;">
+                            <b style="display:block; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; font-size:15px;">${art}</b>
+                            <span style="font-size:13px; color:var(--dim);">${tit}</span>
                         </div>
-                        <img class="song-cover-mini" src="${cover}" style="width:45px; height:45px; border-radius:8px;">
+                        <img src="${cover}" style="width:45px; height:45px; border-radius:10px; border: 1px solid rgba(255,255,255,0.1);">
                     </div>
                 `;
+
+                if(isNow) nowHtml += card; else pastHtml += card;
             });
-            document.getElementById('listContent').innerHTML = html;
+
+            document.getElementById('historyContent').innerHTML = nowHtml + pastHtml;
         } catch(e) {}
     }
 </script>
