@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Radio Player Pro v95.00</title>
+    <title>Radio Player Pro v96.00</title>
     <style>
         :root { 
             --bg-app: #1e2538; --bg-card: #283044; --accent-main: #00fad9; 
@@ -13,55 +13,66 @@
         body { background-color: #0d111a; margin: 0; display: flex; justify-content: center; height: 100vh; color: var(--text-main); font-family: sans-serif; overflow: hidden; }
         .app { width: 100%; max-width: 500px; height: 100%; background-color: var(--bg-app); display: flex; flex-direction: column; position: relative; }
         
-        .top-nav { height: 50px; display: flex; align-items: center; justify-content: space-between; padding: 0 15px; flex-shrink: 0; }
-        #sysTime { font-size: 14px; font-weight: bold; }
-        .icon-btn { font-size: 18px; color: var(--accent-main); cursor: pointer; }
+        /* Header & Größere Lupe */
+        .top-nav { height: 60px; display: flex; align-items: center; justify-content: space-between; padding: 0 20px; flex-shrink: 0; }
+        #sysTime { font-size: 16px; font-weight: bold; }
+        .icon-btn-large { font-size: 28px; color: var(--accent-main); cursor: pointer; transition: 0.2s; }
         
-        #searchOverlay { display: none; position: absolute; top: 10px; left: 50%; transform: translateX(-50%); width: 85%; height: 42px; background: var(--bg-card); z-index: 100; align-items: center; padding: 0 15px; border-radius: 20px; border: 1px solid var(--accent-main); }
-        #sInput { flex: 1; background: transparent; border: none; color: #fff; outline: none; }
+        #searchOverlay { display: none; position: absolute; top: 10px; left: 50%; transform: translateX(-50%); width: 90%; height: 50px; background: var(--bg-card); z-index: 100; align-items: center; padding: 0 15px; border-radius: 25px; border: 2px solid var(--accent-main); }
+        #sInput { flex: 1; background: transparent; border: none; color: #fff; outline: none; font-size: 18px; }
 
         .scroll-area { flex: 1; overflow-y: auto; scrollbar-width: none; }
         .scroll-area::-webkit-scrollbar { display: none; }
         
-        .hero { padding: 15px 0; text-align: center; }
-        #stNameHeader { font-size: 22px; font-weight: bold; margin-bottom: 12px; display: block; color: #fff; }
-        #mainImg { width: 60%; aspect-ratio: 1/1; border-radius: 15px; object-fit: cover; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        .hero { padding: 10px 0; text-align: center; }
+        #stNameHeader { font-size: 24px; font-weight: bold; margin-bottom: 10px; display: block; color: #fff; }
+        #mainImg { width: 65%; aspect-ratio: 1/1; border-radius: 20px; object-fit: cover; box-shadow: 0 10px 30px rgba(0,0,0,0.5); border: 2px solid rgba(255,255,255,0.1); }
         
-        .controls { display: flex; align-items: center; justify-content: center; gap: 25px; margin: 15px 0; }
-        #pBtn { width: 65px; height: 65px; border-radius: 50%; background: var(--accent-main); border: none; font-size: 26px; color: #1e2538; cursor: pointer; }
+        .controls { display: flex; align-items: center; justify-content: center; gap: 30px; margin: 15px 0; }
+        #pBtn { width: 70px; height: 70px; border-radius: 50%; background: var(--accent-main); border: none; font-size: 30px; color: #1e2538; cursor: pointer; box-shadow: 0 0 20px rgba(0, 250, 217, 0.3); }
         
+        /* Song Liste & Lautsprecher Symbol */
         #nowPlayingBox { margin: 0 15px 5px; padding: 12px; border-radius: 15px; background: var(--bg-card); transition: background 0.4s; }
-        .track-entry { display: flex; align-items: center; gap: 12px; padding: 8px; border-radius: 10px; margin-bottom: 5px; background: rgba(0,0,0,0.2); }
-        .track-cover { width: 45px; height: 45px; border-radius: 5px; object-fit: cover; }
+        .track-entry { display: flex; align-items: center; gap: 12px; padding: 10px; border-radius: 10px; margin-bottom: 6px; background: rgba(0,0,0,0.25); border: 1px solid rgba(255,255,255,0.05); }
+        .track-cover { width: 50px; height: 50px; border-radius: 8px; object-fit: cover; }
         .track-details { flex: 1; overflow: hidden; }
-        .track-art { font-size: 14px; font-weight: bold; display: block; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .track-tit { font-size: 12px; color: #eee; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .track-art { font-size: 15px; font-weight: bold; display: block; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .track-tit { font-size: 13px; color: #ccc; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        
+        .track-status { display: flex; flex-direction: column; align-items: flex-end; min-width: 50px; }
         .track-time { font-size: 11px; color: var(--accent-main); font-weight: bold; }
+        .speaker-icon { font-size: 18px; color: var(--accent-main); animation: pulse 1.5s infinite; margin-top: 4px; }
 
-        /* Der Button Bereich */
+        @keyframes pulse {
+            0% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.2); opacity: 0.7; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
         .more-songs-area { text-align: center; padding: 10px 10px 20px 10px; }
-        #btnToggleList { background: none; border: none; color: var(--accent-main); font-size: 14px; font-weight: bold; cursor: pointer; }
+        #btnToggleList { background: none; border: none; color: var(--accent-main); font-size: 15px; font-weight: bold; cursor: pointer; text-transform: uppercase; letter-spacing: 1px; }
         
-        .footer-info { padding: 15px; background: rgba(0,0,0,0.3); border-top: 1px solid rgba(255,255,255,0.1); flex-shrink: 0; }
-        #footerSlogan { font-size: 14px; text-align: center; margin-bottom: 10px; color: #fff; font-style: italic; }
-        .footer-row { display: flex; justify-content: center; margin-bottom: 12px; }
-        .hoerer-badge { background: var(--accent-main); color: #1e2538; padding: 5px 12px; border-radius: 8px; font-size: 11px; font-weight: bold; }
+        /* Footer & Große Hörerzahlen */
+        .footer-info { padding: 20px; background: rgba(0,0,0,0.4); border-top: 2px solid rgba(255,255,255,0.1); flex-shrink: 0; }
+        #footerSlogan { font-size: 15px; text-align: center; margin-bottom: 15px; color: #fff; font-weight: 500; opacity: 0.9; }
+        .footer-row { display: flex; justify-content: center; margin-bottom: 15px; }
+        .hoerer-badge { background: var(--accent-main); color: #1e2538; padding: 8px 20px; border-radius: 12px; font-size: 18px; font-weight: 900; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
         
-        .vol-area { display: flex; align-items: center; gap: 10px; }
-        #volSlider { flex: 1; accent-color: var(--accent-main); cursor: pointer; }
-        #volLabel { color: var(--accent-main); font-size: 12px; font-weight: bold; min-width: 35px; }
+        .vol-area { display: flex; align-items: center; gap: 15px; }
+        #volSlider { flex: 1; height: 6px; accent-color: var(--accent-main); cursor: pointer; }
+        #volLabel { color: var(--accent-main); font-size: 14px; font-weight: bold; min-width: 40px; }
     </style>
 </head>
 <body onload="initApp()">
 <div class="app">
     <div class="top-nav">
         <div id="sysTime">00:00</div>
-        <div class="icon-btn" onclick="toggleSearch()">🔍</div>
+        <div class="icon-btn-large" onclick="toggleSearch()">🔍</div>
     </div>
 
     <div id="searchOverlay">
         <input type="text" id="sInput" placeholder="Sender suchen..." onkeydown="if(event.key==='Enter') execSearch()">
-        <button onclick="toggleSearch()" style="background:none; border:none; color:#fff;">✕</button>
+        <button onclick="toggleSearch()" style="background:none; border:none; color:#fff; font-size: 20px;">✕</button>
     </div>
 
     <div class="scroll-area">
@@ -69,9 +80,9 @@
             <span id="stNameHeader">RADIO</span>
             <img id="mainImg" src="">
             <div class="controls">
-                <div class="icon-btn" onclick="share()">🔗</div>
+                <div style="font-size: 24px; color: var(--accent-main);" onclick="share()">🔗</div>
                 <button id="pBtn" onclick="togglePlay()">▶</button>
-                <div style="width:20px"></div>
+                <div style="width:24px"></div>
             </div>
         </div>
 
@@ -85,12 +96,12 @@
     </div>
 
     <div class="footer-info">
-        <div id="footerSlogan">Lade Sender...</div>
+        <div id="footerSlogan">...</div>
         <div class="footer-row">
             <div id="hoerer" class="hoerer-badge">0 HÖRER</div>
         </div>
         <div class="vol-area">
-            <span style="font-size:10px; font-weight:bold; color:var(--accent-main)">VOL</span>
+            <span style="font-size:12px; font-weight:bold; color:var(--accent-main)">VOL</span>
             <input type="range" id="volSlider" min="0" max="100" step="1" value="50" oninput="changeVol(this.value)">
             <span id="volLabel">50%</span>
         </div>
@@ -114,7 +125,7 @@
     }
 
     function changeVol(v) { au.volume = v / 100; document.getElementById('volLabel').innerText = v + "%"; }
-    function toggleSearch() { const s = document.getElementById('searchOverlay'); s.style.display = (s.style.display === 'flex') ? 'none' : 'flex'; }
+    function toggleSearch() { const s = document.getElementById('searchOverlay'); s.style.display = (s.style.display === 'flex') ? 'none' : 'flex'; if(s.style.display==='flex') document.getElementById('sInput').focus(); }
     function execSearch() { const input = document.getElementById('sInput'); if(input.value.trim()) { startStation(input.value.trim(), true); toggleSearch(); } }
     
     async function startStation(slug, play) {
@@ -142,8 +153,7 @@
             
             let html = "";
             let currentStatusColor = "var(--bg-card)";
-            // Genau 10 Songs wenn "mehr" geklickt wurde, sonst 4
-            const listLimit = showFullList ? 9 : 3; 
+            const listLimit = showFullList ? 10 : 3; 
 
             l.forEach((song, i) => {
                 if(i > listLimit) return;
@@ -172,7 +182,10 @@
                         <span class="track-art">${art}</span>
                         <span class="track-tit">${tit}</span>
                     </div>
-                    <div class="track-time">${isCurrent ? 'JETZT' : new Date(song.started_at).toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'})}</div>
+                    <div class="track-status">
+                        <div class="track-time">${isCurrent ? 'JETZT' : new Date(song.started_at).toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'})}</div>
+                        ${isCurrent ? '<div class="speaker-icon">🔊</div>' : ''}
+                    </div>
                 </div>`;
             });
             document.getElementById('trackList').innerHTML = html;
