@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Radio Pro v101.00 - Full Display Edition</title>
+    <title>Radio Pro v108.00 - Responsive Edition</title>
     <style>
         :root { 
             --bg-app: #1e2538; --bg-card: #283044; --accent-main: #00fad9; 
@@ -11,58 +11,55 @@
             --status-yellow: #ffb300; --status-blue: #00aaff; --status-pink: #ff00ff; 
         }
         body { background-color: #0d111a; margin: 0; display: flex; justify-content: center; height: 100vh; color: var(--text-main); font-family: sans-serif; overflow: hidden; }
-        .app { width: 100%; max-width: 500px; height: 100%; background-color: var(--bg-app); display: flex; flex-direction: column; position: relative; }
         
-        /* Header */
+        /* Container passt sich Smartphone & Tablet an */
+        .app { width: 100%; max-width: 800px; height: 100%; background-color: var(--bg-app); display: flex; flex-direction: column; position: relative; box-shadow: 0 0 50px rgba(0,0,0,0.5); }
+        
         .top-nav { height: 60px; display: flex; align-items: center; justify-content: space-between; padding: 0 20px; flex-shrink: 0; }
         #sysTime { font-size: 16px; font-weight: bold; }
-        .icon-btn-large { font-size: 32px; color: var(--accent-main); cursor: pointer; }
+        .icon-btn-large { font-size: 28px; color: var(--accent-main); cursor: pointer; }
         
-        #searchOverlay { display: none; position: absolute; top: 10px; left: 50%; transform: translateX(-50%); width: 90%; height: 50px; background: var(--bg-card); z-index: 100; align-items: center; padding: 0 15px; border-radius: 25px; border: 2px solid var(--accent-main); box-shadow: 0 5px 20px rgba(0,0,0,0.5); }
+        #searchOverlay { display: none; position: absolute; top: 10px; left: 50%; transform: translateX(-50%); width: 90%; max-width: 400px; height: 50px; background: var(--bg-card); z-index: 100; align-items: center; padding: 0 15px; border-radius: 25px; border: 2px solid var(--accent-main); box-shadow: 0 5px 20px rgba(0,0,0,0.5); }
         #sInput { flex: 1; background: transparent; border: none; color: #fff; outline: none; font-size: 18px; }
 
-        .scroll-area { flex: 1; overflow-y: auto; scrollbar-width: none; }
+        .scroll-area { flex: 1; overflow-y: auto; scrollbar-width: none; padding-bottom: 20px; }
         .scroll-area::-webkit-scrollbar { display: none; }
         
-        /* Sender Display & Hero */
         .hero { padding: 10px 0; text-align: center; }
-        #stNameHeader { font-size: 26px; font-weight: 900; margin-bottom: 5px; display: block; color: #fff; text-transform: uppercase; letter-spacing: 1px; }
+        #stNameHeader { font-size: clamp(20px, 5vw, 28px); font-weight: 900; margin-bottom: 5px; display: block; color: #fff; text-transform: uppercase; }
         #stPageTitle { font-size: 14px; color: var(--accent-main); margin-bottom: 12px; display: block; font-weight: bold; }
-        #mainImg { width: 65%; aspect-ratio: 1/1; border-radius: 20px; object-fit: cover; background: #333; box-shadow: 0 10px 30px rgba(0,0,0,0.5); border: 2px solid rgba(255,255,255,0.05); }
+        
+        /* Bildgröße passt sich an */
+        #mainImg { width: 55%; max-width: 300px; aspect-ratio: 1/1; border-radius: 20px; object-fit: cover; background: #333; box-shadow: 0 10px 30px rgba(0,0,0,0.5); border: 2px solid rgba(255,255,255,0.05); }
         
         .controls { display: flex; align-items: center; justify-content: center; gap: 30px; margin: 15px 0; }
-        #pBtn { width: 75px; height: 75px; border-radius: 50%; background: var(--accent-main); border: none; font-size: 32px; color: #1e2538; cursor: pointer; }
+        #pBtn { width: 70px; height: 70px; border-radius: 50%; background: var(--accent-main); border: none; font-size: 30px; color: #1e2538; cursor: pointer; }
         
-        /* Status Box */
         #nowPlayingBox { margin: 0 15px 5px; padding: 12px; border-radius: 15px; background: var(--bg-card); transition: all 0.5s ease; border-left: 6px solid transparent; }
-        .track-entry { display: flex; align-items: center; gap: 12px; padding: 12px; border-radius: 10px; margin-bottom: 8px; background: rgba(0,0,0,0.2); }
-        .track-cover { width: 50px; height: 50px; border-radius: 8px; object-fit: cover; }
+        .track-entry { display: flex; align-items: center; gap: 12px; padding: 8px; border-radius: 10px; margin-bottom: 8px; background: rgba(0,0,0,0.2); }
+        .icon-box { width: 45px; height: 45px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; }
+        .track-cover { width: 45px; height: 45px; border-radius: 8px; object-fit: cover; background: #111; flex-shrink: 0; }
+        
         .track-details { flex: 1; overflow: hidden; }
-        .track-art { font-size: 15px; font-weight: bold; color: #fff; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .track-tit { font-size: 13px; color: #ddd; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .track-art { font-size: 14px; font-weight: bold; color: #fff; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .track-tit { font-size: 12px; color: #bbb; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         
         .track-status { display: flex; flex-direction: column; align-items: flex-end; min-width: 55px; }
-        .track-time { font-size: 11px; color: var(--accent-main); font-weight: bold; }
-        .speaker-icon { font-size: 20px; color: var(--accent-main); animation: pulse 1.5s infinite; margin-top: 5px; }
+        .track-time { font-size: 10px; color: var(--accent-main); font-weight: bold; }
+        .speaker-icon { font-size: 18px; color: var(--accent-main); animation: pulse 1.5s infinite; }
 
-        @keyframes pulse {
-            0% { transform: scale(1); opacity: 1; }
-            50% { transform: scale(1.25); opacity: 0.6; }
-            100% { transform: scale(1); opacity: 1; }
-        }
+        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
 
-        .more-songs-area { text-align: center; padding: 15px; }
-        #btnToggleList { background: none; border: none; color: var(--accent-main); font-size: 15px; font-weight: bold; cursor: pointer; text-transform: uppercase; }
+        /* Kompakter Footer für alle Geräte */
+        .footer-info { padding: 15px 20px; background: rgba(0,0,0,0.6); border-top: 1px solid rgba(255,255,255,0.1); flex-shrink: 0; }
+        .footer-row { display: flex; justify-content: center; margin-bottom: 8px; }
+        .hoerer-badge { background: var(--accent-main); color: #1e2538; padding: 6px 15px; border-radius: 8px; font-size: 18px; font-weight: 900; }
+        #footerDesc { font-size: 12px; text-align: center; margin-bottom: 12px; color: #ccc; max-height: 34px; overflow: hidden; }
         
-        /* Footer & Beschreibung */
-        .footer-info { padding: 20px; background: rgba(0,0,0,0.4); border-top: 2px solid rgba(255,255,255,0.1); flex-shrink: 0; }
-        #footerDesc { font-size: 13px; text-align: center; margin-bottom: 12px; color: #ccc; line-height: 1.4; max-height: 40px; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
-        .footer-row { display: flex; justify-content: center; margin-bottom: 15px; }
-        .hoerer-badge { background: var(--accent-main); color: #1e2538; padding: 10px 25px; border-radius: 12px; font-size: 22px; font-weight: 900; }
-        
-        .vol-area { display: flex; align-items: center; gap: 15px; }
-        #volSlider { flex: 1; height: 8px; accent-color: var(--accent-main); cursor: pointer; }
-        #volLabel { color: var(--accent-main); font-size: 15px; font-weight: bold; min-width: 45px; text-align: right; }
+        /* Kleinerer, schicker Lautstärkeregler */
+        .vol-area { display: flex; align-items: center; gap: 12px; background: rgba(255,255,255,0.05); padding: 8px 15px; border-radius: 20px; max-width: 400px; margin: 0 auto; }
+        #volSlider { flex: 1; height: 4px; accent-color: var(--accent-main); cursor: pointer; }
+        #volLabel { color: var(--accent-main); font-size: 14px; font-weight: bold; min-width: 35px; text-align: right; }
     </style>
 </head>
 <body onload="initApp()">
@@ -74,37 +71,34 @@
 
     <div id="searchOverlay">
         <input type="text" id="sInput" placeholder="Sender suchen..." onkeydown="if(event.key==='Enter') execSearch()">
-        <button onclick="toggleSearch()" style="background:none; border:none; color:#fff; font-size: 22px;">✕</button>
+        <button onclick="toggleSearch()" style="background:none; border:none; color:#fff; font-size: 20px;">✕</button>
     </div>
 
     <div class="scroll-area">
         <div class="hero">
             <span id="stNameHeader">RADIO PLAYER</span>
-            <span id="stPageTitle">Suche einen Sender</span>
+            <span id="stPageTitle">Wähle einen Sender</span>
             <img id="mainImg" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7">
             <div class="controls">
-                <div style="font-size: 28px; color: var(--accent-main); cursor:pointer" onclick="share()">🔗</div>
+                <div style="font-size: 24px; color: var(--accent-main); cursor:pointer" onclick="share()">🔗</div>
                 <button id="pBtn" onclick="togglePlay()">▶</button>
-                <div style="width:28px"></div>
+                <div style="width:24px"></div>
             </div>
         </div>
 
         <div id="nowPlayingBox">
-            <div id="trackList" style="text-align:center; padding: 10px; opacity:0.6;">Sender über Lupe wählen</div>
-        </div>
-
-        <div class="more-songs-area">
-            <button id="btnToggleList" style="display:none;" onclick="toggleListSize()">mehr Songs anzeigen</button>
+            <div id="trackList" style="text-align:center; padding: 10px; opacity:0.6; font-size: 14px;">Sender über Lupe suchen</div>
         </div>
     </div>
 
     <div class="footer-info">
-        <div id="footerDesc">Wähle einen Sender aus der laut.fm Welt, um zu starten.</div>
         <div class="footer-row">
             <div id="hoerer" class="hoerer-badge">0 HÖRER</div>
         </div>
+        <div id="footerDesc">Bereit für Musik.</div>
+        
         <div class="vol-area">
-            <span style="font-size:12px; font-weight:bold; color:var(--accent-main)">VOL</span>
+            <span style="font-size:10px; font-weight:bold; color:var(--text-dim)">VOL</span>
             <input type="range" id="volSlider" min="0" max="100" step="1" value="50" oninput="changeVol(this.value)">
             <span id="volLabel">50%</span>
         </div>
@@ -112,10 +106,8 @@
 </div>
 
 <script>
-    const au = new Audio(); 
-    au.volume = 0.5; 
+    const au = new Audio(); au.volume = 0.5;
     let currentSlug = ""; 
-    let showFullList = false;
 
     function initApp() { 
         setInterval(() => { document.getElementById('sysTime').innerText = new Date().toLocaleTimeString('de-DE', {hour:'2-digit', minute:'2-digit'}); }, 1000); 
@@ -124,12 +116,6 @@
     function changeVol(v) { 
         au.volume = v / 100; 
         document.getElementById('volLabel').innerText = v + "%"; 
-    }
-
-    function toggleListSize() {
-        showFullList = !showFullList;
-        document.getElementById('btnToggleList').innerText = showFullList ? "weniger anzeigen" : "mehr Songs anzeigen";
-        updateUI();
     }
 
     function toggleSearch() { 
@@ -143,7 +129,6 @@
         if(input.value.trim()) { 
             startStation(input.value.trim(), true); 
             toggleSearch(); 
-            document.getElementById('btnToggleList').style.display = 'inline-block';
         } 
     }
     
@@ -171,41 +156,43 @@
                 fetch(`https://api.laut.fm/station/${currentSlug}/listeners`).then(r => r.text())
             ]);
 
-            // DISPLAY & BESCHREIBUNG
             document.getElementById('stNameHeader').innerText = s.display_name;
             document.getElementById('stPageTitle').innerText = s.page_title || "";
             document.getElementById('footerDesc').innerText = s.description || "Dein Sound auf laut.fm";
             document.getElementById('hoerer').innerText = h + " HÖRER";
-            
+            document.getElementById('mainImg').src = s.images.station_640x640;
+
             let html = "";
             let currentStatusColor = "var(--bg-card)";
             let statusBorder = "transparent";
-            const listLimit = showFullList ? 10 : 3; 
 
             l.forEach((song, i) => {
-                if(i > listLimit) return;
+                if(i > 3) return;
                 const isCurrent = (i === 0);
                 let art = song.artist.name;
                 let tit = song.title;
                 const check = (art + " " + tit).toLowerCase();
                 
+                let mediaElement = `<img class="track-cover" src="${song.image_640x640 || s.images.station_120x120}">`;
+
                 if(check.includes("reklame") || check.includes("werbung") || song.type === "gold" || tit.includes("ad_break")) {
+                    mediaElement = `<div class="icon-box" style="background:var(--status-yellow)">📢</div>`;
                     if(isCurrent) { art = "REKLAME"; tit = "Gleich geht's weiter..."; currentStatusColor = "var(--status-yellow)"; statusBorder = "#ffb300"; }
                 } else if(check.includes("news") || check.includes("nachrichten")) {
+                    mediaElement = `<div class="icon-box" style="background:var(--status-blue)">📰</div>`;
                     if(isCurrent) { art = "NACHRICHTEN"; tit = "Aktuelle Infos..."; currentStatusColor = "var(--status-blue)"; statusBorder = "#00aaff"; }
                 } else if(check.includes("moderation") || check.includes("talk") || check.includes("live") || check.includes("beratung")) {
-                    if(isCurrent) { art = "MODERATION AKTIV"; tit = "Es geht gleich weiter..."; currentStatusColor = "var(--status-pink)"; statusBorder = "#ff00ff"; }
+                    mediaElement = `<div class="icon-box" style="background:var(--status-pink)">🎙️</div>`;
+                    if(isCurrent) { art = "MODERATION"; tit = "Es wird gesprochen..."; currentStatusColor = "var(--status-pink)"; statusBorder = "#ff00ff"; }
                 }
 
                 if(isCurrent) {
-                    const hasStatus = currentStatusColor !== "var(--bg-card)";
-                    document.getElementById('mainImg').src = hasStatus ? s.images.station_640x640 : (song.image_640x640 || s.images.station_640x640);
                     document.getElementById('nowPlayingBox').style.backgroundColor = currentStatusColor;
                     document.getElementById('nowPlayingBox').style.borderLeftColor = statusBorder;
                 }
 
                 html += `<div class="track-entry">
-                    <img class="track-cover" src="${song.image_640x640 || s.images.station_120x120}">
+                    ${mediaElement}
                     <div class="track-details">
                         <span class="track-art">${art}</span>
                         <span class="track-tit">${tit}</span>
