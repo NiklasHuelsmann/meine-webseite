@@ -3,19 +3,28 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Radio Instant v120.0</title>
+    <title>Radio Pro Studio v121.0</title>
     <style>
-        :root { --accent: #00d2ff; --bg: #090c10; --panel: #161b22; --white: #f0f6fc; }
+        :root { --accent: #00d2ff; --bg: #0d1117; --panel: #161b22; --white: #f0f6fc; }
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         body { background: var(--bg); color: var(--white); font-family: -apple-system, sans-serif; margin: 0; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
 
-        /* HEADER */
-        .header { height: 70px; background: #000; border-bottom: 3px solid var(--accent); display: flex; align-items: center; padding: 0 15px; gap: 15px; }
+        /* HEADER & SEARCH */
+        .header { height: 70px; background: #000; border-bottom: 3px solid var(--accent); display: flex; align-items: center; padding: 0 15px; gap: 15px; z-index: 10000; }
         #clock { font-weight: 900; color: var(--accent); font-size: 1.2rem; min-width: 90px; }
         
-        .search-wrap { position: relative; flex: 1; max-width: 500px; display: flex; gap: 5px; }
-        #query { flex: 1; padding: 12px; border-radius: 8px; border: none; font-size: 16px; font-weight: bold; background: #fff; color: #000; }
-        .search-btn { background: var(--accent); border: none; padding: 0 20px; border-radius: 8px; color: white; cursor: pointer; font-size: 20px; font-weight: bold; }
+        .search-area { position: relative; flex: 1; max-width: 500px; }
+        #query { width: 100%; padding: 12px; border-radius: 8px; border: none; font-size: 16px; font-weight: bold; background: #fff; color: #000; outline: none; }
+        
+        /* SUCH-ERGEBNISSE - JETZT STABIL */
+        #results { 
+            position: absolute; top: 55px; left: 0; width: 100%; background: #fff; 
+            border-radius: 8px; color: #333; display: none; z-index: 99999; 
+            box-shadow: 0 15px 50px rgba(0,0,0,0.8); max-height: 350px; overflow-y: auto; border: 2px solid var(--accent);
+        }
+        .res-item { padding: 12px; border-bottom: 1px solid #eee; display: flex; align-items: center; gap: 12px; cursor: pointer; font-weight: bold; }
+        .res-item:hover { background: #f0f7ff; }
+        .res-item img { width: 40px; height: 40px; border-radius: 6px; object-fit: cover; }
 
         /* LAYOUT */
         .main { flex: 1; display: flex; overflow: hidden; }
@@ -38,16 +47,16 @@
         .song-time { font-size: 11px; color: var(--accent); font-weight: bold; width: 45px; }
         .song-img { width: 45px; height: 45px; border-radius: 6px; object-fit: cover; }
 
-        @media (max-width: 850px) { .main { flex-direction: column; overflow-y: auto; } .player-side { width: 100%; border-right: none; } }
+        @media (max-width: 850px) { .main { flex-direction: column; overflow-y: auto; } .player-side { width: 100%; border-right: none; height: auto; } .history-side { flex: none; height: auto; } }
     </style>
 </head>
 <body onload="init()">
 
 <header class="header">
     <div id="clock">00:00:00</div>
-    <div class="search-wrap">
-        <input type="text" id="query" placeholder="Sendername + ENTER..." onkeypress="if(event.key === 'Enter') startQuickSearch()">
-        <button class="search-btn" onclick="startQuickSearch()">🔍</button>
+    <div class="search-area">
+        <input type="text" id="query" placeholder="Sender suchen..." oninput="doSearch()" autocomplete="off">
+        <div id="results"></div>
     </div>
 </header>
 
@@ -58,9 +67,9 @@
             <div id="studioIco"></div>
         </div>
         <button id="playBtn" onclick="togglePlay()" disabled>▶</button>
-        <div id="lsn" class="stat-badge">BEREIT</div>
-        <h2 id="stTitle" style="margin:5px 0">RADIO STUDIO</h2>
-        <div id="stBio" style="font-size:12px; color:#8b949e; margin-bottom:15px;">Gib einen Sender ein und drück die Lupe.</div>
+        <div id="lsn" class="stat-badge">OFFLINE</div>
+        <h2 id="stTitle" style="margin:5px 0">BEREIT</h2>
+        <div id="stBio" style="font-size:12px; color:#8b949e; margin-bottom:15px;">Tippe oben einen Sendernamen ein...</div>
 
         <div class="now-box">
             <small style="color:var(--accent); font-weight:bold; letter-spacing:1px;">AKTUELL IM SENDER:</small>
@@ -69,7 +78,7 @@
     </section>
 
     <section class="history-side">
-        <h3 style="color:var(--accent); margin-top:0;">SENDE-PROTOKOLL</h3>
+        <h4 style="color:var(--accent); margin-top:0; letter-spacing:1px;">SENDE-PROTOKOLL (LIVE)</h4>
         <div id="playlist"></div>
     </section>
 </main>
@@ -77,44 +86,53 @@
 <script>
     const stream = new Audio();
     let currentStation = "";
+    // Dieser Proxy sorgt dafür, dass die Suche nicht blockiert wird
     const proxy = "https://api.allorigins.win/get?url=";
 
     function init() {
         setInterval(() => {
             document.getElementById('clock').innerText = new Date().toLocaleTimeString('de-DE');
         }, 1000);
+        // Schließt Suche bei Klick außerhalb
+        document.addEventListener('click', (e) => {
+            if(!e.target.closest('.search-area')) document.getElementById('results').style.display = 'none';
+        });
     }
 
-    async function startQuickSearch() {
+    async function doSearch() {
         const q = document.getElementById('query').value.trim();
-        if(q.length < 2) return;
+        const resBox = document.getElementById('results');
+        if(q.length < 2) { resBox.style.display = 'none'; return; }
         
         try {
-            // Wir suchen und nehmen SOFORT das erste Ergebnis
             const r = await fetch(proxy + encodeURIComponent(`https://api.laut.fm/search/stations?query=${q}`));
             const d = await r.json();
             const json = JSON.parse(d.contents);
             
             if(json.items && json.items.length > 0) {
-                loadStation(json.items[0].name);
-            } else {
-                alert("Sender nicht gefunden.");
+                resBox.innerHTML = json.items.slice(0, 10).map(s => `
+                    <div class="res-item" onclick="loadStation('${s.name}')">
+                        <img src="${s.images.station_80x80}">
+                        <span>${s.display_name}</span>
+                    </div>`).join('');
+                resBox.style.display = 'block';
             }
-        } catch(e) { console.error("Search error"); }
+        } catch(e) { console.log("Suchfehler"); }
     }
 
     async function loadStation(name) {
         currentStation = name;
+        document.getElementById('results').style.display = 'none';
         document.getElementById('query').value = "";
         
         stream.src = `https://stream.laut.fm/${name}`;
-        stream.play().catch(() => alert("Klicke einmal auf die Seite für Ton!"));
+        stream.play().catch(() => alert("Bitte klicke einmal auf den Player für Ton!"));
         document.getElementById('playBtn').disabled = false;
         document.getElementById('playBtn').innerHTML = "⏸";
         
         refresh();
         if(window.timer) clearInterval(window.timer);
-        window.timer = setInterval(refresh, 10000); // Alle 10 Sek. Update
+        window.timer = setInterval(refresh, 10000);
     }
 
     function togglePlay() {
