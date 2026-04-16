@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Radio Pro v115.00 - Final Stability</title>
+    <title>Radio Pro v115.00</title>
     <style>
         :root { 
             --bg-app: #1e2538; --bg-card: #283044; --accent-main: #00fad9; 
@@ -13,29 +13,24 @@
         body { background-color: #0d111a; margin: 0; display: flex; justify-content: center; height: 100vh; color: var(--text-main); font-family: sans-serif; overflow: hidden; }
         .app { width: 100%; max-width: 800px; height: 100%; background-color: var(--bg-app); display: flex; flex-direction: column; position: relative; }
         
-        /* Header */
         .top-nav { height: 60px; display: flex; align-items: center; justify-content: space-between; padding: 0 20px; flex-shrink: 0; }
         #sysTime { font-size: 16px; font-weight: bold; }
         .icon-btn-large { font-size: 28px; color: var(--accent-main); cursor: pointer; }
         
-        /* Suche */
         #searchOverlay { display: none; position: absolute; top: 10px; left: 50%; transform: translateX(-50%); width: 90%; max-width: 400px; height: 50px; background: var(--bg-card); z-index: 100; align-items: center; padding: 0 15px; border-radius: 25px; border: 2px solid var(--accent-main); box-shadow: 0 5px 20px rgba(0,0,0,0.5); }
         #sInput { flex: 1; background: transparent; border: none; color: #fff; outline: none; font-size: 18px; }
 
         .scroll-area { flex: 1; overflow-y: auto; scrollbar-width: none; padding-bottom: 20px; }
         .scroll-area::-webkit-scrollbar { display: none; }
         
-        /* Sender Logo Bereich */
         .hero { padding: 10px 0; text-align: center; }
         #stNameHeader { font-size: clamp(22px, 6vw, 32px); font-weight: 900; margin-bottom: 5px; display: block; color: #fff; text-transform: uppercase; }
         #stPageTitle { font-size: 14px; color: var(--accent-main); margin-bottom: 12px; display: block; font-weight: bold; }
         #mainImg { width: 55%; max-width: 300px; aspect-ratio: 1/1; border-radius: 20px; object-fit: cover; background: #333; box-shadow: 0 10px 30px rgba(0,0,0,0.5); border: 2px solid rgba(255,255,255,0.05); }
         
-        /* Play Steuerung */
         .controls { display: flex; align-items: center; justify-content: center; gap: 30px; margin: 15px 0; }
         #pBtn { width: 75px; height: 75px; border-radius: 50%; background: var(--accent-main); border: none; font-size: 32px; color: #1e2538; cursor: pointer; box-shadow: 0 0 15px rgba(0, 250, 217, 0.3); }
         
-        /* Song Liste */
         #nowPlayingBox { margin: 0 15px 5px; padding: 12px; border-radius: 15px; background: var(--bg-card); border-left: 6px solid transparent; }
         .track-entry { display: flex; align-items: center; gap: 12px; padding: 8px; border-radius: 10px; margin-bottom: 8px; background: rgba(0,0,0,0.3); }
         .icon-box { width: 45px; height: 45px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; font-weight: bold; }
@@ -54,22 +49,29 @@
         .more-songs-area { text-align: center; padding: 10px 0; }
         #btnToggleList { background: rgba(255,255,255,0.1); border: 1px solid var(--accent-main); color: var(--accent-main); padding: 8px 18px; border-radius: 20px; font-size: 12px; font-weight: bold; cursor: pointer; display: none; }
 
-        /* Footer mit Hörerzahl und Beschreibung */
-        .footer-info { padding: 20px; background: rgba(0,0,0,0.6); border-top: 1px solid rgba(255,255,255,0.1); flex-shrink: 0; }
-        .footer-row { display: flex; justify-content: center; margin-bottom: 15px; }
-        .hoerer-badge { background: var(--accent-main); color: #1e2538; padding: 8px 20px; border-radius: 10px; font-size: 20px; font-weight: 900; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
+        .footer-info { padding: 15px 20px 10px; background: rgba(0,0,0,0.6); border-top: 1px solid rgba(255,255,255,0.1); flex-shrink: 0; }
+        .footer-row { display: flex; justify-content: center; margin-bottom: 12px; }
+        .hoerer-badge { background: var(--accent-main); color: #1e2538; padding: 8px 20px; border-radius: 10px; font-size: 20px; font-weight: 900; }
         
         #footerDesc { 
-            font-size: 14px; 
-            line-height: 1.5;
+            font-size: 13px; 
+            line-height: 1.4;
             text-align: center; 
-            color: #eee; 
+            color: #ccc; 
             background: rgba(255,255,255,0.05);
-            padding: 12px;
-            border-radius: 12px;
-            border: 1px solid rgba(255,255,255,0.1);
-            max-height: 85px; 
+            padding: 10px;
+            border-radius: 10px;
+            max-height: 70px; 
             overflow-y: auto;
+        }
+
+        .version-tag { 
+            text-align: center; 
+            font-size: 10px; 
+            color: var(--text-dim); 
+            margin-top: 8px; 
+            text-transform: uppercase;
+            letter-spacing: 1px;
         }
     </style>
 </head>
@@ -88,7 +90,7 @@
     <div class="scroll-area">
         <div class="hero">
             <span id="stNameHeader">RADIO PLAYER</span>
-            <span id="stPageTitle">Warte auf Suche...</span>
+            <span id="stPageTitle">Suche starten</span>
             <img id="mainImg" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7">
             <div class="controls">
                 <div style="font-size: 24px; color: var(--accent-main); cursor:pointer" onclick="share()">🔗</div>
@@ -98,7 +100,7 @@
         </div>
 
         <div id="nowPlayingBox">
-            <div id="trackList" style="text-align:center; padding: 10px; opacity:0.6;">🔍 Sender suchen zum Starten</div>
+            <div id="trackList" style="text-align:center; padding: 10px; opacity:0.6;">Nutze die Lupe 🔍</div>
         </div>
 
         <div class="more-songs-area">
@@ -110,7 +112,8 @@
         <div class="footer-row">
             <div id="hoerer" class="hoerer-badge">0 HÖRER</div>
         </div>
-        <div id="footerDesc">Kein Sender geladen. Nutze die Lupe oben rechts für die Suche.</div>
+        <div id="footerDesc">Suche einen Sender aus dem laut.fm Netzwerk.</div>
+        <div class="version-tag">Radio App Version v115.00</div>
     </div>
 </div>
 
@@ -186,10 +189,9 @@
                 let mediaElement = `<img class="track-cover" src="${imageToDisplay}">`;
                 let rowColor = "rgba(0,0,0,0.3)";
 
-                // Automatische Reklame/News Erkennung
                 if(check.includes("reklame") || check.includes("werbung") || song.type === "gold" || tit.includes("ad_break")) {
                     mediaElement = `<div class="icon-box" style="background:var(--status-blue); color:white">📢</div>`;
-                    if(isCurrent) { art = "REKLAME"; tit = "Werbung läuft..."; accentBorder = "var(--status-blue)"; rowColor = "rgba(0, 123, 255, 0.1)"; }
+                    if(isCurrent) { art = "REKLAME"; tit = "Werbung..."; accentBorder = "var(--status-blue)"; rowColor = "rgba(0, 123, 255, 0.1)"; }
                 } else if(check.includes("news") || check.includes("nachrichten")) {
                     mediaElement = `<div class="icon-box" style="background:var(--status-yellow); color:black">📰</div>`;
                     if(isCurrent) { art = "NACHRICHTEN"; tit = "Aktuelle Meldungen"; accentBorder = "var(--status-yellow)"; rowColor = "rgba(255, 204, 0, 0.1)"; }
