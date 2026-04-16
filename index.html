@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Radio Player Pro v92.02</title>
+    <title>Radio Player Pro v92.04</title>
     <style>
         :root { 
             --bg-app: #1e2538; --bg-card: #283044; --accent-main: #00fad9; 
@@ -20,27 +20,37 @@
         #sysTime { font-size: 16px; font-weight: bold; }
         .nav-icons { display: flex; gap: 15px; }
         .icon-btn { font-size: 20px; color: var(--accent-main); cursor: pointer; }
+        
         #searchOverlay { display: none; position: absolute; top: 10px; left: 50%; transform: translateX(-50%); width: 70%; max-width: 250px; height: 40px; background: var(--bg-card); z-index: 100; align-items: center; padding: 0 15px; border-radius: 20px; box-shadow: 0 5px 20px rgba(0,0,0,0.3); border: 1px solid var(--accent-main); }
         #sInput { flex: 1; background: transparent; border: none; height: 100%; color: var(--text-main); padding: 0 5px; outline: none; font-size: 14px; }
+        
         .scroll-area { flex: 1; overflow-y: auto; scrollbar-width: none; }
         .scroll-area::-webkit-scrollbar { display: none; }
+        
         .hero { padding: 10px 0; text-align: center; }
+        #stNameHeader { font-size: 24px; font-weight: 900; text-transform: uppercase; margin-bottom: 12px; display: block; color: var(--text-main); }
         #mainImg { width: 75%; aspect-ratio: 1/1; border-radius: 15px; object-fit: cover; box-shadow: 0 8px 25px rgba(0,0,0,0.4); }
+        
         .controls { display: flex; align-items: center; justify-content: center; gap: 25px; margin: 15px 0; }
         #pBtn { width: 70px; height: 70px; border-radius: 50%; background: var(--accent-main); border: none; font-size: 28px; color: #fff; cursor: pointer; }
+        
         #nowPlayingBox { margin: 0 15px 15px; padding: 15px; border-radius: 15px; background: var(--bg-card); transition: 0.5s; }
         .label { font-style: italic; font-size: 22px; font-weight: 900; margin-bottom: 10px; display: block; }
+        
         .track-entry { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-top: 1px solid var(--line); }
         .track-cover { width: 45px; height: 45px; border-radius: 6px; object-fit: cover; background: #000; }
         .track-details { flex: 1; overflow: hidden; }
         .track-art { font-size: 14px; font-weight: bold; display: block; }
         .track-tit { font-size: 12px; color: var(--text-dim); display: block; }
         .track-time { font-size: 11px; color: var(--accent-main); font-weight: bold; }
+        
         .footer-info { padding: 15px 20px; background: rgba(0,0,0,0.1); border-top: 1px solid var(--line); }
-        .footer-slogan { font-style: italic; font-size: 18px; font-weight: 900; margin-bottom: 5px; color: var(--text-main); }
+        /* SENDERBESCHREIBUNG DESIGN */
+        .footer-slogan { font-style: italic; font-size: 18px; font-weight: 900; margin-bottom: 8px; color: var(--text-main); line-height: 1.2; }
         .footer-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
         .loc-info { font-size: 13px; color: var(--accent-main); font-weight: bold; }
         .hoerer-badge { background: var(--accent-main); color: #fff; padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: bold; }
+        
         .vol-area { display: flex; align-items: center; gap: 10px; }
         #volSlider { flex: 1; accent-color: var(--accent-main); cursor: pointer; }
         #volLabel { color: var(--accent-main); font-size: 13px; font-weight: bold; min-width: 35px; }
@@ -61,7 +71,7 @@
     </div>
     <div class="scroll-area">
         <div class="hero">
-            <span id="stNameHeader" style="font-size: 12px; font-weight: bold; margin-bottom: 5px; display: block; opacity: 0.7;">RADIO</span>
+            <span id="stNameHeader">RADIO</span>
             <img id="mainImg" src="">
             <div class="controls">
                 <div class="icon-btn" onclick="share()">🔗</div>
@@ -83,7 +93,7 @@
             <div class="vol-area">
                 <span style="font-size:10px; font-weight:bold; color:var(--accent-main)">VOL</span>
                 <input type="range" id="volSlider" min="0" max="100" step="1" value="50" oninput="changeVol(this.value)">
-                <span id="volLabel">95%</span>
+                <span id="volLabel">50%</span>
             </div>
         </div>
     </div>
@@ -124,12 +134,11 @@
                 const isCurrent = (i === 0); let art = song.artist.name; let tit = song.title;
                 const check = (art + " " + tit).toLowerCase();
                 if(isCurrent) {
-                    // VERBESSERTE ERKENNUNG
-                    if(tit.includes("START_AD_BREAK") || song.type === "gold" || check.includes("werbung") || check.includes("advertisement")) { 
+                    if(tit.includes("START_AD_BREAK") || song.type === "gold" || check.includes("werbung")) { 
                         bgColor = "var(--status-yellow)"; accent = "#000"; art = "WERBUNG"; tit = "Gleich geht's weiter..."; 
-                    } else if(check.includes("news") || check.includes("nachrichten") || check.includes("aktuell")) { 
+                    } else if(check.includes("news") || check.includes("nachrichten")) { 
                         bgColor = "var(--status-blue)"; accent = "#fff"; art = "NACHRICHTEN"; 
-                    } else if(check.includes("moderation") || check.includes("live") || check.includes("show")) { 
+                    } else if(check.includes("moderation") || check.includes("show")) { 
                         bgColor = "var(--status-pink)"; accent = "#fff"; art = s.display_name; tit = "Moderation"; 
                     }
                 }
