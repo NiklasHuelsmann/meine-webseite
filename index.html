@@ -2,170 +2,112 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>laut.fm Player - Original Style</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Laut.fm Radio Search & Player</title>
     <style>
-        :root { --laut-blue: #00d2ff; --bg: #0d1117; --panel: #161b22; --white: #ffffff; }
-        body { background: var(--bg); color: var(--white); font-family: Arial, sans-serif; margin: 0; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+        body { font-family: 'Segoe UI', sans-serif; background: #121212; color: white; display: flex; flex-direction: column; align-items: center; padding: 20px; }
+        .search-container { margin-bottom: 20px; width: 100%; max-width: 400px; position: relative; }
+        input { width: 100%; padding: 12px; border-radius: 25px; border: none; outline: none; font-size: 1em; background: #333; color: white; box-sizing: border-box; }
+        #results { position: absolute; background: #222; width: 100%; border-radius: 10px; margin-top: 5px; z-index: 10; max-height: 300px; overflow-y: auto; box-shadow: 0 5px 15px rgba(0,0,0,0.5); }
+        .result-item { padding: 10px; cursor: pointer; border-bottom: 1px solid #333; display: flex; align-items: center; gap: 10px; }
+        .result-item:hover { background: #444; }
+        .result-item img { width: 30px; height: 30px; border-radius: 50%; }
 
-        /* SUCHE OBEN - WIE BEI LAUT.FM */
-        .header { background: #000; padding: 15px; display: flex; align-items: center; border-bottom: 3px solid var(--laut-blue); gap: 20px; }
-        .search-box { position: relative; flex: 1; max-width: 600px; }
-        #query { width: 100%; padding: 12px; border-radius: 5px; border: none; font-size: 16px; font-weight: bold; }
-        
-        #results { position: absolute; top: 45px; width: 100%; background: white; color: black; border-radius: 0 0 5px 5px; display: none; z-index: 1000; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
-        .res-item { padding: 10px; border-bottom: 1px solid #ddd; display: flex; align-items: center; gap: 10px; cursor: pointer; font-weight: bold; }
-        .res-item:hover { background: #eee; }
-        .res-item img { width: 40px; height: 40px; border-radius: 4px; }
-
-        /* PLAYER LAYOUT */
-        .main { flex: 1; display: flex; overflow: hidden; }
-        .station-side { width: 400px; padding: 20px; border-right: 1px solid #333; display: flex; flex-direction: column; align-items: center; text-align: center; overflow-y: auto; }
-        .playlist-side { flex: 1; padding: 20px; overflow-y: auto; background: rgba(0,0,0,0.2); }
-
-        /* SENDER LOGO / COVER */
-        .logo-frame { width: 300px; height: 300px; border: 4px solid var(--laut-blue); border-radius: 20px; background: #000; overflow: hidden; margin-bottom: 20px; position: relative; }
-        #mainImg { width: 100%; height: 100%; object-fit: cover; }
-        
-        #playBtn { width: 80px; height: 80px; border-radius: 50%; background: var(--laut-blue); border: none; color: white; font-size: 40px; cursor: pointer; margin-bottom: 15px; }
-        
-        /* BESCHREIBUNG */
-        .station-meta { text-align: left; width: 100%; background: var(--panel); padding: 15px; border-radius: 10px; border: 1px solid #333; }
-        #stTitle { font-size: 24px; color: var(--laut-blue); margin: 0 0 10px 0; font-weight: bold; }
-        #stDesc { font-size: 14px; color: #ccc; line-height: 1.5; margin-bottom: 10px; }
-        .listeners { font-weight: bold; color: var(--laut-blue); font-size: 12px; text-transform: uppercase; }
-
-        /* PLAYLIST */
-        .song-row { display: flex; align-items: center; gap: 12px; padding: 12px; background: var(--panel); border-radius: 10px; margin-bottom: 10px; border: 1px solid #333; }
-        .song-row.active { border-color: var(--laut-blue); background: rgba(0,210,255,0.05); }
-        .song-row img { width: 50px; height: 50px; border-radius: 5px; }
-        .song-info b { display: block; font-size: 15px; }
-        .song-info span { font-size: 13px; color: #888; }
-
-        @media (max-width: 850px) { .main { flex-direction: column; overflow-y: auto; } .station-side { width: 100%; border: none; } }
+        .player-card { background: #1e1e1e; width: 400px; border-radius: 20px; padding: 25px; text-align: center; border: 1px solid #333; box-shadow: 0 10px 30px rgba(0,0,0,0.7); }
+        .header { display: flex; justify-content: space-between; font-size: 0.9em; margin-bottom: 10px; color: #00ccff; }
+        #station-logo { width: 120px; height: 120px; border-radius: 50%; border: 3px solid #ff5500; margin: 10px 0; }
+        iframe { border: none; margin-top: 15px; border-radius: 10px; background: white; }
     </style>
 </head>
 <body>
 
-<header class="header">
-    <div style="color: var(--laut-blue); font-weight: 900; font-size: 20px;">STUDIO</div>
-    <div class="search-box">
-        <input type="text" id="query" placeholder="Sender suchen..." oninput="doSearch()">
-        <div id="results"></div>
+<div class="search-container">
+    <input type="text" id="search-input" placeholder="Sender suchen (z.B. Rock, Pop, 80er)...">
+    <div id="results"></div>
+</div>
+
+<div class="player-card" id="player-card">
+    <div class="header">
+        <span id="clock">00:00:00</span>
+        <span id="listeners">● 0 Hörer</span>
     </div>
-</header>
+    
+    <img id="station-logo" src="https://api.laut.fm/station/eins/images/station_120x120.png">
+    <h2 id="station-name">Wähle einen Sender</h2>
+    <p id="current-song">Lade...</p>
 
-<main class="main">
-    <section class="station-side">
-        <div class="logo-frame">
-            <img id="mainImg" src="https://api.laut.fm/station/default/images/station_640x640.png">
-        </div>
-        <button id="playBtn" onclick="togglePlay()" disabled>▶</button>
-        
-        <div class="station-meta">
-            <div class="listeners" id="lsn">STANDBY</div>
-            <h1 id="stTitle">SENDER WÄHLEN</h1>
-            <div id="stDesc">Nutze die Suche oben, um dein Programm zu starten.</div>
-            <div style="margin-top:10px; border-top: 1px solid #444; padding-top:10px;">
-                <small style="color:var(--laut-blue)">AKTUELL:</small>
-                <div id="curSong" style="font-weight:bold;">-</div>
-            </div>
-        </div>
-    </section>
+    <div id="player-wrapper">
+        <p>Suche oben einen Sender, um ihn zu hören!</p>
+    </div>
 
-    <section class="playlist-side">
-        <h3 style="margin-top:0;">PLAYLIST / VERLAUF</h3>
-        <div id="playlist"></div>
-    </section>
-</main>
+    <div style="margin-top: 15px; font-size: 0.8em; color: #777;">
+        🎤 Mikrofon aktiv | Nächste News: <span id="next-news">--:--</span>
+    </div>
+</div>
 
 <script>
-    const player = new Audio();
-    let currentID = "";
-    let stationLogo = "";
+    const searchInput = document.getElementById('search-input');
+    const resultsDiv = document.getElementById('results');
+    let updateInterval;
 
-    // Diese Funktion wird aufgerufen, wenn du tippst
-    function doSearch() {
-        const q = document.getElementById('query').value;
-        if(q.length < 2) { document.getElementById('results').style.display = 'none'; return; }
+    // 1. SUCH-FUNKTION
+    searchInput.addEventListener('input', () => {
+        const query = searchInput.value;
+        if (query.length < 2) { resultsDiv.innerHTML = ''; return; }
 
-        // Wir nutzen JSONP (script tag), das wird vom Browser NIE blockiert
-        const script = document.createElement('script');
-        script.src = `https://api.laut.fm/search/stations?query=${encodeURIComponent(q)}&callback=showResults`;
-        document.body.appendChild(script);
-        document.body.removeChild(script);
-    }
-
-    // Das hier verarbeitet die Suchergebnisse
-    window.showResults = function(data) {
-        const resBox = document.getElementById('results');
-        if(data.items && data.items.length > 0) {
-            resBox.innerHTML = data.items.slice(0, 8).map(s => `
-                <div class="res-item" onclick="selectStation('${s.name}')">
-                    <img src="${s.images.station_80x80}">
-                    <span>${s.display_name}</span>
-                </div>`).join('');
-            resBox.style.display = 'block';
-        }
-    }
-
-    function selectStation(name) {
-        currentID = name;
-        document.getElementById('results').style.display = 'none';
-        document.getElementById('query').value = "";
-        
-        player.src = `https://stream.laut.fm/${name}`;
-        player.play();
-        document.getElementById('playBtn').disabled = false;
-        document.getElementById('playBtn').innerHTML = "⏸";
-        
-        update();
-        if(window.timer) clearInterval(window.timer);
-        window.timer = setInterval(update, 10000);
-    }
-
-    function togglePlay() {
-        if(player.paused) { player.play(); document.getElementById('playBtn').innerHTML = "⏸"; }
-        else { player.pause(); document.getElementById('playBtn').innerHTML = "▶"; }
-    }
-
-    async function update() {
-        if(!currentID) return;
-        try {
-            // Wir holen die Sender-Infos, Songs und Hörer direkt
-            const [st, so, li] = await Promise.all([
-                fetch(`https://api.laut.fm/station/${currentID}`).then(r => r.json()),
-                fetch(`https://api.laut.fm/station/${currentID}/last_songs`).then(r => r.json()),
-                fetch(`https://api.laut.fm/station/${currentID}/listeners`).then(r => r.json())
-            ]);
-
-            stationLogo = st.images.station_640x640;
-            document.getElementById('stTitle').innerText = st.display_name;
-            document.getElementById('stDesc').innerText = st.description;
-            document.getElementById('lsn').innerText = li + " HÖRER LIVE";
-
-            let html = "";
-            so.forEach((s, i) => {
-                const isNow = i === 0;
-                const cover = s.image_640x640 ? s.image_640x640 : stationLogo;
-
-                if(isNow) {
-                    document.getElementById('mainImg').src = cover;
-                    document.getElementById('curSong').innerText = s.artist.name + " - " + s.title;
-                }
-
-                html += `
-                    <div class="song-row ${isNow ? 'active' : ''}">
-                        <img src="${cover}">
-                        <div class="song-info">
-                            <b>${s.artist.name}</b>
-                            <span>${s.title}</span>
-                        </div>
-                    </div>`;
+        fetch(`https://api.laut.fm/search/stations?query=${query}`)
+            .then(res => res.json())
+            .then(data => {
+                resultsDiv.innerHTML = '';
+                data.items.slice(0, 8).forEach(st => {
+                    const div = document.createElement('div');
+                    div.className = 'result-item';
+                    div.innerHTML = `<img src="${st.images.station_80x80}"> <span>${st.display_name}</span>`;
+                    div.onclick = () => selectStation(st.name);
+                    resultsDiv.appendChild(div);
+                });
             });
-            document.getElementById('playlist').innerHTML = html;
-        } catch(e) { console.error("Update fehlgeschlagen"); }
+    });
+
+    // 2. SENDER AUSWÄHLEN & LADEN
+    function selectStation(name) {
+        resultsDiv.innerHTML = '';
+        searchInput.value = '';
+        
+        // Player iframe neu laden
+        document.getElementById('player-wrapper').innerHTML = `
+            <iframe src="https://laut.fm/widgets/player/${name}" width="320" height="150" scrolling="no"></iframe>
+        `;
+
+        updateStationInfo(name);
+        if(updateInterval) clearInterval(updateInterval);
+        updateInterval = setInterval(() => updateStationInfo(name), 15000);
     }
+
+    // 3. DATEN AKTUALISIEREN (Logo, Hörer, Song)
+    function updateStationInfo(name) {
+        fetch(`https://api.laut.fm/station/${name}`)
+            .then(res => res.json())
+            .then(data => {
+                document.getElementById('station-name').innerText = data.display_name;
+                document.getElementById('station-logo').src = data.images.station_120x120;
+                document.getElementById('listeners').innerText = `● ${data.current_listeners} Hörer`;
+                document.getElementById('current-song').innerText = data.current_song ? 
+                    `${data.current_song.artist.name} - ${data.current_song.title}` : "Moderation / News";
+                
+                const now = new Date();
+                document.getElementById('next-news').innerText = (now.getHours() + 1) + ":00 Uhr";
+            });
+    }
+
+    // Uhrzeit-Tick
+    setInterval(() => {
+        document.getElementById('clock').innerText = new Date().toLocaleTimeString();
+    }, 1000);
+
+    // Start mit einem Standardsender (optional)
+    selectStation("eins"); 
 </script>
+
 </body>
 </html>
