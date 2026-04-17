@@ -3,11 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Radio Studio Pro - GitHub Edition</title>
+    <title>Radio Player Pro</title>
     <style>
         body { font-family: 'Segoe UI', sans-serif; background: #0d0d0d; color: #eee; display: flex; flex-direction: column; align-items: center; padding: 20px; margin: 0; }
         
-        /* Suche */
+        /* Suche - Fixiert für GitHub */
         .search-area { width: 100%; max-width: 420px; position: relative; margin-bottom: 25px; }
         input#search-input { 
             width: 100%; padding: 15px; border-radius: 12px; border: 1px solid #333; 
@@ -16,11 +16,10 @@
         #results-box { 
             position: absolute; background: #222; width: 100%; border-radius: 12px; 
             z-index: 1000; margin-top: 8px; max-height: 300px; overflow-y: auto; border: 1px solid #444; display: none;
-            box-shadow: 0 10px 30px #000;
         }
         .result-item { padding: 12px; cursor: pointer; border-bottom: 1px solid #333; display: flex; align-items: center; gap: 12px; }
         .result-item:hover { background: #ff5500; color: white; }
-        .result-item img { width: 40px; height: 40px; border-radius: 6px; object-fit: cover; }
+        .result-item img { width: 40px; height: 40px; border-radius: 6px; }
 
         /* Player Karte */
         .player-card { 
@@ -28,30 +27,30 @@
             padding: 30px; text-align: center; border: 1px solid #222; box-shadow: 0 25px 60px rgba(0,0,0,0.8);
         }
 
-        .status-header { display: flex; justify-content: space-between; color: #00ccff; font-family: monospace; font-size: 0.95em; margin-bottom: 20px; }
+        .status-header { display: flex; justify-content: space-between; color: #00ccff; font-family: monospace; font-size: 0.95em; margin-bottom: 10px; }
         
+        /* Display Name ÜBER dem Logo */
+        #display-name-top { font-size: 1.6em; font-weight: bold; margin-bottom: 15px; color: #fff; }
+
         /* Viereckiges Logo */
-        #station-logo { 
-            width: 220px; height: 220px; border-radius: 15px; 
-            border: 1px solid #333; object-fit: cover; margin-bottom: 15px; background: #222;
-        }
+        #station-logo { width: 220px; height: 220px; border-radius: 18px; border: 1px solid #333; object-fit: cover; margin-bottom: 15px; }
 
-        h2 { margin: 10px 0 5px 0; font-size: 1.8em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        #current-song { color: #00ff00; font-weight: bold; margin-bottom: 25px; min-height: 1.2em; font-size: 1.1em; }
+        #current-song { color: #00ff00; font-weight: bold; margin-bottom: 20px; font-size: 1.1em; }
 
+        /* Play Button */
         .big-play-btn {
             background: #ff5500; border: none; width: 80px; height: 80px; 
             border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center;
-            margin: 0 auto 25px auto; transition: 0.2s; box-shadow: 0 0 20px rgba(255, 85, 0, 0.4);
+            margin: 0 auto 20px auto; box-shadow: 0 0 20px rgba(255, 85, 0, 0.4);
         }
-        .big-play-btn:hover { transform: scale(1.05); background: #ff6622; }
+
+        /* Beschreibung UNTER dem Button */
+        #station-description { font-size: 0.9em; color: #888; margin-bottom: 25px; line-height: 1.4; padding: 0 10px; }
 
         /* History */
         .history { text-align: left; background: #1e1e1e; padding: 20px; border-radius: 18px; }
         .history-item { display: flex; gap: 12px; padding: 8px 0; border-bottom: 1px solid #2a2a2a; font-size: 0.9em; }
         .time-tag { color: #00ccff; font-weight: bold; }
-
-        .studio-footer { margin-top: 25px; display: flex; justify-content: space-between; font-size: 0.75em; color: #555; border-top: 1px solid #222; padding-top: 15px; }
     </style>
 </head>
 <body>
@@ -67,114 +66,96 @@
         <div id="listeners">● 0 Hörer</div>
     </div>
 
-    <img id="station-logo" src="https://api.laut.fm/station/eins/images/station_640x640" alt="">
+    <div id="display-name-top">Lade...</div>
     
-    <h2 id="station-name">Wähle einen Sender</h2>
-    <div id="current-song">Bereit zum Senden</div>
+    <img id="station-logo" src="" alt="">
+    
+    <div id="current-song">Wähle einen Sender</div>
 
-    <button class="big-play-btn" id="master-play">
+    <button class="big-play-btn" id="play-trigger">
         <svg id="play-icon" width="35" height="35" viewBox="0 0 24 24" fill="white"><path d="M8 5v14l11-7z"/></svg>
         <svg id="pause-icon" width="35" height="35" viewBox="0 0 24 24" fill="white" style="display:none;"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
     </button>
+
+    <div id="station-description">Keine Beschreibung verfügbar.</div>
 
     <audio id="audio-player"></audio>
 
     <div class="history">
         <div id="history-content"></div>
     </div>
-
-    <div class="studio-footer">
-        <div>🎤 MODERATION AKTIV</div>
-        <div>📰 NEWS: <span id="news-timer">--:--</span></div>
-    </div>
 </div>
 
 <script>
     const audio = document.getElementById('audio-player');
-    const playBtn = document.getElementById('master-play');
+    const playBtn = document.getElementById('play-trigger');
     const playIcon = document.getElementById('play-icon');
     const pauseIcon = document.getElementById('pause-icon');
-    const searchInput = document.getElementById('search-input');
-    const resultsBox = document.getElementById('results-box');
+    const input = document.getElementById('search-input');
+    const resBox = document.getElementById('results-box');
+    
+    let currentStation = "eins"; 
 
-    let currentStationShortname = "eins"; // Start-Sender
-
-    // 1. Umschalt-Funktion (DIESE FUNKTIONIERT GARANTIERT)
-    function changeStation(shortname) {
-        currentStationShortname = shortname;
-        
-        // Audio stoppen
+    // Funktion zum Wechseln (WICHTIG für die Suche)
+    function selectStation(name) {
+        currentStation = name;
         audio.pause();
         audio.src = "";
         playIcon.style.display = "block";
         pauseIcon.style.display = "none";
-
-        // Daten sofort neu laden
-        loadStationData(shortname);
-        
-        // Optisches Feedback
-        document.getElementById('current-song').innerText = "Sender gewechselt! Klicke Play.";
+        updateInterface(name);
     }
 
-    // 2. Play/Pause Steuerung
     playBtn.addEventListener('click', () => {
         if (audio.paused) {
-            audio.src = `https://stream.laut.fm/${currentStationShortname}`;
+            audio.src = `https://stream.laut.fm/${currentStation}`;
             audio.play();
             playIcon.style.display = "none";
             pauseIcon.style.display = "block";
         } else {
             audio.pause();
-            audio.src = "";
             playIcon.style.display = "block";
             pauseIcon.style.display = "none";
         }
     });
 
-    // 3. Suche-Logik
-    searchInput.addEventListener('input', () => {
-        const query = searchInput.value.trim();
-        if (query.length < 2) { resultsBox.style.display = "none"; return; }
-
-        fetch(`https://api.laut.fm/search/stations?query=${encodeURIComponent(query)}`)
-            .then(res => res.json())
+    input.addEventListener('input', () => {
+        if (input.value.length < 2) { resBox.style.display = "none"; return; }
+        fetch(`https://api.laut.fm/search/stations?query=${encodeURIComponent(input.value)}`)
+            .then(r => r.json())
             .then(data => {
-                resultsBox.innerHTML = "";
-                if (data.items.length > 0) {
-                    resultsBox.style.display = "block";
-                    data.items.slice(0, 8).forEach(st => {
-                        const div = document.createElement('div');
-                        div.className = "result-item";
-                        div.innerHTML = `<img src="${st.images.station_80x80}"> <strong>${st.display_name}</strong>`;
-                        div.onclick = () => {
-                            changeStation(st.name);
-                            resultsBox.style.display = "none";
-                            searchInput.value = "";
-                        };
-                        resultsBox.appendChild(div);
-                    });
-                }
+                resBox.innerHTML = "";
+                resBox.style.display = "block";
+                data.items.slice(0, 8).forEach(s => {
+                    const d = document.createElement('div');
+                    d.className = "result-item";
+                    d.innerHTML = `<img src="${s.images.station_80x80}"> <strong>${s.display_name}</strong>`;
+                    d.onclick = () => { 
+                        selectStation(s.name); 
+                        resBox.style.display="none"; 
+                        input.value=""; 
+                    };
+                    resBox.appendChild(d);
+                });
             });
     });
 
-    // 4. Daten von laut.fm laden
-    function loadStationData(name) {
-        // Infos & Hörer & Logo
+    function updateInterface(name) {
+        // Infos & Hörer & Beschreibung
         fetch(`https://api.laut.fm/station/${name}`)
             .then(r => r.json())
             .then(d => {
-                document.getElementById('station-name').innerText = d.display_name;
+                document.getElementById('display-name-top').innerText = d.display_name;
                 document.getElementById('station-logo').src = d.images.station_640x640;
                 document.getElementById('listeners').innerText = `● ${d.current_listeners || 0} Hörer`;
-                const next = (new Date().getHours() + 1) % 24;
-                document.getElementById('news-timer').innerText = next + ":00 Uhr";
+                document.getElementById('station-description').innerText = d.description || "Keine Beschreibung verfügbar.";
             });
 
         // Songs & History
         fetch(`https://api.laut.fm/station/${name}/last_songs`)
             .then(r => r.json())
             .then(songs => {
-                if (songs && songs.length > 0) {
+                if (songs.length > 0) {
                     document.getElementById('current-song').innerText = `🎶 ${songs[0].artist.name} - ${songs[0].title}`;
                     let html = "";
                     songs.slice(1, 4).forEach(s => {
@@ -186,12 +167,11 @@
             });
     }
 
-    // Zeit & Auto-Refresh
     setInterval(() => { document.getElementById('uhr').innerText = new Date().toLocaleTimeString('de-DE'); }, 1000);
-    setInterval(() => { loadStationData(currentStationShortname); }, 25000);
+    setInterval(() => { updateInterface(currentStation); }, 30000);
 
-    // Initialer Start
-    loadStationData("eins");
+    // Start-Sender
+    selectStation("eins");
 </script>
 
 </body>
