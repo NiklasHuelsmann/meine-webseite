@@ -3,11 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Radio Studio Pro</title>
+    <title>Radio Studio Pro - Live</title>
     <style>
-        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: #0d0d0d; color: #eee; display: flex; flex-direction: column; align-items: center; padding: 20px; margin: 0; }
+        body { font-family: 'Segoe UI', sans-serif; background: #0d0d0d; color: #eee; display: flex; flex-direction: column; align-items: center; padding: 20px; margin: 0; }
         
-        /* Suche oben - Findet ALLE laut.fm Sender */
+        /* Globale Suche für alle laut.fm Sender */
         .search-area { width: 100%; max-width: 420px; position: relative; margin-bottom: 25px; }
         input#search-input { 
             width: 100%; padding: 15px 20px; border-radius: 12px; border: 1px solid #333; 
@@ -22,34 +22,32 @@
             box-shadow: 0 10px 40px #000; border: 1px solid #333; display: none;
         }
         .result-item { padding: 12px; cursor: pointer; border-bottom: 1px solid #333; display: flex; align-items: center; gap: 12px; }
-        .result-item:hover { background: #333; }
+        .result-item:hover { background: #333; color: #ff5500; }
         .result-item img { width: 40px; height: 40px; border-radius: 6px; }
 
-        /* Die Haupt-Karte */
+        /* Player Karte (Minimal abgerundet) */
         .player-card { 
-            background: #161616; width: 100%; max-width: 420px; border-radius: 24px; 
+            background: #161616; width: 100%; max-width: 420px; border-radius: 20px; 
             padding: 30px; text-align: center; border: 1px solid #222; box-shadow: 0 25px 60px rgba(0,0,0,0.8);
         }
 
-        .status-header { display: flex; justify-content: space-between; color: #00ccff; font-family: 'Courier New', monospace; font-size: 0.95em; margin-bottom: 20px; font-weight: bold; }
+        .status-header { display: flex; justify-content: space-between; color: #00ccff; font-family: monospace; font-size: 0.95em; margin-bottom: 20px; }
         
-        /* Viereckiges Logo mit minimalem Radius */
+        /* Viereckiges Logo (minimal abgerundet) */
         #station-logo { 
-            width: 220px; height: 220px; border-radius: 18px; 
+            width: 220px; height: 220px; border-radius: 15px; 
             border: 1px solid #333; object-fit: cover; margin-bottom: 15px;
-            box-shadow: 0 12px 35px rgba(0,0,0,0.6);
-            background: #222;
+            box-shadow: 0 12px 35px rgba(0,0,0,0.6); background: #222;
         }
 
         h2#station-name { margin: 10px 0 5px 0; font-size: 1.8em; color: #fff; }
         #current-song { color: #00ff00; font-weight: bold; margin: 10px 0 25px 0; font-size: 1.1em; min-height: 1.2em; }
 
-        /* Play-Button Design */
+        /* Der zentrale Play-Knopf */
         .big-play-btn {
             background: #ff5500; border: none; width: 80px; height: 80px; 
             border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center;
-            margin: 0 auto 25px auto; transition: transform 0.2s, background 0.2s;
-            box-shadow: 0 0 20px rgba(255, 85, 0, 0.4);
+            margin: 0 auto 25px auto; transition: 0.2s; box-shadow: 0 0 20px rgba(255, 85, 0, 0.4);
         }
         .big-play-btn:hover { transform: scale(1.1); background: #ff6622; }
         .big-play-btn svg { width: 35px; height: 35px; fill: white; }
@@ -57,11 +55,9 @@
         /* History Liste */
         .history { text-align: left; background: #1e1e1e; padding: 20px; border-radius: 18px; }
         .history-item { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid #2a2a2a; font-size: 0.9em; }
-        .history-item:last-child { border: none; }
         .time-tag { color: #00ccff; font-weight: bold; min-width: 45px; }
-        .song-text { color: #ccc; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
-        /* Studio Studio Footer */
+        /* Studio Footer (Mikro & News) */
         .studio-footer { 
             margin-top: 25px; display: flex; justify-content: space-between; 
             font-size: 0.75em; color: #555; border-top: 1px solid #222; padding-top: 15px;
@@ -72,7 +68,7 @@
 <body>
 
 <div class="search-area">
-    <input type="text" id="search-input" placeholder="🔍 Sender suchen (z.B. Rock, Pop, 80er)..." autocomplete="off">
+    <input type="text" id="search-input" placeholder="🔍 Sender suchen (alle laut.fm Sender)..." autocomplete="off">
     <div id="results-box"></div>
 </div>
 
@@ -82,10 +78,10 @@
         <div id="listeners">● 0 Hörer</div>
     </div>
 
-    <img id="station-logo" src="" alt="Radio Logo">
+    <img id="station-logo" src="" alt="Station">
     
-    <h2 id="station-name">Sender wählen</h2>
-    <div id="current-song">Stream bereit</div>
+    <h2 id="station-name">Sender suchen...</h2>
+    <div id="current-song">Bereit zum Senden</div>
 
     <button class="big-play-btn" onclick="togglePlay()">
         <svg id="play-icon" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
@@ -95,7 +91,7 @@
     <audio id="audio-player"></audio>
 
     <div class="history">
-        <div style="font-size: 0.7em; color: #444; font-weight: bold; text-transform: uppercase; margin-bottom: 10px;">Zuletzt gelaufen</div>
+        <div style="font-size: 0.7em; color: #444; font-weight: bold; text-transform: uppercase; margin-bottom: 10px;">Letzte Songs & Sendezeit</div>
         <div id="history-content"></div>
     </div>
 
@@ -111,7 +107,6 @@
     const pauseIcon = document.getElementById('pause-icon');
     let activeStation = "";
 
-    // Stream steuern
     function togglePlay() {
         if (!activeStation) return;
         if (audio.paused) {
@@ -121,13 +116,13 @@
             pauseIcon.style.display = "block";
         } else {
             audio.pause();
-            audio.src = ""; // Stop buffering
+            audio.src = ""; 
             playIcon.style.display = "block";
             pauseIcon.style.display = "none";
         }
     }
 
-    // Globale Suche
+    // Die Suche greift auf das komplette laut.fm Verzeichnis zu
     const input = document.getElementById('search-input');
     const resBox = document.getElementById('results-box');
 
@@ -142,6 +137,7 @@
                     const d = document.createElement('div');
                     d.className = "result-item";
                     d.innerHTML = `<img src="${s.images.station_80x80}"> <strong>${s.display_name}</strong>`;
+                    // Wenn man klickt, wird der Sender-Name AUTOMATISCH in den Code übernommen
                     d.onclick = () => { selectStation(s.name); resBox.style.display="none"; input.value=""; };
                     resBox.appendChild(d);
                 });
@@ -149,16 +145,16 @@
     });
 
     function selectStation(name) {
-        activeStation = name;
+        activeStation = name; // Der Code merkt sich den neuen Sender
         audio.pause();
+        audio.src = "";
         playIcon.style.display = "block";
         pauseIcon.style.display = "none";
         updateInfo(name);
     }
 
-    // Daten-Update (Hörer, Songs, Logo)
     function updateInfo(name) {
-        // Hörer & Logo
+        // Holt Logo, Hörer und Namen vom neuen Sender
         fetch(`https://api.laut.fm/station/${name}`)
             .then(r => r.json())
             .then(d => {
@@ -170,7 +166,7 @@
                 document.getElementById('news-timer').innerText = nextHour + ":00 Uhr";
             });
 
-        // Song History & Aktueller Song
+        // Holt die Song-Historie mit Uhrzeit
         fetch(`https://api.laut.fm/station/${name}/last_songs`)
             .then(r => r.json())
             .then(songs => {
@@ -179,26 +175,19 @@
                     let hHTML = "";
                     songs.slice(1, 4).forEach(s => {
                         const time = s.started_at.split(' ')[1].substring(0,5);
-                        hHTML += `<div class="history-item">
-                            <span class="time-tag">${time}</span>
-                            <span class="song-text">${s.artist.name} - ${s.title}</span>
-                        </div>`;
+                        hHTML += `<div class="history-item"><span class="time-tag">${time}</span><span>${s.artist.name} - ${s.title}</span></div>`;
                     });
                     document.getElementById('history-content').innerHTML = hHTML;
                 }
             });
     }
 
-    // Uhrzeit Ticker
-    setInterval(() => {
-        document.getElementById('uhr').innerText = new Date().toLocaleTimeString('de-DE');
-    }, 1000);
-
-    // Automatisches Update der Song-Infos alle 20 Sekunden
+    setInterval(() => { document.getElementById('uhr').innerText = new Date().toLocaleTimeString('de-DE'); }, 1000);
     setInterval(() => { if(activeStation) updateInfo(activeStation); }, 20000);
 
-    // Start-Sender
-    selectStation("eins");
+    // Der Start-Sender ist jetzt leer oder auf einen Standard gesetzt, bis du suchst
+    // Du kannst hier "eins" stehen lassen oder es leer lassen.
+    selectStation("eins"); 
 </script>
 
 </body>
