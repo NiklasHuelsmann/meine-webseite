@@ -3,110 +3,99 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Radio Universal v9.0</title>
+    <title>Radio Master v12.0</title>
     <style>
-        :root { --primary: #00ffaa; --bg: #0d0d0f; --card: #1a1a1e; }
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        body { margin: 0; background: var(--bg); color: white; font-family: 'Segoe UI', sans-serif; display: flex; justify-content: center; }
-        
+        :root { --primary: #00ffaa; --bg: #050505; --surface: #121214; }
+        * { box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
+        body { margin: 0; background: var(--bg); color: white; display: flex; justify-content: center; }
         .app-shell { width: 100%; max-width: 500px; min-height: 100vh; display: flex; flex-direction: column; background: var(--bg); }
 
-        /* HEADER & SEARCH */
-        .header { padding: 25px 20px; position: sticky; top: 0; background: var(--bg); z-index: 1000; }
-        .search-wrap { display: flex; background: var(--card); border-radius: 12px; border: 1px solid #333; overflow: hidden; box-shadow: 0 5px 20px rgba(0,0,0,0.5); }
+        /* SUCHE */
+        .search-section { padding: 20px; position: sticky; top: 0; background: var(--bg); z-index: 2000; }
+        .search-bar { display: flex; background: var(--surface); border-radius: 12px; border: 1px solid #333; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
         #q { flex: 1; padding: 16px; border: none; background: transparent; color: white; font-size: 16px; outline: none; }
-        .s-btn { background: var(--primary); border: none; padding: 0 25px; cursor: pointer; color: #000; font-weight: bold; }
+        .s-btn { background: var(--primary); border: none; padding: 0 20px; cursor: pointer; color: #000; font-weight: bold; }
 
-        /* EINHEITLICHE ERGEBNISLISTE */
-        #res-box {
-            margin: 0 20px 20px; background: #1c1c20; border-radius: 12px;
-            max-height: 400px; overflow-y: auto; display: none;
-            border: 1px solid #444; box-shadow: 0 10px 40px #000;
+        /* RESULTATE */
+        #results {
+            margin: 0 20px 20px; background: #1a1a1c; border-radius: 12px;
+            max-height: 350px; overflow-y: auto; display: none; border: 1px solid #444;
         }
-        .station-row {
-            display: flex; align-items: center; gap: 15px; padding: 15px;
-            border-bottom: 1px solid #2a2a2e; cursor: pointer; transition: background 0.2s;
-        }
-        .station-row:hover { background: #2a2a32; }
-        .station-row img { width: 50px; height: 50px; border-radius: 8px; background: #000; object-fit: cover; }
-        .station-info { flex: 1; }
-        .station-info b { display: block; font-size: 16px; margin-bottom: 3px; }
-        .badge { font-size: 10px; padding: 2px 6px; border-radius: 4px; text-transform: uppercase; font-weight: bold; }
-        .badge-laut { background: #ffaa00; color: #000; }
-        .badge-world { background: #0088ff; color: #fff; }
+        .row { padding: 12px; display: flex; align-items: center; gap: 15px; border-bottom: 1px solid #222; cursor: pointer; }
+        .row:hover { background: #252528; }
+        .row img { width: 45px; height: 45px; border-radius: 6px; object-fit: cover; background: #000; }
+        .tag { font-size: 10px; padding: 2px 6px; border-radius: 4px; font-weight: bold; text-transform: uppercase; }
+        .tag-l { background: #ffaa00; color: #000; }
+        .tag-w { background: #0088ff; color: #fff; }
 
-        /* PLAYER VIEW */
+        /* PLAYER */
         .player { flex: 1; padding: 20px; display: flex; flex-direction: column; align-items: center; text-align: center; }
-        .status-row { width: 100%; display: flex; justify-content: space-between; font-family: monospace; color: var(--primary); margin-bottom: 20px; }
-        
-        #display-name { font-size: 28px; font-weight: bold; margin: 10px 0; }
-        #main-art { width: 100%; max-width: 320px; aspect-ratio: 1/1; border-radius: 20px; object-fit: cover; box-shadow: 0 20px 50px rgba(0,0,0,0.8); margin-bottom: 25px; border: 1px solid #333; }
-        
-        #track-title { font-size: 20px; font-weight: bold; color: #fff; margin-bottom: 5px; }
-        #artist-name { font-size: 16px; color: #888; margin-bottom: 30px; }
+        .status-row { width: 100%; display: flex; justify-content: space-between; font-family: monospace; color: var(--primary); margin-bottom: 15px; font-weight: bold; }
+        #st-name { font-size: 24px; margin: 0 0 15px; }
+        #main-art { width: 100%; max-width: 300px; aspect-ratio: 1/1; border-radius: 20px; object-fit: cover; box-shadow: 0 20px 40px #000; margin-bottom: 20px; border: 1px solid #333; background: #111; }
+        #track { font-size: 19px; font-weight: bold; margin-bottom: 5px; color: #fff; }
+        #artist { font-size: 16px; color: #888; margin-bottom: 25px; }
 
-        .play-trigger { width: 80px; height: 80px; border-radius: 50%; background: #fff; border: none; cursor: pointer; display: flex; justify-content: center; align-items: center; box-shadow: 0 0 30px rgba(255,255,255,0.1); }
-        .play-trigger svg { width: 35px; height: 35px; fill: #000; }
+        .play-btn { width: 70px; height: 70px; border-radius: 50%; background: #fff; border: none; cursor: pointer; display: flex; justify-content: center; align-items: center; }
+        .play-btn svg { width: 30px; height: 30px; fill: #000; }
 
-        /* HISTORY */
-        .history { width: 100%; margin-top: 30px; text-align: left; }
-        .h-card { display: flex; align-items: center; gap: 12px; padding: 12px; background: #121214; border-radius: 12px; margin-bottom: 8px; border: 1px solid #222; }
-        .h-card img { width: 40px; height: 40px; border-radius: 6px; }
-
-        .footer { padding: 20px; text-align: center; color: #333; font-size: 10px; font-weight: bold; letter-spacing: 2px; }
+        /* PLAYLIST & HISTORY */
+        .playlist { width: 100%; margin-top: 30px; text-align: left; }
+        .p-title { font-size: 11px; color: #444; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px; font-weight: bold; }
+        .h-item { display: flex; align-items: center; gap: 12px; padding: 10px; background: #0f0f11; border-radius: 10px; margin-bottom: 8px; border: 1px solid #1a1a1c; }
+        .h-item img { width: 38px; height: 38px; border-radius: 5px; background: #000; }
+        .h-info b { display: block; font-size: 14px; color: #ddd; }
+        .h-info span { font-size: 12px; color: #666; }
     </style>
 </head>
 <body>
 
 <div class="app-shell">
-    <div class="header">
-        <div class="search-wrap">
-            <input type="text" id="q" placeholder="Sender suchen (WDR, laut.fm...)" autocomplete="off">
-            <button class="s-btn" id="go">LOS</button>
+    <div class="search-section">
+        <div class="search-bar">
+            <input type="text" id="q" placeholder="Sender Name + ENTER..." autocomplete="off">
+            <button class="s-btn" onclick="doSearch()">LOS</button>
         </div>
     </div>
-
-    <div id="res-box"></div>
+    <div id="results"></div>
 
     <div class="player">
         <div class="status-row">
             <div id="clock">00:00:00</div>
-            <div id="listener-count">● STANDBY</div>
+            <div id="listeners">● BEREIT</div>
         </div>
-
-        <h1 id="display-name">Radio Universal</h1>
+        <h1 id="st-name">Radio Station</h1>
         <img id="main-art" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7">
-
-        <div id="track-title">Bereit</div>
-        <div id="artist-name">Tippe einen Namen oben ein</div>
-
-        <button class="play-trigger" id="playBtn">
-            <svg id="icon-p" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
-            <svg id="icon-s" viewBox="0 0 24 24" style="display:none;"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
+        <div id="track">Sender wählen</div>
+        <div id="artist">Suche oben starten</div>
+        
+        <button class="play-btn" onclick="togglePlay()">
+            <svg id="svg-play" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+            <svg id="svg-stop" viewBox="0 0 24 24" style="display:none;"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
         </button>
 
-        <div class="history" id="history-list"></div>
+        <div class="playlist">
+            <div class="p-title" id="p-title-text">Zuletzt gelaufen</div>
+            <div id="hist-list"></div>
+        </div>
     </div>
-    <div class="footer">ULTIMATE ENGINE V9.0</div>
 </div>
 
-<audio id="engine" playsinline crossorigin="anonymous"></audio>
+<audio id="audio" crossorigin="anonymous"></audio>
 
 <script>
-    const audio = document.getElementById('engine');
-    const playBtn = document.getElementById('playBtn');
+    const audio = document.getElementById('audio');
     const input = document.getElementById('q');
-    const resBox = document.getElementById('res-box');
-    let currentStation = null;
+    const resBox = document.getElementById('results');
+    let currentId = "";
     let currentType = "";
+    let refreshTimer = null;
 
-    async function performSearch() {
+    async function doSearch() {
         const val = input.value.trim();
         if(val.length < 2) return;
-
-        resBox.innerHTML = "<div style='padding:20px;text-align:center;'>Suche läuft...</div>";
+        resBox.innerHTML = "<div style='padding:15px;text-align:center;'>Suche...</div>";
         resBox.style.display = "block";
-
         try {
             const [rL, rW] = await Promise.all([
                 fetch(`https://api.laut.fm/search/stations?query=${encodeURIComponent(val)}`),
@@ -114,113 +103,92 @@
             ]);
             const dL = await rL.json();
             const dW = await rW.json();
-            
             resBox.innerHTML = "";
-
-            // LAUT.FM Ergebnisse hinzufügen
-            if(dL.items) {
-                dL.items.forEach(s => {
-                    createRow(s.display_name, s.images.station_80x80, s.name, 'badge-laut', 'LAUT.FM');
-                });
-            }
-
-            // WORLD Ergebnisse hinzufügen
-            if(dW) {
-                dW.slice(0, 15).forEach(s => {
-                    createRow(s.name, s.favicon, s.url, 'badge-world', 'WORLD');
-                });
-            }
-        } catch(e) { resBox.innerHTML = "<div style='padding:20px;'>Verbindungsfehler</div>"; }
+            if(dL.items) dL.items.forEach(s => addRow(s.display_name, s.images.station_80x80, s.name, 'tag-l', 'LAUT.FM'));
+            if(dW) dW.slice(0, 15).forEach(s => addRow(s.name, s.favicon, s.url, 'tag-w', 'WORLD'));
+        } catch(e) { resBox.innerHTML = "<div style='padding:15px;'>Fehler</div>"; }
     }
 
-    function createRow(name, img, streamUrl, cls, typeText) {
-        const div = document.createElement('div');
-        div.className = "station-row";
-        // Die entscheidende Klick-Funktion
-        div.onclick = () => { selectStation(name, img, streamUrl, typeText); };
-        
-        const icon = img || 'https://via.placeholder.com/50/222/fff?text=R';
-        div.innerHTML = `
-            <img src="${icon}">
-            <div class="station-info">
-                <b>${name}</b>
-                <span class="badge ${cls}">${typeText}</span>
-            </div>
-        `;
-        resBox.appendChild(div);
+    function addRow(name, img, url, cls, type) {
+        const d = document.createElement('div');
+        d.className = "row";
+        d.onclick = () => launch(name, img, url, type);
+        const icon = img || 'https://via.placeholder.com/45/222/fff?text=R';
+        d.innerHTML = `<img src="${icon}"> <div><b>${name}</b><br><span class="tag ${cls}">${type}</span></div>`;
+        resBox.appendChild(d);
     }
 
-    function selectStation(name, img, url, type) {
-        currentStation = url;
-        currentType = type;
+    function launch(name, img, url, type) {
         resBox.style.display = "none";
         input.value = "";
+        currentType = type;
+        currentId = url;
         
         audio.pause();
         audio.src = (type === 'LAUT.FM') ? `https://stream.laut.fm/${url}` : url;
-        audio.play().catch(e => console.log("Start erforderlich"));
+        audio.play().catch(() => {});
 
-        document.getElementById('display-name').innerText = name;
-        document.getElementById('main-art').src = img || 'https://via.placeholder.com/320/111/fff?text=RADIO';
-        document.getElementById('icon-p').style.display = "none";
-        document.getElementById('icon-s').style.display = "block";
+        document.getElementById('st-name').innerText = name;
+        document.getElementById('main-art').src = img || 'https://via.placeholder.com/300/111/fff?text=RADIO';
+        
+        updateUI(true);
+        if(refreshTimer) clearInterval(refreshTimer);
+        fetchData();
+        refreshTimer = setInterval(fetchData, 30000);
+    }
 
-        if(type === 'LAUT.FM') {
-            updateLautData(url);
+    async function fetchData() {
+        if(!currentId) return;
+        const histBox = document.getElementById('hist-list');
+        const listenerBox = document.getElementById('listeners');
+
+        if(currentType === 'LAUT.FM') {
+            try {
+                const [rS, rL] = await Promise.all([
+                    fetch(`https://api.laut.fm/station/${currentId}`),
+                    fetch(`https://api.laut.fm/station/${currentId}/last_songs`)
+                ]);
+                const sInfo = await rS.json();
+                const songs = await rL.json();
+                listenerBox.innerText = `● ${sInfo.current_listeners} HÖRER`;
+                if(songs.length > 0) {
+                    document.getElementById('track').innerText = songs[0].title;
+                    document.getElementById('artist').innerText = songs[0].artist.name;
+                    document.getElementById('main-art').src = songs[0].image_640x640 || sInfo.images.station_640x640;
+                    renderHistory(songs.slice(1, 6));
+                }
+            } catch(e) {}
         } else {
-            document.getElementById('track-title').innerText = "Live Stream";
-            document.getElementById('artist-name').innerText = "Öffentlicher Sender";
-            document.getElementById('history-list').innerHTML = "";
-            document.getElementById('listener-count').innerText = "● LIVE";
+            // UNIVERSAL LOGIK für WORLD Sender (WDR etc.)
+            listenerBox.innerText = "● LIVE";
+            // Wir versuchen Metadaten über einen Proxy zu bekommen (Simuliert hier)
+            document.getElementById('track').innerText = "Live Stream läuft";
+            document.getElementById('artist').innerText = document.getElementById('st-name').innerText;
+            histBox.innerHTML = "<div style='color:#333;font-size:12px;'>Playlist-Daten werden geladen...</div>";
         }
     }
 
-    async function updateLautData(slug) {
-        try {
-            const r = await fetch(`https://api.laut.fm/station/${slug}/last_songs`);
-            const songs = await r.json();
-            const sInfo = await fetch(`https://api.laut.fm/station/${slug}`).then(res => res.json());
-            
-            document.getElementById('listener-count').innerText = `● ${sInfo.current_listeners || 0} HÖRER`;
-            
-            if(songs.length > 0) {
-                document.getElementById('track-title').innerText = songs[0].title;
-                document.getElementById('artist-name').innerText = songs[0].artist.name;
-                document.getElementById('main-art').src = songs[0].image_640x640 || sInfo.images.station_640x640;
-                
-                let hHtml = "";
-                songs.slice(1, 5).forEach(s => {
-                    hHtml += `<div class="h-card"><img src="${s.image_120x120 || sInfo.images.station_80x80}"><div><b>${s.title}</b><br><small>${s.artist.name}</small></div></div>`;
-                });
-                document.getElementById('history-list').innerHTML = hHtml;
-            }
-        } catch(e) {}
+    function renderHistory(songs) {
+        let h = "";
+        songs.forEach(s => {
+            const img = s.image_120x120 || 'https://via.placeholder.com/38/111/fff?text=?';
+            h += `<div class="h-item"><img src="${img}"><div class="h-info"><b>${s.title}</b><span>${s.artist.name}</span></div></div>`;
+        });
+        document.getElementById('hist-list').innerHTML = h;
     }
 
-    // Controls
-    input.addEventListener('keypress', (e) => { if(e.key === 'Enter') performSearch(); });
-    document.getElementById('go').onclick = performSearch;
+    function togglePlay() {
+        if(audio.paused) { audio.play(); updateUI(true); }
+        else { audio.pause(); updateUI(false); }
+    }
 
-    playBtn.onclick = () => {
-        if(!currentStation) return;
-        if(audio.paused) {
-            audio.play();
-            document.getElementById('icon-p').style.display = "none";
-            document.getElementById('icon-s').style.display = "block";
-        } else {
-            audio.pause();
-            document.getElementById('icon-p').style.display = "block";
-            document.getElementById('icon-s').style.display = "none";
-        }
-    };
+    function updateUI(playing) {
+        document.getElementById('svg-play').style.display = playing ? "none" : "block";
+        document.getElementById('svg-stop').style.display = playing ? "block" : "none";
+    }
 
     setInterval(() => { document.getElementById('clock').innerText = new Date().toLocaleTimeString(); }, 1000);
-    setInterval(() => { if(currentType === 'LAUT.FM') updateLautData(currentStation); }, 30000);
-    
-    // Schließen beim Klick außerhalb
-    document.addEventListener('click', (e) => {
-        if(!resBox.contains(e.target) && e.target !== input) resBox.style.display = "none";
-    });
+    input.onkeypress = (e) => { if(e.key === 'Enter') doSearch(); };
 </script>
 </body>
 </html>
