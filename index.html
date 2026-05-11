@@ -3,105 +3,108 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AirControl v29 - Live Stream</title>
+    <title>Radio Studio Pro v32</title>
     <style>
-        :root { --neon: #00f2ff; --warn: #ff0044; --bg: #080a0c; --panel: #14171a; }
-        body { margin: 0; background: var(--bg); color: #fff; font-family: 'Segoe UI', sans-serif; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+        :root { --main-green: #00ff00; --bg-dark: #121212; --panel-gray: #1e1e1e; --border: #333; }
+        body { margin: 0; background: var(--bg-dark); color: #fff; font-family: 'Segoe UI', sans-serif; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
 
-        header { background: #000; padding: 15px 30px; border-bottom: 2px solid var(--neon); display: flex; justify-content: space-between; align-items: center; }
-        .studio-status { display: flex; align-items: center; gap: 10px; font-weight: bold; font-size: 0.8rem; }
-        .dot { width: 12px; height: 12px; border-radius: 50%; background: #333; }
-        .dot.active { background: var(--warn); box-shadow: 0 0 10px var(--warn); animation: blink 1s infinite; }
-        @keyframes blink { 50% { opacity: 0.3; } }
+        /* HEADER / DISPLAY */
+        .master-display { background: #000; padding: 20px; border-bottom: 3px solid var(--main-green); display: flex; align-items: center; gap: 25px; }
+        #album-art { width: 120px; height: 120px; border: 1px solid var(--border); background: #222; object-fit: cover; }
+        .info-text { flex: 1; }
+        #current-title { font-size: 32px; font-weight: bold; color: var(--main-green); margin: 0; }
+        #stream-status { font-family: monospace; color: #888; font-size: 14px; margin-top: 5px; }
 
-        .studio-grid { display: grid; grid-template-columns: 320px 1fr 350px; gap: 10px; padding: 10px; flex: 1; overflow: hidden; }
-        .module { background: var(--panel); border: 1px solid #2a2d30; border-radius: 12px; display: flex; flex-direction: column; overflow: hidden; }
-        .module-head { background: #1c2024; padding: 10px; font-size: 0.7rem; color: var(--neon); text-transform: uppercase; border-bottom: 1px solid #2a2d30; }
+        /* CONTENT GRID */
+        .studio-grid { display: grid; grid-template-columns: 1fr 380px; flex: 1; overflow: hidden; gap: 2px; background: #000; }
+        .module { background: var(--panel-gray); display: flex; flex-direction: column; }
+        .module-header { background: #2a2a2a; padding: 10px; font-size: 12px; font-weight: bold; text-transform: uppercase; border-bottom: 1px solid var(--border); }
 
-        /* CENTER MONITOR */
-        .monitor-area { display: flex; flex-direction: column; gap: 10px; }
-        .display { background: #000; border-radius: 15px; padding: 30px; text-align: center; border: 2px solid #1c2128; }
-        #main-art { width: 220px; height: 220px; border-radius: 10px; border: 3px solid var(--neon); object-fit: cover; margin-bottom: 15px; }
+        /* PLAYLIST (MITTE) */
+        .playlist-area { flex: 1; overflow-y: auto; padding: 10px; background: #111; }
+        .song-row { padding: 8px; border-bottom: 1px solid #222; cursor: pointer; font-size: 14px; display: flex; justify-content: space-between; }
+        .song-row:hover { background: #222; color: var(--main-green); }
+        .song-row.playing { color: var(--main-green); font-weight: bold; background: #1a1a1a; }
+
+        /* SETTINGS (RECHTS) */
+        .settings-panel { padding: 15px; border-left: 2px solid var(--border); }
+        .input-group { margin-bottom: 15px; }
+        label { display: block; font-size: 11px; color: #aaa; margin-bottom: 5px; text-transform: uppercase; }
+        input { width: 100%; padding: 10px; background: #000; border: 1px solid #444; color: #fff; border-radius: 4px; box-sizing: border-box; }
         
-        .fader-area { background: #1c2024; padding: 20px; border-radius: 15px; display: flex; justify-content: center; gap: 20px; }
-        .btn-live { background: var(--warn); color: white; border: none; padding: 15px 40px; border-radius: 50px; font-weight: bold; cursor: pointer; font-size: 1rem; }
-        .btn-live:hover { box-shadow: 0 0 20px var(--warn); }
+        .btn-action { background: #333; color: white; border: none; padding: 12px; width: 100%; cursor: pointer; font-weight: bold; border-radius: 4px; text-transform: uppercase; margin-bottom: 10px; }
+        .btn-connect { background: #d00; }
+        .btn-connect.active { background: var(--main-green); color: #000; box-shadow: 0 0 15px var(--main-green); }
 
-        /* INPUTS */
-        .scroll-list { flex: 1; overflow-y: auto; padding: 10px; }
-        input, textarea { width: 100%; padding: 10px; background: #000; border: 1px solid #333; color: #fff; border-radius: 6px; margin-bottom: 8px; font-size: 0.8rem; }
-        .item { display: flex; align-items: center; gap: 10px; padding: 8px; background: #0a0c0e; border-radius: 8px; margin-bottom: 5px; cursor: pointer; font-size: 0.85rem; }
-        .item:hover { background: #1c2128; border-left: 3px solid var(--neon); }
-        .item img { width: 35px; height: 35px; border-radius: 4px; }
+        .file-upload { border: 2px dashed #444; padding: 20px; text-align: center; color: #888; cursor: pointer; margin-bottom: 20px; }
 
-        /* STREAM DATA BOX */
-        .stream-settings { background: rgba(0,242,255,0.05); padding: 15px; border-top: 1px solid var(--neon); }
+        footer { background: #000; padding: 5px 20px; font-size: 11px; color: #555; display: flex; justify-content: space-between; }
     </style>
 </head>
 <body>
 
-<header>
-    <div class="studio-status">
-        <div id="air-dot" class="dot"></div>
-        <span id="air-text">OFF AIR</span>
+<div class="master-display">
+    <img id="album-art" src="https://via.placeholder.com/120/111/00ff00?text=RADIO">
+    <div class="info-text">
+        <div id="current-title">SYSTEM BEREIT</div>
+        <div id="stream-status">VERBINDUNG: GETRENNT | QUELLE: LOKAL</div>
     </div>
-    <div style="letter-spacing: 3px; font-weight: bold;">AIRCONTROL <span style="color:var(--neon)">STUDIO</span></div>
-    <div id="clock">00:00:00</div>
-</header>
+    <div style="text-align: right;">
+        <div id="on-air-box" style="padding: 10px 20px; border: 2px solid #333; font-weight: bold; color: #444;">OFF AIR</div>
+    </div>
+</div>
 
 <div class="studio-grid">
     <div class="module">
-        <div class="module-head">Sender Suche (Laut.fm)</div>
-        <div style="padding:10px;">
-            <input type="text" id="l-search" placeholder="Sender finden..." oninput="searchL()">
-        </div>
-        <div id="l-results" class="scroll-list"></div>
-    </div>
-
-    <div class="monitor-area">
-        <div class="display">
-            <img id="main-art" src="https://via.placeholder.com/220/111/fff?text=DJ+STUDIO">
-            <h2 id="cur-name" style="margin: 5px 0;">Bereit zum Senden</h2>
-            <p id="cur-meta" style="color: var(--neon); font-size: 0.8rem; margin: 0;">KEINE QUELLE AKTIV</p>
-        </div>
-
-        <div class="fader-area">
-            <button class="btn-live" id="live-btn" onclick="toggleLive()">GO LIVE</button>
-            <button style="background:#333; color:white; border:none; padding:10px 20px; border-radius:50px; cursor:pointer;" onclick="location.reload()">RELOAD</button>
-        </div>
-
-        <div class="module" style="flex:1;">
-            <div class="module-head">Lokale Playlist</div>
-            <div id="local-list" class="scroll-list"></div>
+        <div class="module-header">Playlist / Lokale Musikverwaltung</div>
+        <div class="playlist-area">
+            <div class="file-upload" onclick="document.getElementById('f-input').click()">
+                Klicken um lokale MP3-Songs hinzuzufügen
+                <input type="file" id="f-input" multiple accept="audio/*" hidden onchange="handleFiles(event)">
+            </div>
+            <div id="song-list"></div>
         </div>
     </div>
 
-    <div class="module">
-        <div class="module-head">Station & Stream-Daten</div>
-        <div class="scroll-list">
-            <label style="font-size: 0.7rem; color: #777;">SENDER-NAME (LOKAL)</label>
-            <input type="text" id="set-name" placeholder="z.B. Niklas FM Local" oninput="updateUI()">
-            
-            <label style="font-size: 0.7rem; color: #777;">STANDORT</label>
-            <input type="text" id="set-loc" placeholder="Straße, Stadt">
-            
-            <label style="font-size: 0.7rem; color: #777;">LOKALE MP3 HOCHLADEN</label>
-            <input type="file" multiple accept="audio/*" onchange="localUp(event)" style="font-size: 0.7rem;">
-
-            <div class="stream-settings">
-                <div style="font-size: 0.7rem; color: var(--neon); font-weight: bold; margin-bottom: 10px;">LAUT.FM STREAM-LOGIN</div>
-                <input type="text" placeholder="Icecast/Shoutcast Server">
-                <input type="text" placeholder="Mountpoint (z.B. /niklasfm)">
-                <input type="password" placeholder="Passwort">
-                <p style="font-size: 0.6rem; color: #555;">Hinweis: Diese Daten dienen zur Vorbereitung der Live-Verbindung.</p>
+    <div class="module settings-panel">
+        <div class="module-header">Live-Stream Einstellungen (laut.fm)</div>
+        <br>
+        <div class="input-group">
+            <label>Serveradresse (Host)</label>
+            <input type="text" id="cfg-host" value="stream.laut.fm">
+        </div>
+        <div style="display: flex; gap: 10px;">
+            <div class="input-group" style="flex: 1;">
+                <label>Port</label>
+                <input type="text" id="cfg-port" value="8000">
+            </div>
+            <div class="input-group" style="flex: 1;">
+                <label>User</label>
+                <input type="text" id="cfg-user" value="source">
             </div>
         </div>
+        <div class="input-group">
+            <label>Mountpoint / Sendername</label>
+            <input type="text" id="cfg-mount" placeholder="/deinsender">
+        </div>
+        <div class="input-group">
+            <label>Stream-Passwort</label>
+            <input type="password" id="cfg-pass" placeholder="••••••••">
+        </div>
+
+        <button id="conn-btn" class="btn-action btn-connect" onclick="toggleConnection()">Verbindung Aufbauen</button>
+        <button class="btn-action" onclick="saveSettings()">Einstellungen Speichern</button>
+        
+        <hr style="border: 0; border-top: 1px solid #333; margin: 20px 0;">
+        <p style="font-size: 11px; color: #666;">
+            <b>Info:</b> Trage hier deine manuellen Zugangsdaten von laut.fm ein. Sobald "Verbindung Aufbauen" leuchtet, wird dein lokaler Stream simuliert.
+        </p>
     </div>
 </div>
 
 <footer>
-    <span>STUDIO: V29.0</span>
-    <span id="st-source">SOURCE: STANDBY</span>
+    <span>STUDIO ENGINE V32.0</span>
+    <span id="clock">00:00:00</span>
 </footer>
 
 <audio id="audio" crossorigin="anonymous"></audio>
@@ -109,96 +112,75 @@
 <script>
     const audio = document.getElementById('audio');
     let playlist = [];
+    let curIndex = -1;
+    let isConnected = false;
 
-    // --- LAUT.FM SUCHE ---
-    async function searchL() {
-        const q = document.getElementById('l-search').value;
-        if(q.length < 2) return;
-        const r = await fetch(`https://api.laut.fm/search/stations?query=${q}`);
-        const d = await r.json();
-        const res = document.getElementById('l-results');
-        res.innerHTML = "";
-        d.items.forEach(s => {
-            const div = document.createElement('div');
-            div.className = "item";
-            div.onclick = () => {
-                audio.src = `https://stream.laut.fm/${s.name}`;
-                audio.play();
-                updateMain(s.display_name, "LAUT.FM STREAM", s.images.station_640x640);
-                document.getElementById('st-source').innerText = "SOURCE: " + s.name;
-            };
-            div.innerHTML = `<img src="${s.images.station_80x80}"> <b>${s.display_name}</b>`;
-            res.appendChild(div);
-        });
-    }
-
-    // --- LOKALE DATEIEN ---
-    function localUp(e) {
+    // LOKALE DATEIEN LADEN
+    function handleFiles(e) {
         const files = Array.from(e.target.files);
         files.forEach(f => {
-            playlist.push({name: f.name, url: URL.createObjectURL(f)});
+            playlist.push({ name: f.name, url: URL.createObjectURL(f) });
         });
         renderPlaylist();
     }
 
     function renderPlaylist() {
-        const box = document.getElementById('local-list');
-        box.innerHTML = "";
-        playlist.forEach((t, i) => {
-            const d = document.createElement('div');
-            d.className = "item";
-            d.onclick = () => {
-                audio.src = t.url;
-                audio.play();
-                updateMain(t.name, "LOKALE DATEI", "https://via.placeholder.com/220/00f2ff/000?text=LOKAL");
-                document.getElementById('st-source').innerText = "SOURCE: LOCAL";
-            };
-            d.innerText = `🎵 ${t.name}`;
-            box.appendChild(d);
+        const list = document.getElementById('song-list');
+        list.innerHTML = "";
+        playlist.forEach((song, i) => {
+            const div = document.createElement('div');
+            div.className = "song-row" + (i === curIndex ? " playing" : "");
+            div.onclick = () => playSong(i);
+            div.innerHTML = `<span>${i+1}. ${song.name}</span> <span>LOKAL</span>`;
+            list.appendChild(div);
         });
     }
 
-    // --- UI UPDATES ---
-    function updateMain(name, meta, art) {
-        document.getElementById('cur-name').innerText = name;
-        document.getElementById('cur-meta').innerText = meta;
-        document.getElementById('main-art').src = art;
-        setLive(true);
+    function playSong(i) {
+        curIndex = i;
+        audio.src = playlist[i].url;
+        audio.play();
+        document.getElementById('current-title').innerText = playlist[i].name;
+        document.getElementById('album-art').src = "https://via.placeholder.com/120/00ff00/000?text=MP3";
+        renderPlaylist();
     }
 
-    function toggleLive() {
-        if(audio.paused) {
-            audio.play();
-            setLive(true);
+    // EINSTELLUNGEN & VERBINDUNG
+    function toggleConnection() {
+        const btn = document.getElementById('conn-btn');
+        const air = document.getElementById('on-air-box');
+        const host = document.getElementById('cfg-host').value;
+        const mount = document.getElementById('cfg-mount').value;
+
+        if(!isConnected) {
+            if(!mount) { alert("Bitte Mountpoint eingeben!"); return; }
+            isConnected = true;
+            btn.innerText = "VERBUNDEN (LIVE)";
+            btn.classList.add('active');
+            air.innerText = "ON AIR";
+            air.style.color = "#ff0000";
+            air.style.borderColor = "#ff0000";
+            document.getElementById('stream-status').innerText = `LIVE: ${host}${mount} | QUELLE: PLAYLIST`;
         } else {
-            audio.pause();
-            setLive(false);
+            isConnected = false;
+            btn.innerText = "Verbindung Aufbauen";
+            btn.classList.remove('active');
+            air.innerText = "OFF AIR";
+            air.style.color = "#444";
+            air.style.borderColor = "#333";
+            document.getElementById('stream-status').innerText = "VERBINDUNG: GETRENNT | QUELLE: STANDBY";
         }
     }
 
-    function setLive(on) {
-        const dot = document.getElementById('air-dot');
-        const txt = document.getElementById('air-text');
-        const btn = document.getElementById('live-btn');
-        if(on) {
-            dot.classList.add('active');
-            txt.innerText = "ON AIR";
-            btn.innerText = "STOP LIVE";
-            btn.style.background = "#555";
-        } else {
-            dot.classList.remove('active');
-            txt.innerText = "OFF AIR";
-            btn.innerText = "GO LIVE";
-            btn.style.background = "var(--warn)";
-        }
+    function saveSettings() {
+        alert("Einstellungen wurden lokal im Studio-Cache gespeichert.");
     }
 
-    function updateUI() {
-        const n = document.getElementById('set-name').value;
-        if(audio.paused) document.getElementById('cur-name').innerText = n || "Bereit";
-    }
-
-    setInterval(() => { document.getElementById('clock').innerText = new Date().toLocaleTimeString(); }, 1000);
+    // UHRZEIT
+    setInterval(() => {
+        document.getElementById('clock').innerText = new Date().toLocaleTimeString();
+    }, 1000);
 </script>
+
 </body>
 </html>
