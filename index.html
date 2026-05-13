@@ -3,179 +3,233 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mein laut.fm Player</title>
+    <title>Laut.fm Universal Player</title>
     <style>
-        /* Hintergrundfarbe der Webseite */
+        :root {
+            --haupt-weiss: #ffffff;
+            --hintergrund: #121212; /* Dunkel für edlen Kontrast */
+            --akzent: #00ff88;
+        }
+
         body {
-            font-family: Arial, sans-serif;
-            background-color: #1a1a1a; /* Ein dunkler Hintergrund, damit das Weiß gut aussieht */
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--hintergrund);
+            color: var(--haupt-weiss);
+            margin: 0;
             display: flex;
             flex-direction: column;
             align-items: center;
+            min-height: 100vh;
             padding: 20px;
-            margin: 0;
         }
 
-        /* Suchfeld */
-        .suche {
-            margin-bottom: 30px;
+        /* Suchbereich optimiert für Enter-Taste */
+        .search-container {
+            width: 100%;
+            max-width: 400px;
+            margin-bottom: 40px;
+            margin-top: 20px;
+        }
+
+        form {
             display: flex;
-            gap: 10px;
+            background: rgba(255,255,255,0.1);
+            padding: 5px;
+            border-radius: 50px;
+            border: 1px solid rgba(255,255,255,0.2);
         }
 
         input {
-            padding: 10px 15px;
-            border-radius: 20px;
+            flex: 1;
+            background: transparent;
             border: none;
             outline: none;
+            color: white;
+            padding: 12px 20px;
+            font-size: 1rem;
         }
 
         button {
-            padding: 10px 20px;
-            border-radius: 20px;
+            background: var(--haupt-weiss);
+            color: black;
             border: none;
-            background-color: #ffffff;
+            padding: 10px 25px;
+            border-radius: 50px;
             cursor: pointer;
             font-weight: bold;
+            transition: transform 0.2s;
         }
 
-        /* Der Player (ist am Anfang unsichtbar) */
-        #player-bereich {
-            display: none;
+        button:active { transform: scale(0.95); }
+
+        /* Der Player-Kasten */
+        #player-card {
+            display: none; /* Erst nach Suche sichtbar */
             width: 100%;
-            max-width: 350px;
+            max-width: 380px;
             text-align: center;
+            animation: fadeIn 0.5s ease;
         }
 
-        /* Das Display-Bild (Cover) */
-        .cover-bild {
-            width: 250px;
-            height: 250px;
-            border-radius: 50%; /* Rund wie gewünscht */
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .cover-wrapper {
+            position: relative;
+            width: 280px;
+            height: 280px;
+            margin: 0 auto 25px auto;
+        }
+
+        .cover-img {
+            width: 100%;
+            height: 100%;
+            border-radius: 40px; /* Schön abgerundet */
             object-fit: cover;
-            border: 5px solid white;
-            margin-bottom: 20px;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.5);
+            border: 2px solid rgba(255,255,255,0.1);
         }
 
-        /* Texte in Weiß */
-        .weiss-text {
-            color: #ffffff;
-            margin: 5px 0;
-        }
+        .info-area h2 { font-size: 1.6rem; margin: 10px 0 5px 0; font-weight: 600; }
+        .info-area p { font-size: 1.1rem; opacity: 0.8; margin-bottom: 25px; }
 
-        .aktuell-box {
-            margin-bottom: 25px;
-        }
+        audio { width: 100%; filter: invert(100%); opacity: 0.8; }
 
-        audio {
-            width: 100%;
-            margin-bottom: 30px;
-        }
-
-        /* Liste der letzten Songs */
-        .last-songs {
+        /* Verlauf / Zuletzt gelaufen */
+        .history {
+            margin-top: 35px;
             text-align: left;
-            width: 100%;
         }
 
-        .song-eintrag {
-            background-color: rgba(255, 255, 255, 0.1); /* Ganz leicht transparent */
-            padding: 10px;
-            border-radius: 15px;
+        .history-title {
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            margin-bottom: 15px;
+            opacity: 0.6;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            padding-bottom: 5px;
+        }
+
+        .song-item {
+            background: rgba(255,255,255,0.05);
             margin-bottom: 10px;
-            color: white;
+            padding: 12px 18px;
+            border-radius: 20px;
             display: flex;
             justify-content: space-between;
             align-items: center;
+            backdrop-filter: blur(5px);
         }
 
-        .zeit {
-            font-size: 0.8rem;
-            color: #ccc;
+        .song-details { font-size: 0.95rem; }
+        .song-details strong { display: block; color: var(--haupt-weiss); }
+
+        .time-tag {
+            background: rgba(255,255,255,0.1);
+            padding: 4px 10px;
+            border-radius: 10px;
+            font-size: 0.75rem;
+            font-weight: bold;
         }
     </style>
 </head>
 <body>
 
-    <!-- Manuelle Suche -->
-    <div class="suche">
-        <input type="text" id="sender-name" placeholder="Sendername eingeben...">
-        <button onclick="senderLaden()">Hören</button>
+    <div class="search-container">
+        <!-- Das Form-Tag sorgt dafür, dass die Enter-Taste funktioniert -->
+        <form id="searchForm" onsubmit="event.preventDefault(); senderSuchen();">
+            <input type="text" id="stationInput" placeholder="Sendernamen eingeben..." autocomplete="off">
+            <button type="submit">Suchen</button>
+        </form>
     </div>
 
-    <!-- Der Player-Bereich -->
-    <div id="player-bereich">
-        <img id="display-bild" class="cover-bild" src="" alt="Cover">
+    <div id="player-card">
+        <div class="cover-wrapper">
+            <img id="display-cover" class="cover-img" src="" alt="Album Art">
+        </div>
         
-        <div class="aktuell-box">
-            <h2 id="aktuell-titel" class="weiss-text">Titel</h2>
-            <p id="aktuell-artist" class="weiss-text">Interpret</p>
+        <div class="info-area">
+            <h2 id="track-title">Titel</h2>
+            <p id="track-artist">Interpret</p>
         </div>
 
-        <audio id="audio-player" controls autoplay>
-            <source id="stream-quelle" src="" type="audio/mpeg">
+        <audio id="radio-player" controls autoplay>
+            <source id="stream-src" src="" type="audio/mpeg">
         </audio>
 
-        <div class="last-songs">
-            <h3 class="weiss-text">Zuletzt gelaufen:</h3>
-            <div id="historie"></div>
+        <div class="history">
+            <div class="history-title">Zuletzt gelaufen (Server-Zeit)</div>
+            <div id="history-list"></div>
         </div>
     </div>
 
     <script>
-        let interval;
+        let updateTimer;
 
-        async function senderLaden() {
-            const sender = document.getElementById('sender-name').value.trim().toLowerCase();
-            if (!sender) return;
+        async function senderSuchen() {
+            const station = document.getElementById('stationInput').value.trim().toLowerCase();
+            if (!station) return;
 
-            // Player anzeigen
-            document.getElementById('player-bereich').style.display = 'block';
+            const playerCard = document.getElementById('player-card');
+            const audio = document.getElementById('radio-player');
+            const source = document.getElementById('stream-src');
 
-            // Stream starten
-            const player = document.getElementById('audio-player');
-            const source = document.getElementById('stream-quelle');
-            source.src = `https://stream.laut.fm/${sender}`;
-            player.load();
-            player.play();
+            // Stream-URL setzen
+            source.src = `https://stream.laut.fm/${station}`;
+            
+            try {
+                // Erst testen, ob der Sender existiert
+                const check = await fetch(`https://api.laut.fm/station/${station}`);
+                if (!check.ok) throw new Error();
 
-            // Daten laden
-            updateDaten(sender);
-            if(interval) clearInterval(interval);
-            interval = setInterval(() => updateDaten(sender), 30000);
+                playerCard.style.display = 'block';
+                audio.load();
+                audio.play();
+
+                // Daten-Update
+                updateUI(station);
+                if (updateTimer) clearInterval(updateTimer);
+                updateTimer = setInterval(() => updateUI(station), 20000);
+                
+            } catch (err) {
+                alert("Sender wurde nicht gefunden. Bitte Kurznamen prüfen!");
+            }
         }
 
-        async function updateDaten(sender) {
+        async function updateUI(station) {
             try {
                 // Aktueller Song
-                const res = await fetch(`https://api.laut.fm/station/${sender}/current_song`);
-                const data = await res.json();
+                const songRes = await fetch(`https://api.laut.fm/station/${station}/current_song`);
+                const songData = await songRes.json();
                 
-                document.getElementById('aktuell-titel').innerText = data.title;
-                document.getElementById('aktuell-artist').innerText = data.artist;
-                document.getElementById('display-bild').src = data.image_640 || 'https://laut.fm/images/default-cover.png';
+                document.getElementById('track-title').innerText = songData.title;
+                document.getElementById('track-artist').innerText = songData.artist;
+                document.getElementById('display-cover').src = songData.image_640 || 'https://laut.fm/images/default-cover.png';
 
-                // Verlauf (Letzte Songs)
-                const resHist = await fetch(`https://api.laut.fm/station/${sender}/last_songs`);
-                const dataHist = await resHist.json();
+                // Verlauf
+                const histRes = await fetch(`https://api.laut.fm/station/${station}/last_songs`);
+                const histData = await histRes.json();
                 
-                const historieDiv = document.getElementById('historie');
-                historieDiv.innerHTML = "";
+                const list = document.getElementById('history-list');
+                list.innerHTML = "";
 
-                dataHist.slice(0, 3).forEach(song => {
-                    const startZeit = new Date(song.started_at);
-                    const zeitString = startZeit.getHours().toString().padStart(2, '0') + ":" + 
-                                       startZeit.getMinutes().toString().padStart(2, '0');
+                histData.slice(0, 3).forEach(song => {
+                    const start = new Date(song.started_at);
+                    const timeStr = start.getHours().toString().padStart(2, '0') + ":" + 
+                                   start.getMinutes().toString().padStart(2, '0');
 
-                    historieDiv.innerHTML += `
-                        <div class="song-eintrag">
-                            <span><strong>${song.title}</strong><br>${song.artist}</span>
-                            <span class="zeit">${zeitString} Uhr</span>
+                    list.innerHTML += `
+                        <div class="song-item">
+                            <div class="song-details">
+                                <strong>${song.title}</strong>
+                                <span>${song.artist}</span>
+                            </div>
+                            <div class="time-tag">${timeStr}</div>
                         </div>
                     `;
                 });
-            } catch (f) {
-                console.log("Fehler beim Laden.");
+            } catch (e) {
+                console.error("Update fehlgeschlagen.");
             }
         }
     </script>
