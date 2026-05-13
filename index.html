@@ -2,172 +2,174 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Niklas Radio - laut.fm Pro</title>
+    <title>Radio Player - Sendeplan Edition</title>
     <style>
-        :root { 
-            --primary: #1db954; 
-            --bg-gray: #2c2f33; /* Dunkelgrauer Hintergrund */
-            --card-white: #ffffff; 
-        }
+        :root { --primary: #1db954; --bg: #2c2f33; --card: #ffffff; }
+        body { font-family: 'Segoe UI', Arial, sans-serif; background: var(--bg); color: #fff; margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; }
 
-        body { 
-            font-family: 'Segoe UI', Arial, sans-serif; 
-            background: var(--bg-gray); 
-            color: #fff; 
-            margin: 0; 
-            padding: 20px; 
-            display: flex; 
-            flex-direction: column; 
-            align-items: center; 
-        }
+        .search-area { background: #40444b; padding: 10px 20px; border-radius: 30px; display: flex; gap: 10px; margin-bottom: 25px; }
+        .search-area input { border: none; outline: none; width: 180px; background: transparent; color: white; }
+        .search-area button { background: var(--primary); color: white; border: none; padding: 8px 15px; border-radius: 20px; cursor: pointer; font-weight: bold; }
 
-        /* Suche oben */
-        .search-box { background: #40444b; padding: 10px 20px; border-radius: 30px; display: flex; gap: 10px; margin-bottom: 30px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
-        .search-box input { border: none; outline: none; width: 180px; background: transparent; color: white; }
-        .search-box button { background: var(--primary); color: white; border: none; padding: 8px 15px; border-radius: 20px; cursor: pointer; font-weight: bold; }
+        #player-ui { display: none; width: 100%; max-width: 1100px; }
 
-        #main-app { display: none; width: 100%; max-width: 1150px; }
+        .header { text-align: center; margin-bottom: 20px; }
+        .live-tag { background: #40444b; padding: 8px 18px; border-radius: 12px; display: inline-flex; align-items: center; gap: 8px; font-weight: bold; }
+        .dot { height: 10px; width: 10px; background: #ff4747; border-radius: 50%; animation: blink 2s infinite; }
+        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
 
-        /* Sendername & Hörer */
-        .header-info { text-align: center; margin-bottom: 20px; }
-        .station-name { font-size: 2.5rem; font-weight: 900; display: block; margin-bottom: 5px; }
-        .listener-badge { background: #40444b; padding: 6px 15px; border-radius: 10px; font-weight: bold; border: 1px solid #4f545c; display: inline-flex; align-items: center; gap: 8px; }
-        .dot { height: 10px; width: 10px; background: #ff4747; border-radius: 50%; box-shadow: 0 0 8px #ff4747; }
+        .grid { display: grid; grid-template-columns: 1fr 380px; gap: 30px; }
+        .card { background: var(--card); color: #333; padding: 30px; border-radius: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
 
-        /* Layout: Links Player, Rechts Verlauf */
-        .layout-container { display: grid; grid-template-columns: 1fr 380px; gap: 30px; }
+        .logo { width: 100%; max-width: 280px; border-radius: 15px; margin-bottom: 20px; }
 
-        /* Weiße Karten */
-        .white-card { background: var(--card-white); color: #333; padding: 30px; border-radius: 25px; box-shadow: 0 15px 35px rgba(0,0,0,0.4); }
+        /* Sendeplan Tab-Design */
+        .tab-header { background: #e0e0e0; display: inline-block; padding: 5px 15px; border-radius: 10px 10px 0 0; font-weight: bold; font-size: 0.9rem; color: #555; }
+        .schedule-container { background: #f9f9f9; border-radius: 0 10px 10px 10px; padding: 15px; margin-top: -1px; border: 1px solid #ddd; max-height: 250px; overflow-y: auto; text-align: left; }
+        .schedule-item { display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px solid #eee; font-size: 0.85rem; }
+        .schedule-time { font-weight: bold; color: var(--primary); min-width: 90px; }
 
-        .logo-img { width: 100%; max-width: 320px; border-radius: 15px; margin-bottom: 25px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
+        .playing { border-top: 2px solid #eee; padding-top: 20px; display: flex; gap: 15px; text-align: left; }
+        .time { color: var(--primary); font-weight: bold; }
 
-        /* Jetzt läuft Info */
-        .playing-bar { display: flex; gap: 15px; border-top: 2px solid #f0f0f0; padding-top: 20px; text-align: left; }
-        .song-time { color: var(--primary); font-weight: bold; font-size: 1.2rem; min-width: 55px; }
-        .song-meta b { display: block; font-size: 1.4rem; color: #000; }
-        .song-meta span { color: #666; font-size: 1.1rem; }
+        .history-card { background: var(--card); color: #333; padding: 20px; border-radius: 20px; text-align: left; }
+        .h-item { display: flex; gap: 12px; padding: 10px 0; border-bottom: 1px solid #eee; }
+        .h-time { color: #bbb; font-weight: bold; }
 
-        .play-control { margin-top: 25px; background: var(--primary); color: white; border: none; width: 75px; height: 75px; border-radius: 50%; font-size: 1.8rem; cursor: pointer; transition: 0.2s; }
-        .play-control:hover { transform: scale(1.1); }
-
-        /* Verlauf Rechts */
-        .history-card { background: var(--card-white); color: #333; padding: 20px; border-radius: 20px; text-align: left; }
-        .history-item { display: flex; gap: 12px; padding: 12px 0; border-bottom: 1px solid #eee; }
-        .h-time { font-weight: bold; color: #bbb; font-size: 0.9rem; }
-        .h-details b { display: block; font-size: 1rem; }
-        .h-details span { font-size: 0.9rem; color: #777; }
-
-        @media (max-width: 950px) { .layout-container { grid-template-columns: 1fr; } }
+        .volume-box { margin-top: 15px; display: flex; align-items: center; gap: 10px; justify-content: center; }
+        input[type=range] { accent-color: var(--primary); cursor: pointer; }
+        .btn-play { background: var(--primary); color: white; border: none; width: 65px; height: 65px; border-radius: 50%; font-size: 1.6rem; cursor: pointer; margin-top: 10px; }
     </style>
 </head>
 <body>
 
-    <div class="search-box">
-        <input type="text" id="userInput" placeholder="Sendernamen eingeben..." onkeypress="if(event.key==='Enter') startApp()">
-        <button onclick="startApp()">START</button>
+    <div class="search-area">
+        <input type="text" id="slugInput" placeholder="Sendername...">
+        <button onclick="launch()">START</button>
     </div>
 
-    <div id="main-app">
-        <div class="header-info">
-            <span class="station-name" id="stName">RADIO</span>
-            <div class="listener-badge">
-                <div class="dot"></div>
-                Hörer: <span id="lCount">0</span>
-            </div>
+    <div id="player-ui">
+        <div class="header">
+            <h1 id="stName" style="margin:0; font-size: 2.2rem;">RADIO</h1>
+            <div class="live-tag"><div class="dot"></div>Hörer: <span id="lCount">0</span></div>
         </div>
 
-        <div class="layout-container">
-            <!-- AKTUELLER SONG (Links) -->
-            <div class="white-card">
+        <div class="grid">
+            <div class="card">
                 <center>
-                    <img id="stLogo" class="logo-img" src="">
-                    <div class="playing-bar">
-                        <div class="song-time" id="cTime">--:--</div>
-                        <div class="song-meta">
-                            <b id="cArtist">Interpret</b>
-                            <span id="cTitle">Titel wird geladen...</span>
-                        </div>
+                    <img id="stLogo" class="logo" src="">
+                    
+                    <!-- Sendeplan Bereich -->
+                    <div id="schedule-section" style="display:none; margin-bottom: 20px;">
+                        <div class="tab-header">Sendeplan</div>
+                        <div class="schedule-container" id="scheduleList"></div>
                     </div>
-                    <button class="play-control" id="pBtn" onclick="toggle()">▶</button>
+
+                    <div class="playing">
+                        <div class="time" id="cTime">--:--</div>
+                        <div><b id="cArtist" style="display:block; font-size: 1.2rem;">Interpret</b><span id="cTitle">Titel</span></div>
+                    </div>
+
+                    <button class="btn-play" id="pBtn" onclick="toggle()">▶</button>
+
+                    <div class="volume-box">
+                        <span>🔈</span>
+                        <input type="range" id="vol" min="0" max="1" step="0.01" value="0.5" oninput="changeVol(this.value)">
+                        <span>🔊</span>
+                    </div>
                 </center>
             </div>
 
-            <!-- VERLAUF (Rechts) -->
             <div class="history-card">
-                <strong style="color:#999; text-transform: uppercase; font-size: 0.8rem; display: block; margin-bottom: 15px;">Zuletzt gelaufen</strong>
+                <strong style="color:#999; font-size: 0.8rem; display: block; margin-bottom: 10px; text-transform: uppercase;">Zuletzt gelaufen</strong>
                 <div id="hList"></div>
             </div>
         </div>
     </div>
 
-    <audio id="player"></audio>
+    <audio id="radio"></audio>
 
     <script>
-        let station = "";
+        let slug = "";
         let isPlaying = false;
+        const audio = document.getElementById('radio');
+        const volSlider = document.getElementById('vol');
 
-        async function startApp() {
-            station = document.getElementById('userInput').value.trim().toLowerCase();
-            if(!station) return;
-            document.getElementById('main-app').style.display = 'block';
-            document.getElementById('player').src = `https://stream.laut.fm/${station}`;
+        const savedVol = localStorage.getItem('radioVol');
+        if (savedVol !== null) { audio.volume = savedVol; volSlider.value = savedVol; } 
+        else { audio.volume = 0.5; volSlider.value = 0.5; }
+
+        async function launch() {
+            slug = document.getElementById('slugInput').value.trim().toLowerCase();
+            if(!slug) return;
+            document.getElementById('player-ui').style.display = 'block';
+            audio.src = `https://stream.laut.fm/${slug}`;
+            
             refresh();
-            setInterval(refresh, 15000);
-            document.getElementById('player').play();
+            setInterval(refresh, 10000);
+
+            audio.play();
             isPlaying = true;
             document.getElementById('pBtn').innerText = "⏸";
         }
 
         function toggle() {
-            const p = document.getElementById('player');
-            if(isPlaying) { p.pause(); document.getElementById('pBtn').innerText = "▶"; }
-            else { p.play(); document.getElementById('pBtn').innerText = "⏸"; }
+            if(isPlaying) { audio.pause(); document.getElementById('pBtn').innerText = "▶"; }
+            else { audio.play(); document.getElementById('pBtn').innerText = "⏸"; }
             isPlaying = !isPlaying;
         }
 
-        function cleanText(val) {
-            if (!val) return "Unbekannt";
-            if (typeof val === 'object') return val.name || "Künstler";
-            return String(val);
-        }
+        function changeVol(v) { audio.volume = v; localStorage.setItem('radioVol', v); }
 
-        function formatTime(iso) {
-            if(!iso) return "--:--";
-            const d = new Date(iso);
-            return d.getHours().toString().padStart(2, '0') + ":" + d.getMinutes().toString().padStart(2, '0');
-        }
+        function clean(t) { return (typeof t === 'object') ? t.name : (t || "---"); }
 
         async function refresh() {
             try {
-                const sR = await fetch(`https://api.laut.fm/station/${station}`);
-                const sD = await sR.json();
-                document.getElementById('stName').innerText = sD.display_name;
-                document.getElementById('lCount').innerText = sD.current_listeners || 0;
-                document.getElementById('stLogo').src = sD.images.station_640x640;
+                // Sender Info
+                const r1 = await fetch(`https://api.laut.fm/station/${slug}`);
+                const d1 = await r1.json();
+                document.getElementById('stName').innerText = d1.display_name;
+                document.getElementById('lCount').innerText = d1.current_listeners;
+                document.getElementById('stLogo').src = d1.images.station_640x640;
 
-                const cR = await fetch(`https://api.laut.fm/station/${station}/current_song`);
-                const cD = await cR.json();
-                document.getElementById('cTime').innerText = formatTime(cD.started_at);
-                document.getElementById('cArtist').innerText = cleanText(cD.artist);
-                document.getElementById('cTitle').innerText = cleanText(cD.title);
+                // Sendeplan laden
+                const rPlan = await fetch(`https://api.laut.fm/station/${slug}/schedule`);
+                const dPlan = await rPlan.json();
+                const sSection = document.getElementById('schedule-section');
+                const sList = document.getElementById('scheduleList');
+                
+                if (dPlan && dPlan.length > 0) {
+                    sSection.style.display = "block";
+                    sList.innerHTML = "";
+                    dPlan.forEach(item => {
+                        sList.innerHTML += `
+                            <div class="schedule-item">
+                                <span class="schedule-time">${item.start_time} - ${item.end_time}</span>
+                                <span class="schedule-name">${item.name}</span>
+                            </div>`;
+                    });
+                } else {
+                    sSection.style.display = "none";
+                }
 
-                const hR = await fetch(`https://api.laut.fm/station/${station}/last_songs`);
-                const hD = await hR.json();
+                // Aktueller Song
+                const r2 = await fetch(`https://api.laut.fm/station/${slug}/current_song`);
+                const d2 = await r2.json();
+                const t = new Date(d2.started_at);
+                document.getElementById('cTime').innerText = t.getHours().toString().padStart(2,'0')+":"+t.getMinutes().toString().padStart(2,'0');
+                document.getElementById('cArtist').innerText = clean(d2.artist);
+                document.getElementById('cTitle').innerText = clean(d2.title);
+
+                // Verlauf
+                const r3 = await fetch(`https://api.laut.fm/station/${slug}/last_songs`);
+                const d3 = await r3.json();
                 const list = document.getElementById('hList');
                 list.innerHTML = "";
-                hD.slice(1, 10).forEach(s => {
-                    list.innerHTML += `
-                        <div class="history-item">
-                            <span class="h-time">${formatTime(s.started_at)}</span>
-                            <div class="h-details">
-                                <b>${cleanText(s.artist)}</b>
-                                <span>${cleanText(s.title)}</span>
-                            </div>
-                        </div>`;
+                d3.slice(1, 10).forEach(s => {
+                    const st = new Date(s.started_at);
+                    list.innerHTML += `<div class="h-item"><span class="h-time">${st.getHours()}:${st.getMinutes().toString().padStart(2,'0')}</span><div><b>${clean(s.artist)}</b><br><span style="font-size:0.85rem; color:#666;">${clean(s.title)}</span></div></div>`;
                 });
-            } catch (e) { console.log("Fehler beim Laden"); }
+            } catch(e) { console.log("Fehler"); }
         }
     </script>
 </body>
