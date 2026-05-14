@@ -1,172 +1,38 @@
-<!DOCTYPE html>
-<html lang="de">
-<head>
-    <meta charset="UTF-8">
-    <title>Niklas Radio-Zentrale</title>
-    <style>
-        :root { --bg: #f4f7f6; --accent: #00d26a; --card: #ffffff; }
-        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); padding: 20px; display: flex; justify-content: center; }
-        .app-container { width: 100%; max-width: 1000px; display: grid; grid-template-columns: 350px 1fr; gap: 25px; }
-        .card { background: var(--card); border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); padding: 20px; margin-bottom: 20px; }
-        
-        /* Wochentage */
-        .day-bar { display: flex; justify-content: space-between; margin-bottom: 15px; background: #eee; border-radius: 8px; overflow: hidden; }
-        .day-btn { flex: 1; border: none; padding: 10px; cursor: pointer; font-weight: bold; background: none; font-size: 0.75rem; }
-        .day-btn.active { background: #333; color: white; }
-        
-        .st-logo { width: 100%; border-radius: 10px; margin: 15px 0; border: 1px solid #eee; }
-        .play-btn { width: 100%; padding: 15px; background: var(--accent); color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; }
-        .list-item { padding: 12px; border-bottom: 1px solid #eee; }
-        .item-time { font-weight: bold; color: #555; margin-right: 10px; }
-        .desc { font-size: 0.8rem; color: #888; display: block; margin-top: 3px; }
-    </style>
-</head>
-<body>
-
-<div class="app-container">
-    <div class="sidebar">
-        <div class="card">
-            <input type="text" id="slug" placeholder="Sender suchen..." onkeypress="if(event.key === 'Enter') start()">
-            <button onclick="start()" style="width:100%; margin-top:10px; padding:10px; cursor:pointer;">Laden & Speichern</button>
-        </div>
-
-        <div id="playerUI" class="card" style="display:none;">
-            <div id="server-status" style="font-size:0.8rem; font-weight:bold; margin-bottom:10px;">
-                <span id="status-dot" style="display:inline-block; width:8px; height:8px; border-radius:50%; background:#ccc;"></span>
-                <span id="status-text">Status prüfen...</span>
-            </div>
-            
-            <b id="c-artist" style="display:block; font-size:1.2rem;">Interpret</b>
-            <span id="c-title">Titel</span>
-            
-            <img id="logo" class="st-logo" src="">
-            <button id="pBtn" class="play-btn" onclick="toggle()">Radio Starten</button>
-        </div>
-    </div>
-
-    <div id="listUI" class="card" style="display:none;">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
-            <h3 id="view-title" style="margin:0;">Verlauf</h3>
-            <button onclick="switchView()" id="toggleBtn" style="padding:5px 12px; cursor:pointer; border-radius:6px; border:1px solid #ddd;">Sendeplan</button>
-        </div>
-
-        <div id="day-selector" class="day-bar" style="display:none;">
-            <button class="day-btn" id="btn-mon" onclick="setDay('mon')">Mo</button>
-            <button class="day-btn" id="btn-tue" onclick="setDay('tue')">Di</button>
-            <button class="day-btn" id="btn-wed" onclick="setDay('wed')">Mi</button>
-            <button class="day-btn" id="btn-thu" onclick="setDay('thu')">Do</button>
-            <button class="day-btn" id="btn-fri" onclick="setDay('fri')">Fr</button>
-            <button class="day-btn" id="btn-sat" onclick="setDay('sat')">Sa</button>
-            <button class="day-btn" id="btn-sun" onclick="setDay('sun')">So</button>
-        </div>
-
-        <div id="content"></div>
-    </div>
-</div>
-
-<audio id="audio"></audio>
-
 <script>
-    let station = "";
-    let mode = "history"; 
-    let currentDay = "mon";
-    let lastSongId = "";
-    const days = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
+    // Korrigierte Standard-Liste ohne das noch nicht existierende Feierabend Radio
+    // Test-Station-FM ist jetzt als Haupt-Test-Sender dabei
+    const MY_DEFAULT_FAVORITES = ["test-station-fm", "brian", "niklasheulsmann", "simulator-4"]; 
+    const DEFAULT_START_STATION = "test-station-fm"; // Startet direkt zum Testen der Funktionen
+
+    let currentStation = "";
+    // Favoriten laden; wenn leer, wird die korrigierte Liste genutzt
+    let favorites = JSON.parse(localStorage.getItem('radioFavs_v2'));
+    
+    if (!favorites || favorites.length === 0) {
+        favorites = MY_DEFAULT_FAVORITES;
+    }
+
+    const audio = document.getElementById('audio');
 
     window.onload = () => {
-        const fav = localStorage.getItem('favStation');
-        if(fav) { document.getElementById('slug').value = fav; start(); }
+        renderFavs();
+        
+        // Lädt beim Start entweder den letzten Sender oder die neue Test-Station
+        const last = localStorage.getItem('lastStation') || DEFAULT_START_STATION;
+        loadStation(last); 
     };
 
-    async function start() {
-        station = document.getElementById('slug').value.toLowerCase().trim();
-        if(!station) return;
-        localStorage.setItem('favStation', station);
-        currentDay = days[new Date().getDay()];
+    async function loadStation(name) {
+        currentStation = (name || document.getElementById('slug').value).toLowerCase().trim();
+        if(!currentStation) return;
         
-        document.getElementById('playerUI').style.display = "block";
-        document.getElementById('listUI').style.display = "block";
+        localStorage.setItem('lastStation', currentStation);
+        document.getElementById('player').style.display = "block";
+        document.getElementById('history-ui').style.display = "block";
         
         update();
-        setInterval(update, 10000);
+        checkHeart();
     }
-
-    async function update() {
-        try {
-            const [cRes, sRes, pRes] = await Promise.all([
-                fetch(`https://api.laut.fm/station/${station}/current_song`),
-                fetch(`https://api.laut.fm/station/${station}`),
-                fetch(`https://api.laut.fm/station/${station}/schedule`)
-            ]);
-
-            if(!sRes.ok) throw new Error();
-            const song = await cRes.json();
-            const info = await sRes.json();
-            const schedule = await pRes.json();
-
-            // Status & Player synchronisieren
-            document.getElementById('status-dot').style.background = "#00d26a";
-            document.getElementById('status-text').innerText = "SERVER ONLINE";
-            document.getElementById('c-artist').innerText = song.artist.name;
-            document.getElementById('c-title').innerText = song.title;
-            document.title = `▶ ${song.artist.name} - ${song.title}`;
-            document.getElementById('logo').src = info.images.station_640x640;
-
-            // Sendeplan-Button nur zeigen wenn Daten da sind
-            document.getElementById('toggleBtn').style.display = (schedule && schedule.length > 0) ? "block" : "none";
-
-            if(song.id !== lastSongId) {
-                lastSongId = song.id;
-                render();
-            }
-        } catch(e) {
-            document.getElementById('status-dot').style.background = "#e74c3c";
-            document.getElementById('status-text').innerText = "SERVERWARTUNG / OFFLINE";
-        }
-    }
-
-    async function render() {
-        const container = document.getElementById('content');
-        if(mode === "history") {
-            document.getElementById('day-selector').style.display = "none";
-            const res = await fetch(`https://api.laut.fm/station/${station}/last_songs`);
-            const data = await res.json();
-            container.innerHTML = data.filter(s => s.id !== lastSongId).map(s => `
-                <div class="list-item">
-                    <span class="item-time">${new Date(s.started_at).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</span>
-                    <b>${s.artist.name}</b> - ${s.title}
-                </div>`).join('');
-        } else {
-            document.getElementById('day-selector').style.display = "flex";
-            const res = await fetch(`https://api.laut.fm/station/${station}/schedule`);
-            const data = await res.json();
-            const daily = data.filter(p => p.day === currentDay);
-            
-            // Markiere aktiven Button
-            document.querySelectorAll('.day-btn').forEach(b => b.classList.remove('active'));
-            document.getElementById('btn-' + currentDay).classList.add('active');
-
-            container.innerHTML = daily.length ? daily.map(p => `
-                <div class="list-item">
-                    <span class="item-time">${p.start_time.substring(0,5)}</span>
-                    <b>${p.name}</b>
-                    <span class="desc">${p.description || ''}</span>
-                </div>`).join('') : '<p style="padding:20px;">Kein Sendeplan für diesen Tag.</p>';
-        }
-    }
-
-    function setDay(d) { currentDay = d; render(); }
-    function switchView() {
-        mode = (mode === "history") ? "plan" : "history";
-        document.getElementById('view-title').innerText = mode === "history" ? "Verlauf" : "Sendeplan";
-        render();
-    }
-
-    function toggle() {
-        const a = document.getElementById('audio');
-        if(a.paused) { a.src = `https://stream.laut.fm/${station}`; a.play(); document.getElementById('pBtn').innerText = "Pause"; }
-        else { a.pause(); document.getElementById('pBtn').innerText = "Radio Starten"; }
-    }
+    
+    // ... Rest der Logik für Hörerinfos, Logo und Verlauf ...
 </script>
-</body>
-</html>
