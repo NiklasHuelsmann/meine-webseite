@@ -2,234 +2,221 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Niklas IT - Radio Hub V35 (Mobile)</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Niklas IT - Radio Hub Dashboard V40</title>
     <style>
-        :root { --sidebar-bg: #1a2634; --accent: #00d26a; --bg: #f5f7f9; --heart-blue: #007bff; }
+        :root { --sidebar-bg: #1a2634; --accent: #00d26a; --bg: #f0f3f7; --heart-blue: #007bff; }
         
-        /* Grundlayout */
-        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; display: flex; height: 100vh; overflow: hidden; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; overflow-x: hidden; color: #333; }
+
+        /* HEADER: Waagerechte Favoriten-Leiste */
+        .fav-header { background: var(--sidebar-bg); padding: 15px 20px; display: flex; gap: 20px; overflow-x: auto; white-space: nowrap; border-bottom: 3px solid var(--accent); }
+        .fav-header::-webkit-scrollbar { height: 5px; }
+        .fav-header::-webkit-scrollbar-thumb { background: var(--accent); border-radius: 10px; }
         
-        /* Sidebar Design */
-        .sidebar { width: 320px; background: var(--sidebar-bg); color: white; padding: 20px; display: flex; flex-direction: column; flex-shrink: 0; }
-        .search-box { display: flex; gap: 8px; margin-bottom: 20px; }
-        .search-box input { flex: 1; padding: 12px; border-radius: 8px; border: none; background: #2c3e50; color: white; font-size: 16px; }
-        .search-box button { background: var(--accent); border: none; border-radius: 8px; color: white; padding: 0 15px; cursor: pointer; font-weight: bold; }
+        .fav-card { display: inline-flex; flex-direction: column; align-items: center; cursor: pointer; transition: 0.3s; }
+        .fav-card img { width: 70px; height: 70px; border-radius: 12px; border: 2px solid transparent; object-fit: cover; }
+        .fav-card:hover img { border-color: var(--accent); transform: scale(1.05); }
+        .fav-card span { color: white; font-size: 0.8rem; margin-top: 5px; font-weight: bold; }
 
-        .fav-list { overflow-y: auto; flex: 1; padding-right: 5px; }
-        .fav-item { position: relative; padding: 12px; background: rgba(255,255,255,0.05); border-radius: 8px; margin-bottom: 10px; cursor: pointer; display: flex; align-items: center; gap: 12px; }
-        .btn-remove { position: absolute; right: 10px; background: #ff4444; color: white; border: none; border-radius: 50%; width: 22px; height: 22px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 12px; }
+        /* MAIN CONTENT */
+        .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
 
-        /* Main Bereich */
-        .main-layout { flex: 1; display: grid; grid-template-columns: 1fr 450px; gap: 20px; padding: 20px; padding-bottom: 120px; overflow-y: auto; }
-        .card { background: white; border-radius: 15px; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); display: flex; flex-direction: column; overflow: hidden; height: fit-content; }
+        /* Suche Sektion */
+        .search-hero { text-align: center; padding: 40px 0; }
+        .search-hero h1 { margin-bottom: 20px; color: var(--sidebar-bg); }
+        .search-box { max-width: 600px; margin: 0 auto; display: flex; gap: 10px; }
+        .search-box input { flex: 1; padding: 15px 20px; border-radius: 30px; border: 1px solid #ddd; font-size: 1.1rem; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
+        .search-box button { background: var(--accent); color: white; border: none; padding: 0 30px; border-radius: 30px; cursor: pointer; font-weight: bold; }
 
-        .station-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 15px; }
-        .btn-heart { background: none; border: none; font-size: 1.6rem; cursor: pointer; color: #ccc; }
-        .btn-heart.active { color: var(--heart-blue); }
+        /* DISPLAY BEREICH (Erscheint nur wenn Sender gewählt) */
+        #displaySection { display: none; margin-top: 30px; }
+        .display-grid { display: grid; grid-template-columns: 1fr 400px; gap: 20px; }
+        
+        .card { background: white; border-radius: 20px; padding: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.08); position: relative; }
+        #errorOverlay { display: none; position: absolute; inset: 0; background: white; z-index: 10; border-radius: 20px; flex-direction: column; align-items: center; justify-content: center; }
 
-        /* Listen & Tabs */
-        .list-container { flex: 1; overflow: hidden; }
-        .list-entry { display: flex; padding: 12px 0; border-bottom: 1px solid #f2f2f2; align-items: flex-start; min-height: 50px; }
-        .list-time { width: 65px; font-weight: 800; color: #444; font-size: 0.9rem; }
-        .day-bar { display: flex; gap: 5px; margin-bottom: 10px; overflow-x: auto; padding-bottom: 5px; }
-        .day-tab { cursor: pointer; font-weight: bold; color: #999; padding: 6px 12px; font-size: 0.75rem; border-radius: 5px; white-space: nowrap; }
-        .day-tab.active { color: white; background: var(--sidebar-bg); }
+        /* LISTE: Zuletzt gehört */
+        .history-section { margin-top: 40px; }
+        .history-list { display: flex; flex-direction: column; gap: 10px; }
+        .history-item { background: white; padding: 12px 20px; border-radius: 12px; display: flex; align-items: center; justify-content: space-between; cursor: pointer; border-left: 5px solid transparent; transition: 0.2s; }
+        .history-item:hover { border-left-color: var(--accent); background: #fafafa; }
 
-        /* Player Bar unten */
-        .player-bar { position: fixed; bottom: 0; left: 0; right: 0; height: 100px; background: white; border-top: 1px solid #ddd; display: flex; align-items: center; padding: 0 20px; z-index: 1000; justify-content: space-between; }
-        .player-info { display: flex; align-items: center; gap: 12px; width: 30%; }
-        .player-info img { width: 50px; height: 50px; border-radius: 8px; object-fit: cover; }
+        /* Player Bar */
+        .player-bar { position: fixed; bottom: 0; left: 0; right: 0; height: 90px; background: white; border-top: 1px solid #ddd; display: flex; align-items: center; padding: 0 40px; z-index: 1000; box-shadow: 0 -5px 20px rgba(0,0,0,0.05); }
+        .player-info { display: flex; align-items: center; gap: 15px; width: 350px; }
+        .player-info img { width: 55px; height: 55px; border-radius: 8px; object-fit: cover; }
+        .info-text b { display: block; font-size: 1rem; color: #222; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .info-text span { display: block; font-size: 0.85rem; color: #777; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
         .player-center { flex: 1; text-align: center; }
-        .btn-play { background: var(--accent); color: white; border: none; padding: 12px 35px; border-radius: 30px; font-weight: bold; cursor: pointer; font-size: 1rem; }
-        .volume-box { width: 20%; display: flex; justify-content: flex-end; }
-
-        /* RESPONSIVE ANPASSUNGEN (Handy & Tablet) */
-        @media (max-width: 1000px) {
-            body { flex-direction: column; overflow-y: auto; height: auto; }
-            .sidebar { width: auto; height: auto; border-bottom: 2px solid var(--accent); }
-            .main-layout { grid-template-columns: 1fr; padding-bottom: 130px; overflow: visible; }
-            .player-bar { padding: 0 15px; height: 110px; flex-wrap: wrap; }
-            .player-info { width: 100%; margin-bottom: 10px; }
-            .volume-box { display: none; } /* Lautstärke am Handy meist über Tasten */
-            .player-center { width: 100%; text-align: center; }
+        .btn-play { background: var(--accent); color: white; border: none; padding: 12px 40px; border-radius: 30px; font-weight: bold; cursor: pointer; font-size: 1rem; }
+        
+        @media (max-width: 900px) {
+            .display-grid { grid-template-columns: 1fr; }
+            .player-bar { flex-direction: column; height: auto; padding: 10px; }
+            .player-info, .volume-box { width: 100%; display: none; }
         }
     </style>
 </head>
 <body>
 
-<div class="sidebar">
-    <h2 style="color: var(--accent); margin: 0 0 15px 0;">Radio Hub V35</h2>
-    <div class="search-box">
-        <input type="text" id="slugInput" placeholder="Sender suchen...">
-        <button onclick="loadFromSearch()">OK</button>
+<div class="fav-header" id="favHeader"></div>
+
+<div class="container">
+    <div class="search-hero">
+        <h1>Entdecke deine Musik</h1>
+        <div class="search-box">
+            <input type="text" id="slugInput" placeholder="Sender suchen (z.B. simulator4)...">
+            <button onclick="loadFromSearch()">LOS</button>
+        </div>
     </div>
-    <div id="favList" class="fav-list"></div>
+
+    <div id="displaySection">
+        <div class="display-grid">
+            <div class="card">
+                <div id="errorOverlay">
+                    <h1 style="font-size: 4rem; color: #ddd; margin: 0;">404</h1>
+                    <b>Sender ist nicht aktiv</b>
+                </div>
+                <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:20px;">
+                    <div style="display:flex; align-items:center; gap:15px;">
+                        <img id="miniLogo" src="" style="width:50px; height:50px; border-radius:8px;">
+                        <h2 id="stationName" style="margin:0;">Sender Name</h2>
+                    </div>
+                    <button id="heartBtn" style="background:none; border:none; font-size:2rem; cursor:pointer; color:#ccc;" onclick="toggleFavorite()">💙</button>
+                </div>
+                <div style="display:flex; gap:30px; align-items:center;">
+                    <img id="displayCover" src="" style="width:250px; height:250px; border-radius:15px; box-shadow: 0 8px 20px rgba(0,0,0,0.1); object-fit: cover;">
+                    <div style="flex:1;">
+                        <div id="startTime" style="color:var(--accent); font-weight:bold; margin-bottom:5px;">--:--</div>
+                        <h2 id="liveArtist" style="margin:0; font-size:1.8rem;">Interpret</h2>
+                        <h3 id="liveTitle" style="margin:0; font-weight:normal; color:#666;">Songtitel</h3>
+                        <div style="margin-top:20px; font-size:0.9rem;">👥 Hörer: <b id="listeners">0</b></div>
+                    </div>
+                </div>
+            </div>
+            <div class="card">
+                <b style="color:var(--accent);">SENDEPLAN</b>
+                <div id="scheduleView" style="margin-top:15px;"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="history-section">
+        <h3 style="color:#1a2634; border-bottom: 2px solid #ddd; padding-bottom:10px;">Zuletzt gehört</h3>
+        <div id="historyList" class="history-list"></div>
+    </div>
 </div>
 
-<div class="main-layout">
-    <div class="card">
-        <div class="station-header">
-            <div style="display:flex; align-items:center;">
-                <img id="miniLogo" src="" style="width:45px; height:45px; border-radius:5px; margin-right:12px; background:#eee;">
-                <h1 id="stationName" style="font-size:1.2rem; margin:0;">Wähle einen Sender</h1>
-            </div>
-            <button id="heartBtn" class="btn-heart" onclick="toggleFavorite()">💙</button>
-        </div>
-        
-        <div style="text-align:center;">
-            <img id="displayCover" src="" style="width:100%; max-width:280px; aspect-ratio:1; border-radius:12px; margin-bottom:15px; background:#ddd; box-shadow: 0 8px 20px rgba(0,0,0,0.1);">
-            <div style="background:#fcfcfc; padding:15px; border-radius:10px; border:1px solid #eee; text-align:left;">
-                <div id="startTime" style="font-weight:bold; color:var(--accent); font-size: 0.85rem;">--:--</div>
-                <b id="liveArtist" style="font-size:1.1rem; display:block; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">Interpret</b>
-                <span id="liveTitle" style="color:#666; font-size: 0.9rem; display:block; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">Songtitel</span>
-            </div>
-        </div>
-        
-        <div style="margin-top:20px; display:flex; justify-content:space-between; font-size:0.85rem;">
-            <span>👥 Hörer: <b id="listeners">0</b></span>
-            <span style="color:var(--accent); font-weight:bold;">● ONLINE</span>
-        </div>
-    </div>
-
-    <div class="card">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
-            <b style="font-size: 0.9rem; color: #444;">PROGRAMM</b>
-            <div style="display:flex; gap:15px;">
-                <button id="tabS" onclick="setMode('songs')" style="cursor:pointer; border:none; background:none; font-weight:bold; color:var(--accent); font-size:0.85rem;">VERLAUF</button>
-                <button id="tabP" onclick="setMode('plan')" style="cursor:pointer; border:none; background:none; font-weight:bold; color:#999; font-size:0.85rem;">PLAN</button>
-            </div>
-        </div>
-        <div id="dayBar" class="day-bar" style="display:none;"></div>
-        <div id="listView" class="list-container"></div>
-    </div>
-</div>
-
-<div class="player-bar">
+<div class="player-bar" id="pBar" style="display:none;">
     <div class="player-info">
         <img id="barCover" src="">
-        <div style="overflow:hidden;">
-            <b id="barArtist" style="display:block; white-space:nowrap; font-size:1rem; overflow:hidden; text-overflow:ellipsis;">Interpret</b>
-            <span id="barTitle" style="display:block; color:#777; font-size:0.8rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">Titel</span>
+        <div class="info-text">
+            <b id="barArtist">Interpret</b>
+            <span id="barTitle">Titel</span>
         </div>
     </div>
     <div class="player-center">
         <button id="pToggle" class="btn-play" onclick="handlePlay()">STARTEN</button>
     </div>
-    <div class="volume-box">
-        <input type="range" min="0" max="1" step="0.01" value="0.5" oninput="audio.volume=this.value" style="accent-color:var(--accent); width:120px;">
+    <div style="width:350px; display:flex; justify-content:flex-end;">
+        <input type="range" min="0" max="1" step="0.01" value="0.5" oninput="audio.volume=this.value" style="accent-color:var(--accent);">
     </div>
 </div>
 
 <audio id="audio"></audio>
 
 <script>
-    let currentSlug = localStorage.getItem('it_hub_last') || "simulator4";
-    let viewMode = "songs";
-    let selectedDay = new Date().toLocaleDateString('en-US', {weekday: 'long'}).toLowerCase(); 
+    let currentSlug = "";
     let myFavs = JSON.parse(localStorage.getItem('it_hub_favs')) || ["simulator4", "brian-radio", "feierabend-radio"];
+    let history = JSON.parse(localStorage.getItem('it_hub_history')) || [];
     const audio = document.getElementById('audio');
 
+    async function loadStation(slug) {
+        currentSlug = slug;
+        document.getElementById('displaySection').style.display = 'block';
+        document.getElementById('pBar').style.display = 'flex';
+        
+        // In Verlauf speichern (ohne Dubletten)
+        history = [slug, ...history.filter(s => s !== slug)].slice(0, 5);
+        localStorage.setItem('it_hub_history', JSON.stringify(history));
+        
+        renderHistory();
+        update();
+    }
+
     async function update() {
+        if(!currentSlug) return;
         try {
             const sRes = await fetch(`https://api.laut.fm/station/${currentSlug}`);
-            if(!sRes.ok) return;
+            if(!sRes.ok) { document.getElementById('errorOverlay').style.display = 'flex'; return; }
+            document.getElementById('errorOverlay').style.display = 'none';
 
-            const [cRes, lRes, scRes] = await Promise.all([
+            const station = await sRes.json();
+            const [cRes, scRes] = await Promise.all([
                 fetch(`https://api.laut.fm/station/${currentSlug}/current_song`),
-                fetch(`https://api.laut.fm/station/${currentSlug}/last_songs`),
                 fetch(`https://api.laut.fm/station/${currentSlug}/schedule`)
             ]);
-            
-            const station = await sRes.json();
             const song = await cRes.json();
-            const history = await lRes.json();
             const schedule = await scRes.json();
 
             document.getElementById('stationName').innerText = station.display_name;
             document.getElementById('miniLogo').src = station.images.station_120x120;
             document.getElementById('displayCover').src = station.images.station_640x640;
             document.getElementById('barCover').src = station.images.station_120x120;
-            
             document.getElementById('listeners').innerText = station.current_listeners || 0;
             document.getElementById('liveArtist').innerText = song.artist ? song.artist.name : "...";
             document.getElementById('liveTitle').innerText = song.title || "";
             document.getElementById('barArtist').innerText = song.artist ? song.artist.name : station.display_name;
             document.getElementById('barTitle').innerText = song.title || "Radio läuft";
             document.getElementById('startTime').innerText = song.started_at ? new Date(song.started_at).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) : "--:--";
+            
+            document.getElementById('heartBtn').style.color = myFavs.includes(currentSlug) ? 'var(--heart-blue)' : '#ccc';
 
-            const heart = document.getElementById('heartBtn');
-            heart.classList.toggle('active', myFavs.includes(currentSlug));
+            // Sendeplan rendern
+            const today = new Date().toLocaleDateString('en-US', {weekday: 'long'}).toLowerCase();
+            const todaySchedule = schedule.filter(e => e.day === today).sort((a,b) => a.hour - b.hour);
+            document.getElementById('scheduleView').innerHTML = todaySchedule.slice(0, 5).map(i => `
+                <div style="padding:10px 0; border-bottom:1px solid #eee;">
+                    <b>${i.hour}:00</b> - ${i.name}
+                </div>
+            `).join('');
 
-            renderList(viewMode === "songs" ? history : schedule);
         } catch(e) {}
     }
 
-    function renderList(data) {
-        const view = document.getElementById('listView');
-        const dayBar = document.getElementById('dayBar');
-        view.innerHTML = "";
-
-        if(viewMode === "songs") {
-            dayBar.style.display = "none";
-            view.innerHTML = data.slice(0, 8).map(i => `
-                <div class="list-entry">
-                    <div class="list-time">${new Date(i.started_at).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</div>
-                    <div class="list-details"><b>${i.artist.name}</b><span>${i.title}</span></div>
+    function renderHistory() {
+        document.getElementById('historyList').innerHTML = history.length ? history.map(s => `
+            <div class="history-item" onclick="loadStation('${s}')">
+                <div style="display:flex; align-items:center; gap:15px;">
+                    <img src="https://api.laut.fm/station/${s}/images/station_120x120" style="width:40px; height:40px; border-radius:5px;">
+                    <b>${s}</b>
                 </div>
-            `).join('');
-        } else {
-            dayBar.style.display = "flex";
-            const daysDe = ["Mo","Di","Mi","Do","Fr","Sa","So"];
-            const daysEn = ["monday","tuesday","wednesday","thursday","friday","saturday","sunday"];
-            dayBar.innerHTML = daysDe.map((d, i) => `<div class="day-tab ${selectedDay === daysEn[i] ? 'active' : ''}" onclick="changeDay('${daysEn[i]}')">${d}</div>`).join('');
-            
-            const dayData = data.filter(e => e.day === selectedDay).sort((a,b) => a.hour - b.hour);
-            view.innerHTML = dayData.slice(0, 8).map(item => `
-                <div class="list-entry">
-                    <div class="list-time">${item.hour.toString().padStart(2, '0')}:00</div>
-                    <div class="list-details"><b>${item.name}</b><p>${item.description || ''}</p></div>
-                </div>
-            `).join('');
-        }
+                <span style="color:#888;">Wiedergeben →</span>
+            </div>
+        `).join('') : "<p style='color:#888;'>Noch keine Sender gehört.</p>";
     }
 
-    function changeDay(day) { selectedDay = day; update(); }
-    function setMode(m) { 
-        viewMode = m; 
-        document.getElementById('tabS').style.color = (m==='songs'?'var(--accent)':'#999');
-        document.getElementById('tabP').style.color = (m==='plan'?'var(--accent)':'#999');
-        update(); 
+    function renderFavs() {
+        document.getElementById('favHeader').innerHTML = myFavs.map(f => `
+            <div class="fav-card" onclick="loadStation('${f}')">
+                <img src="https://api.laut.fm/station/${f}/images/station_120x120" onerror="this.src='https://api.laut.fm/station/test-station/images/station_120x120'">
+                <span>${f}</span>
+            </div>
+        `).join('');
     }
 
     function loadFromSearch() {
-        const slug = document.getElementById('slugInput').value.toLowerCase().trim();
-        if(slug) { loadStation(slug); }
+        const val = document.getElementById('slugInput').value.toLowerCase().trim();
+        if(val) loadStation(val);
     }
 
     function toggleFavorite() {
-        if(myFavs.includes(currentSlug)) { myFavs = myFavs.filter(f => f !== currentSlug); }
-        else { myFavs.push(currentSlug); }
-        saveFavs(); renderFavs(); update();
-    }
-
-    function removeStation(slug, event) {
-        event.stopPropagation();
-        myFavs = myFavs.filter(f => f !== slug);
-        saveFavs(); renderFavs(); update();
-    }
-
-    function loadStation(slug) { currentSlug = slug; localStorage.setItem('it_hub_last', slug); update(); }
-    function saveFavs() { localStorage.setItem('it_hub_favs', JSON.stringify(myFavs)); }
-
-    function renderFavs() {
-        document.getElementById('favList').innerHTML = myFavs.map(f => `
-            <div class="fav-item" onclick="loadStation('${f}')">
-                <img src="https://api.laut.fm/station/${f}/images/station_120x120" onerror="this.src='https://api.laut.fm/station/test-station-fm/images/station_120x120'" style="width:35px; border-radius:4px;">
-                <span style="font-size:0.9rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:180px;">${f}</span>
-                <button class="btn-remove" onclick="removeStation('${f}', event)">✕</button>
-            </div>
-        `).join('');
+        if(myFavs.includes(currentSlug)) myFavs = myFavs.filter(f => f !== currentSlug);
+        else myFavs.push(currentSlug);
+        localStorage.setItem('it_hub_favs', JSON.stringify(myFavs));
+        renderFavs(); update();
     }
 
     function handlePlay() {
@@ -237,7 +224,7 @@
         else { audio.pause(); document.getElementById('pToggle').innerText="STARTEN"; }
     }
 
-    window.onload = () => { renderFavs(); update(); };
+    window.onload = () => { renderFavs(); renderHistory(); };
     setInterval(update, 20000);
 </script>
 </body>
