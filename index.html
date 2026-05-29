@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NiklasIT Hub - Radio Portal V53</title>
+    <title>Unsere Radio Stationen - Live Hub</title>
     <style>
         :root {
             --bg-color: #f4f6f9;
@@ -225,7 +225,7 @@
 <body>
 
 <header class="site-header">
-    <a href="#" class="site-logo">NiklasIT<span>Hub</span></a>
+    <a href="#" class="site-logo">Unsere Radio <span>Stationen</span></a>
     
     <div class="search-form">
         <input type="text" id="webSearchInput" class="search-input" placeholder="Nach Sendern suchen...">
@@ -305,13 +305,11 @@
 <script>
     let activePlayingSlug = null;
     const audioPlayer = document.getElementById('globalAudioPlayer');
-    // Hier kannst du in Zukunft beliebig viele deiner Slugs eintragen!
     const nativeStations = ["simulator4", "brian-radio", "feierabend-radio"];
     let searchedStations = [];
 
     async function updateStationCard(slug) {
         try {
-            // 1. Echtzeit-Hörerzahl DIREKT von /listeners ziehen (Absolut Priorität 1)
             let realTimeListeners = 0;
             try {
                 const lRes = await fetch(`https://api.laut.fm/station/${slug}/listeners?nocache=${Date.now()}`);
@@ -323,10 +321,8 @@
                 console.log("Echtzeit-Hörer-Abruf verzögert für: " + slug);
             }
 
-            // 2. Stationsdetails laden (für Name und Logos)
             const sRes = await fetch(`https://api.laut.fm/station/${slug}?nocache=${Date.now()}`);
             if(!sRes.ok) {
-                // Falls der Sender (wie Feierabend Radio) noch in Vorbereitung ist, zeige die 0 Hörer an
                 if(document.getElementById(`listeners-${slug}`)) {
                     document.getElementById(`listeners-${slug}`).innerText = realTimeListeners;
                 }
@@ -334,14 +330,11 @@
             }
             const station = await sRes.json();
 
-            // 3. Aktuellen Song laden
             const cRes = await fetch(`https://api.laut.fm/station/${slug}/current_song?nocache=${Date.now()}`);
             const song = await cRes.json();
 
             if(document.getElementById(`name-${slug}`)) {
                 document.getElementById('name-' + slug).innerText = station.display_name;
-                
-                // Live-Anzeige der echten Zahl, sofort sichtbar!
                 document.getElementById('listeners-' + slug).innerText = realTimeListeners;
                 
                 if (song.image && song.image.trim() !== "") {
@@ -361,9 +354,7 @@
     }
 
     function updateAllCards() {
-        // Aktualisiert alle voreingestellten Stationen
         nativeStations.forEach(slug => updateStationCard(slug));
-        // Aktualisiert alle dynamisch gesuchten Stationen
         searchedStations.forEach(slug => updateStationCard(slug));
     }
 
@@ -376,7 +367,6 @@
             clickedBtn.innerText = "Sender starten";
             clickedBtn.className = "btn-action btn-play";
             
-            // Sofortige Aktualisierung beim Ausschalten
             await updateStationCard(slug);
         } else {
             if(activePlayingSlug) {
@@ -394,7 +384,6 @@
             clickedBtn.innerText = "Sender stoppen";
             clickedBtn.className = "btn-action btn-stop";
             
-            // Sofortige Aktualisierung beim Einschalten
             await updateStationCard(slug);
         }
     }
@@ -432,18 +421,13 @@
             `;
             document.getElementById('webStationGrid').appendChild(newCard);
             
-            // Zur Liste der überwachten Sender hinzufügen
             searchedStations.push(searchVal);
-            // Sofort die echten Daten für den gesuchten Sender abrufen!
             updateStationCard(searchVal);
         } catch(e) {}
     }
 
     window.onload = () => {
-        // EXTREM WICHTIG: Wird sofort beim Öffnen der Seite ausgeführt!
         updateAllCards();
-        
-        // Schneller 5-Sekunden-Intervall für absolute Live-Präzision
         setInterval(updateAllCards, 5000); 
     };
 </script>
