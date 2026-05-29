@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NiklasIT Hub - Radio Portal V50</title>
+    <title>NiklasIT Hub - Radio Portal V51</title>
     <style>
         :root {
             --bg-color: #f4f6f9;
@@ -309,7 +309,7 @@
 
     async function updateStationCard(slug) {
         try {
-            // Holt für jede Station absolut cache-freie Daten direkt von laut.fm
+            // Aggressives Cache-Busting, damit wir niemals veraltete Werte anzeigen
             const sRes = await fetch(`https://api.laut.fm/station/${slug}?nocache=${Date.now()}`);
             if(!sRes.ok) return;
             const station = await sRes.json();
@@ -320,8 +320,11 @@
             if(document.getElementById(`name-${slug}`)) {
                 document.getElementById('name-' + slug).innerText = station.display_name;
                 
-                // GILT JETZT FÜR ALLE STATIONEN: Es wird immer exakt der echte API-Wert angezeigt!
-                document.getElementById('listeners-' + slug).innerText = station.current_listeners !== undefined ? station.current_listeners : 0;
+                // Wir lesen den ungefilterten, exakten Wert aus der API aus
+                let currentApiListeners = station.current_listeners !== undefined ? station.current_listeners : 0;
+                
+                // VISUELLE KORREKTUR: Zeigt die exakte Zahl live an
+                document.getElementById('listeners-' + slug).innerText = currentApiListeners;
                 
                 if (song.image && song.image.trim() !== "") {
                     document.getElementById('logo-' + slug).src = song.image;
@@ -346,21 +349,27 @@
         }
     }
 
-    function controlStation(slug) {
+    async function controlStation(slug) {
         const clickedBtn = document.getElementById('btn-' + slug);
 
         if (activePlayingSlug === slug) {
+            // SENDER WIRD AUSGESCHALTET
             audioPlayer.pause();
             activePlayingSlug = null;
             clickedBtn.innerText = "Sender starten";
             clickedBtn.className = "btn-action btn-play";
-            updateStationCard(slug);
+            
+            // Sofortige API-Überprüfung erzwingen, damit die Anzeige sofort umschaltet!
+            await updateStationCard(slug);
         } else {
+            // SENDER WIRD GESTARTET
             if(activePlayingSlug) {
                 const oldBtn = document.getElementById('btn-' + activePlayingSlug);
                 if(oldBtn) {
                     oldBtn.innerText = "Sender starten";
                     oldBtn.className = "btn-action btn-play";
+                    // Den alten Sender auch sofort aktualisieren
+                    updateStationCard(activePlayingSlug);
                 }
             }
 
@@ -370,7 +379,8 @@
             clickedBtn.innerText = "Sender stoppen";
             clickedBtn.className = "btn-action btn-stop";
             
-            updateStationCard(slug);
+            // Sofortige Überprüfung beim Einschalten erzwingen
+            await updateStationCard(slug);
         }
     }
 
@@ -412,7 +422,8 @@
 
     window.onload = () => {
         updateAllCards();
-        setInterval(updateAllCards, 10000); // Alle 10 Sekunden sauberer Abgleich
+        // Alle 10 Sekunden wird im Hintergrund geprüft
+        setInterval(updateAllCards, 10000); 
     };
 </script>
 </body>
