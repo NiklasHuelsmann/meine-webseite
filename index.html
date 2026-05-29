@@ -1,215 +1,250 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
-    <link rel="stylesheet" href="assets/css/loader.min.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Niklas IT - Radio Hub V42 (Sidebar Edition)</title>
+    <style>
+        :root { --sidebar-bg: #1a2634; --accent: #00d26a; --bg: #f0f3f7; --heart-blue: #007bff; --text-light: #ecf0f1; }
+        
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; display: flex; height: 100vh; overflow: hidden; color: #333; }
 
-    <!--WebApp Basics-->
-    <meta name="apple-mobile-web-app-capable" content = "yes"/>
-    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+        /* SIDEBAR: Favoriten & Verlauf */
+        .sidebar { width: 280px; background: var(--sidebar-bg); color: var(--text-light); display: flex; flex-direction: column; flex-shrink: 0; border-right: 3px solid var(--accent); }
+        .sidebar-content { padding: 20px; overflow-y: auto; flex: 1; }
+        .sidebar h3 { font-size: 0.9rem; color: var(--accent); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 15px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 5px; }
+
+        .sidebar-list { display: flex; flex-direction: column; gap: 10px; margin-bottom: 30px; }
+        .sidebar-item { display: flex; align-items: center; gap: 12px; padding: 8px; border-radius: 8px; cursor: pointer; transition: 0.2s; background: rgba(255,255,255,0.03); }
+        .sidebar-item:hover { background: rgba(255,255,255,0.1); }
+        .sidebar-item img { width: 40px; height: 40px; border-radius: 6px; object-fit: cover; }
+        .sidebar-item span { font-size: 0.85rem; font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+        /* MAIN CONTENT */
+        .main-content { flex: 1; display: flex; flex-direction: column; overflow-y: auto; position: relative; }
+        .container { padding: 30px; max-width: 1100px; margin: 0 auto; width: 100%; box-sizing: border-box; }
+
+        /* Suche oben */
+        .search-area { background: white; padding: 15px 30px; display: flex; justify-content: center; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+        .search-box { width: 500px; display: flex; gap: 10px; }
+        .search-box input { flex: 1; padding: 12px 20px; border-radius: 25px; border: 1px solid #ddd; font-size: 1rem; }
+        .search-box button { background: var(--accent); color: white; border: none; padding: 0 25px; border-radius: 25px; cursor: pointer; font-weight: bold; }
+
+        /* SENDER DISPLAY */
+        .display-card { background: white; border-radius: 20px; padding: 30px; box-shadow: 0 10px 30px rgba(0,0,0,0.08); margin-bottom: 30px; position: relative; }
+        .display-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
+        .btn-heart { background: none; border: none; font-size: 2.2rem; cursor: pointer; color: #ccc; transition: 0.3s; }
+        .btn-heart.active { color: var(--heart-blue); transform: scale(1.1); }
+
+        .song-info-box { display: flex; gap: 30px; align-items: center; }
+        .main-cover { width: 280px; height: 280px; border-radius: 15px; box-shadow: 0 8px 25px rgba(0,0,0,0.15); object-fit: cover; }
+        
+        .track-details { flex: 1; }
+        .track-details .time { color: var(--accent); font-weight: bold; font-size: 1rem; margin-bottom: 5px; }
+        .track-details h2 { font-size: 2.2rem; margin: 5px 0; }
+        .track-details h3 { font-size: 1.3rem; font-weight: normal; color: #666; margin: 0; }
+
+        /* PLAYER BAR */
+        .player-bar { position: sticky; bottom: 0; background: white; height: 90px; border-top: 1px solid #ddd; display: flex; align-items: center; padding: 0 40px; z-index: 100; box-shadow: 0 -5px 15px rgba(0,0,0,0.05); }
+        .p-info { width: 300px; display: flex; align-items: center; gap: 15px; }
+        .p-info img { width: 55px; height: 55px; border-radius: 8px; }
+        .p-center { flex: 1; text-align: center; }
+        .btn-play { background: var(--accent); color: white; border: none; padding: 12px 50px; border-radius: 30px; font-weight: bold; cursor: pointer; font-size: 1.1rem; }
+
+        /* Verlaufs-Liste im Hauptbereich */
+        .recent-list { background: white; border-radius: 15px; padding: 20px; box-shadow: 0 5px 15px rgba(0,0,0,0.05); }
+
+        @media (max-width: 1000px) {
+            .sidebar { display: none; }
+            .song-info-box { flex-direction: column; text-align: center; }
+        }
+    </style>
 </head>
-
 <body>
-<nav class="broadcastbar fixed-top">
+
+<div class="sidebar">
+    <div style="padding: 20px; background: rgba(0,0,0,0.2); text-align: center;">
+        <h2 style="color: var(--accent); margin: 0; font-size: 1.2rem;">Radio Hub V42</h2>
+    </div>
+    <div class="sidebar-content">
+        <h3>💙 Deine Favoriten</h3>
+        <div id="favSidebar" class="sidebar-list"></div>
+
+        <h3>🕒 Zuletzt gehört</h3>
+        <div id="historySidebar" class="sidebar-list"></div>
+    </div>
+</div>
+
+<div class="main-content">
+    <div class="search-area">
+        <div class="search-box">
+            <input type="text" id="slugInput" placeholder="Sender suchen (z.B. simulator4)...">
+            <button onclick="loadFromSearch()">SUCHEN</button>
+        </div>
+    </div>
+
     <div class="container">
-        <div class="row no-gutters">
-            <div class="col-md-3 col-lg-2 d-flex d-md-block justify-content-center mb-2 mb-md-0">
-                <button type="button" class="player-button playbtn btn-floating"><i class="fas play-pause fa-play"></i></button>
-                <button type="button" class="mute-button mutebtn btn-floating"><i class="fas mute-unmute fa-volume-up"></i></button>
-                <div class="icon audio hidden">
-                    <i></i>
+        <div id="displaySection" style="display:none;">
+            <div class="display-card">
+                <div class="display-header">
+                    <div style="display:flex; align-items:center; gap:15px;">
+                        <img id="miniLogo" src="" style="width:45px; height:45px; border-radius:6px;">
+                        <h2 id="stationName" style="margin:0;">Sender Name</h2>
+                    </div>
+                    <button id="heartBtn" class="btn-heart" onclick="toggleFavorite()">💙</button>
+                </div>
+
+                <div class="song-info-box">
+                    <img id="displayCover" src="" class="main-cover">
+                    <div class="track-details">
+                        <div id="startTime" class="time">--:--</div>
+                        <h2 id="liveArtist">Interpret</h2>
+                        <h3 id="liveTitle">Songtitel</h3>
+                        <div style="margin-top:20px; padding: 10px 15px; background: #f9f9f9; border-radius: 10px; display: inline-block;">
+                            👥 Hörer: <b id="listeners" style="color: var(--accent);">0</b>
+                        </div>
+                    </div>
                 </div>
             </div>
-            <div class="col-md-9 col-lg-10 d-flex align-items-center" id="nowplaying">
-                <div class="d-inline-block"><span id="api_lfm_display_name"></span>&nbsp;spielt:&nbsp;</div>
-                <div id="api_lfm_current_song1"></div>
+            
+            <div class="recent-list">
+                <b style="color: #999; font-size: 0.8rem; text-transform: uppercase;">Letzte Songs</b>
+                <div id="songHistory" style="margin-top: 15px;"></div>
             </div>
         </div>
     </div>
-</nav>
-<!--Station Infos-->
-<div id="station" class="container" style="margin-top: 5rem;">
-	<div class="row">
-		<div class="col-md-3 mt-5 mt-md-4">
-			<img id="station_logo" class="station_logo z-depth-1-half img-fluid" alt="Station Logo"/>
-		</div>
-		<div class="col-md-5 mt-4 station_info_container" id="station_info">
-			<div class="station_details_container z-depth-1-half">
-				<h2 id="station_displayname"></h2>
-				<i><h5 id="station_slogan"></h5></i>
-				<i><p id="station_description"></p></i>
-				<div class="station_details_links">
-                    <a class="social-link link-lfm" id="lfm-link" target="_blank" rel="external nofollow noopener noreferrer"><i class="fas fa-headphones"></i></a>
-					<a class="social-link link-hp" id="hp-link" target="_blank" rel="external nofollow noopener noreferrer"><i class="fas fa-globe-europe"></i></a>
-					<a class="social-link link-fb" id="fb-link" target="_blank" rel="external nofollow noopener noreferrer"><i class="fab fa-facebook-f"></i></a>
-					<a class="social-link link-tw" id="tw-link" target="_blank" rel="external nofollow noopener noreferrer"><i class="fab fa-twitter"></i></a>
-					<a class="social-link link-ig" id="ig-link" target="_blank" rel="external nofollow noopener noreferrer"><i class="fab fa-instagram"></i></a>
-                    <a class="social-link link-rss" id="rss-link" target="_blank" rel="external nofollow noopener noreferrer"><i class="fas fa-rss"></i></a>
-				</div>
-                <div class="btn-group btn_external" role="group" aria-label="Playlist Links">
-                    <a class="external_listening btn btn-sm btn-grey" id="radiode-link" rel="external nofollow noopener noreferrer">radio.de</a>
-                    <a class="external_listening btn btn-sm btn-grey" id="phonostar-link" rel="external nofollow noopener noreferrer">phonostar</a>
-                    <a class="external_listening btn btn-sm btn-grey" id="tunein-link" rel="external nofollow noopener noreferrer">tunein</a>
-                    <a class="external_listening btn btn-sm btn-grey" id="m3u-link" rel="external nofollow noopener noreferrer">M3U</a>
-                    <a class="external_listening btn btn-sm btn-grey" id="pls-link" rel="external nofollow noopener noreferrer">PLS</a>
-                </div>
-			</div>
-		</div>
-		<div class="col-md-4 mt-4 station_info_container" id="playlist_wrapper">
-			<div id="current_show" class="current_show_container z-depth-1-half mb-4">
-				<h4 id="show_start"></h4>
-				<h3 id="show_name"></h3>
-				<p id="show_description"></p>
-			</div>
-			<div id="next_show" class="current_show_container z-depth-1-half">
-				<h4 id="next_start"></h4>
-				<h3 id="next_name"></h3>
-				<p id="next_description"></p>
-			</div>
-		</div>
-	</div>
-</div>
 
-<!-- Song history -->
-<div class="container" id="last_songs">
-    <div class="row">
-        <div class="col-12 mt-5 mt-md-4">
-            <h3>Letzte Songs:</h3>
+    <div class="player-bar" id="playerBar" style="display:none;">
+        <div class="p-info">
+            <img id="barCover" src="">
+            <div style="overflow: hidden;">
+                <b id="barArtist" style="display:block; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">Interpret</b>
+                <span id="barTitle" style="font-size:0.8rem; color:#777;">Songtitel</span>
+            </div>
+        </div>
+        <div class="p-center">
+            <button id="pToggle" class="btn-play" onclick="handlePlay()">SENDER STARTEN</button>
+        </div>
+        <div style="width:300px; display:flex; justify-content:flex-end;">
+            <input type="range" min="0" max="1" step="0.01" value="0.5" oninput="audio.volume=this.value" style="accent-color:var(--accent);">
         </div>
     </div>
-    <div id="song_row" class="row"></div>
 </div>
 
-<br/>
+<audio id="audio"></audio>
 
-<!-- Footer -->
-<footer class="page-footer font-small grey text-center">
-    <p style="color: black; padding-top: 15px; margin-bottom: 2px;">This station is powered by:</p>
-<a href="https://laut.fm/" rel="external nofollow noopener noreferrer">
-    <img src="assets/img/lautfm.svg" style="height: 40px; margin-bottom: 20px;" alt=""/>
-</a>
-</footer>
-<!-- Footer -->
-
-<audio class="live-player" id="audio"></audio>
-
-<script src="assets/js/jquery.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
-<script src="assets/bootstrap/js/bootstrap.min.js"></script>
-<script src="assets/js/mdb/mdb.js"></script>
-<script src="assets/js/fontawesome/all.min.js"></script>
-<script src="assets/js/jquery.khan-shatyr.min.js"></script>
-<script src="assets/js/lfmplayer.js"></script>
-<script src="assets/js/tracklist.js"></script>
 <script>
-    /* =========================
-     *  $_GET vars and checks
-     * ========================= */
-    let station         = $_GET('station'),
-        color           = $_GET('color')            || '1ed9b4';
+    let currentSlug = "";
+    let myFavs = JSON.parse(localStorage.getItem('it_hub_favs')) || ["simulator4", "brian-radio"];
+    let historyLog = JSON.parse(localStorage.getItem('it_hub_history_sidebar')) || [];
+    const audio = document.getElementById('audio');
 
-    /* Boolean */
-    let badges          = $_GET('badges')           || true,
-        station_info    = $_GET('station_info')     || true,
-        current_show    = $_GET('current_show')     || true,
-        next_show       = $_GET('next_show')        || true,
-        history         = $_GET('history')          || true,
-        cover           = $_GET('cover')            || false,
-        autoplay        = $_GET('autoplay')         || false;
-
-    /* $_GET vars checks and translation */
-    (badges == 'true' || badges == 'false')             ? badges = (badges == 'true')               : badges = true;
-    (current_show == 'true' || current_show == 'false') ? current_show = (current_show == 'true')   : current_show = true;
-    (next_show == 'true' || next_show == 'false')       ? next_show = (next_show == 'true')         : next_show = true;
-    (station_info == 'true' || station_info == 'false') ? station_info = (station_info == 'true')   : station_info = true;
-    (history == 'true' || history == 'false')           ? history = (history == 'true')             : history = true;
-    (cover == 'true' || cover == 'false')               ? cover = (cover == 'true')                 : cover = false;
-    (autoplay == 'true' || autoplay == 'false')         ? autoplay = (autoplay == 'true')           : autoplay = false;
-
-
-    /* =========================
-     *  Other things
-     * ========================= */
-
-    /* Hide not wanted stuff from $_GET */
-    !current_show   && $('#current_show').hide();
-    !next_show      && $('#next_show').hide();
-    !station_info   && $(function () {$('#station').hide(); $('#last_songs').css("margin-top", "5rem")});
-    !history        && $('#last_songs').hide();
-
-    if (!current_show && !next_show) {
-        $("#playlist_wrapper").addClass("d-none");
-        $("#station_info").removeClass("col-md-5").addClass("col-md-9");
+    async function loadStation(slug) {
+        currentSlug = slug;
+        document.getElementById('displaySection').style.display = 'block';
+        document.getElementById('playerBar').style.display = 'flex';
+        
+        // In Sidebar-Verlauf speichern
+        if(!historyLog.includes(slug)) {
+            historyLog = [slug, ...historyLog].slice(0, 10);
+            localStorage.setItem('it_hub_history_sidebar', JSON.stringify(historyLog));
+        } else {
+            historyLog = [slug, ...historyLog.filter(s => s !== slug)];
+            localStorage.setItem('it_hub_history_sidebar', JSON.stringify(historyLog));
+        }
+        
+        renderSidebar();
+        update();
     }
 
-    let root = document.documentElement,
-        sender = station.toUpperCase(),
-        last_song_data_cache,
-        song_str;
-    root.style.setProperty('--main-color', '#' + color);
-    !station && $("#api_lfm_current_song1").html("<b>No Station Name given</b>");
+    async function update() {
+        if(!currentSlug) return;
+        try {
+            const sRes = await fetch(`https://api.laut.fm/station/${currentSlug}`);
+            const station = await sRes.json();
+            const [cRes, hRes] = await Promise.all([
+                fetch(`https://api.laut.fm/station/${currentSlug}/current_song`),
+                fetch(`https://api.laut.fm/station/${currentSlug}/last_songs`)
+            ]);
+            const song = await cRes.json();
+            const historyData = await hRes.json();
 
-    function cycle() {
-        setTimeout(function () {
-            history && load_last_song(station);
-            $('[data-toggle="popover"]').popover({trigger: 'focus'});
-            getSong(station);
-            crawlePlaylist(station);
-            cycle();
-        }, 2000);
+            document.getElementById('stationName').innerText = station.display_name;
+            document.getElementById('miniLogo').src = station.images.station_120x120;
+            document.getElementById('displayCover').src = station.images.station_640x640;
+            document.getElementById('barCover').src = station.images.station_120x120;
+            document.getElementById('listeners').innerText = station.current_listeners || 0;
+            
+            document.getElementById('liveArtist').innerText = song.artist ? song.artist.name : "...";
+            document.getElementById('liveTitle').innerText = song.title || "";
+            document.getElementById('barArtist').innerText = song.artist ? song.artist.name : station.display_name;
+            document.getElementById('barTitle').innerText = song.title || "Live Stream";
+            
+            document.getElementById('startTime').innerText = song.started_at ? new Date(song.started_at).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) : "--:--";
+            
+            // Herz-Status
+            document.getElementById('heartBtn').classList.toggle('active', myFavs.includes(currentSlug));
+
+            // Letzte Songs Liste
+            document.getElementById('songHistory').innerHTML = historyData.slice(0, 5).map(s => `
+                <div style="display:flex; justify-content:space-between; padding:10px 0; border-bottom:1px solid #eee;">
+                    <span><b>${s.artist.name}</b> - ${s.title}</span>
+                    <span style="color:#999; font-size:0.8rem;">${new Date(s.started_at).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</span>
+                </div>
+            `).join('');
+
+        } catch(e) {}
     }
 
-    $(document).ready(function () {
-        audiobtn(autoplay, station);
-        history && load_last_songs_fully(station);
-        crawleLautApi(station);
-        getSong(station);
-        getWidth();
-        $("#api_lfm_current_song1").khanShatyr({delay: 2000, pause: 300, max_kerning: -0.05}).css('color', 'white');
-        cycle();
-    });
-</script>
+    function renderSidebar() {
+        // Favoriten Sidebar
+        document.getElementById('favSidebar').innerHTML = myFavs.map(f => `
+            <div class="sidebar-item" onclick="loadStation('${f}')">
+                <img src="https://api.laut.fm/station/${f}/images/station_120x120" onerror="this.src='https://api.laut.fm/station/test-station/images/station_120x120'">
+                <span>${f}</span>
+            </div>
+        `).join('');
 
-<script type="text/template" id="song_detailed">
-    <div class="col-md-4">
-        <div class="last_song d-flex z-depth-1-half">
-            <span class="track_nr">{{track_nr}}</span>
-            <div class="song_wrapper">
-                <h4 class="last_text last_artist">
-                    {{artist}}
-                </h4>
-                <p class="last_text last_title">
-                    {{title}}
-                </p>
+        // Verlauf Sidebar
+        document.getElementById('historySidebar').innerHTML = historyLog.map(s => `
+            <div class="sidebar-item" onclick="loadStation('${s}')">
+                <img src="https://api.laut.fm/station/${s}/images/station_120x120" onerror="this.src='https://api.laut.fm/station/test-station/images/station_120x120'">
+                <span>${s}</span>
             </div>
-            <div class="last_btn">
-                <a tabindex="0" role="button" data-toggle="popover" data-trigger="focus" title="{{artist}}" data-content="{{title}}">
-                    <i class="fas fa-ellipsis-h"></i>
-                </a>
-            </div>
-        </div>
-    </div>
-</script>
-<script type="text/template" id="song_detailed_cover">
-    <div class="col-md-4">
-        <div class="last_song d-flex z-depth-1-half">
-            <span class="cover"><img src="{{cover}}" alt=""></span>
-            <div class="song_wrapper">
-                <h4 class="last_text last_artist">
-                    {{artist}}
-                </h4>
-                <p class="last_text last_title">
-                    {{title}}
-                </p>
-            </div>
-            <div class="last_btn">
-                <a tabindex="0" role="button" data-toggle="popover" data-trigger="focus" title="{{artist}}" data-content="{{title}}">
-                    <i class="fas fa-ellipsis-h"></i>
-                </a>
-            </div>
-        </div>
-    </div>
+        `).join('');
+    }
+
+    function toggleFavorite() {
+        if(myFavs.includes(currentSlug)) {
+            myFavs = myFavs.filter(f => f !== currentSlug);
+        } else {
+            myFavs.push(currentSlug);
+        }
+        localStorage.setItem('it_hub_favs', JSON.stringify(myFavs));
+        renderSidebar();
+        update();
+    }
+
+    function loadFromSearch() {
+        const val = document.getElementById('slugInput').value.toLowerCase().trim();
+        if(val) loadStation(val);
+    }
+
+    function handlePlay() {
+        if(audio.paused) { 
+            audio.src = `https://stream.laut.fm/${currentSlug}`; 
+            audio.play(); 
+            document.getElementById('pToggle').innerText="STOPP"; 
+            document.getElementById('pToggle').style.background = "#ff4757";
+        } else { 
+            audio.pause(); 
+            document.getElementById('pToggle').innerText="SENDER STARTEN"; 
+            document.getElementById('pToggle').style.background = "var(--accent)";
+        }
+    }
+
+    window.onload = () => { renderSidebar(); };
+    setInterval(update, 20000);
 </script>
 </body>
 </html>
