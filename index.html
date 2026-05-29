@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NiklasIT Hub - Radio Portal V51</title>
+    <title>NiklasIT Hub - Radio Portal V53</title>
     <style>
         :root {
             --bg-color: #f4f6f9;
@@ -243,7 +243,7 @@
                 <img id="logo-simulator4" src="" class="station-img" alt="Logo">
                 <div class="station-meta">
                     <h3 id="name-simulator4">Simulator 4</h3>
-                    <div class="listener-badge">Hörer online: <b id="listeners-simulator4">0</b></div>
+                    <div class="listener-badge">Hörer online: <b id="listeners-simulator4">Lade...</b></div>
                 </div>
             </div>
             <div class="current-track-box">
@@ -261,7 +261,7 @@
                 <img id="logo-brian-radio" src="" class="station-img" alt="Logo">
                 <div class="station-meta">
                     <h3 id="name-brian-radio">Brian Radio</h3>
-                    <div class="listener-badge">Hörer online: <b id="listeners-brian-radio">0</b></div>
+                    <div class="listener-badge">Hörer online: <b id="listeners-brian-radio">Lade...</b></div>
                 </div>
             </div>
             <div class="current-track-box">
@@ -279,7 +279,7 @@
                 <img id="logo-feierabend-radio" src="" class="station-img" alt="Logo">
                 <div class="station-meta">
                     <h3 id="name-feierabend-radio">Feierabend Radio</h3>
-                    <div class="listener-badge">Hörer online: <b id="listeners-feierabend-radio">In Vorbereitung</b></div>
+                    <div class="listener-badge">Hörer online: <b id="listeners-feierabend-radio">Lade...</b></div>
                 </div>
             </div>
             <div class="current-track-box">
@@ -305,26 +305,44 @@
 <script>
     let activePlayingSlug = null;
     const audioPlayer = document.getElementById('globalAudioPlayer');
+    // Hier kannst du in Zukunft beliebig viele deiner Slugs eintragen!
     const nativeStations = ["simulator4", "brian-radio", "feierabend-radio"];
+    let searchedStations = [];
 
     async function updateStationCard(slug) {
         try {
-            // Aggressives Cache-Busting, damit wir niemals veraltete Werte anzeigen
+            // 1. Echtzeit-Hörerzahl DIREKT von /listeners ziehen (Absolut Priorität 1)
+            let realTimeListeners = 0;
+            try {
+                const lRes = await fetch(`https://api.laut.fm/station/${slug}/listeners?nocache=${Date.now()}`);
+                if(lRes.ok) {
+                    const lData = await lRes.text();
+                    realTimeListeners = parseInt(lData.trim()) || 0;
+                }
+            } catch(e) {
+                console.log("Echtzeit-Hörer-Abruf verzögert für: " + slug);
+            }
+
+            // 2. Stationsdetails laden (für Name und Logos)
             const sRes = await fetch(`https://api.laut.fm/station/${slug}?nocache=${Date.now()}`);
-            if(!sRes.ok) return;
+            if(!sRes.ok) {
+                // Falls der Sender (wie Feierabend Radio) noch in Vorbereitung ist, zeige die 0 Hörer an
+                if(document.getElementById(`listeners-${slug}`)) {
+                    document.getElementById(`listeners-${slug}`).innerText = realTimeListeners;
+                }
+                return;
+            }
             const station = await sRes.json();
 
+            // 3. Aktuellen Song laden
             const cRes = await fetch(`https://api.laut.fm/station/${slug}/current_song?nocache=${Date.now()}`);
             const song = await cRes.json();
 
             if(document.getElementById(`name-${slug}`)) {
                 document.getElementById('name-' + slug).innerText = station.display_name;
                 
-                // Wir lesen den ungefilterten, exakten Wert aus der API aus
-                let currentApiListeners = station.current_listeners !== undefined ? station.current_listeners : 0;
-                
-                // VISUELLE KORREKTUR: Zeigt die exakte Zahl live an
-                document.getElementById('listeners-' + slug).innerText = currentApiListeners;
+                // Live-Anzeige der echten Zahl, sofort sichtbar!
+                document.getElementById('listeners-' + slug).innerText = realTimeListeners;
                 
                 if (song.image && song.image.trim() !== "") {
                     document.getElementById('logo-' + slug).src = song.image;
@@ -338,37 +356,34 @@
                 }
             }
         } catch(e) {
-            console.log("Fehler beim API-Abruf für: " + slug);
+            console.log("Fehler im Hauptprozess für: " + slug);
         }
     }
 
     function updateAllCards() {
+        // Aktualisiert alle voreingestellten Stationen
         nativeStations.forEach(slug => updateStationCard(slug));
-        if(activePlayingSlug && !nativeStations.includes(activePlayingSlug)) {
-            updateStationCard(activePlayingSlug);
-        }
+        // Aktualisiert alle dynamisch gesuchten Stationen
+        searchedStations.forEach(slug => updateStationCard(slug));
     }
 
     async function controlStation(slug) {
         const clickedBtn = document.getElementById('btn-' + slug);
 
         if (activePlayingSlug === slug) {
-            // SENDER WIRD AUSGESCHALTET
             audioPlayer.pause();
             activePlayingSlug = null;
             clickedBtn.innerText = "Sender starten";
             clickedBtn.className = "btn-action btn-play";
             
-            // Sofortige API-Überprüfung erzwingen, damit die Anzeige sofort umschaltet!
+            // Sofortige Aktualisierung beim Ausschalten
             await updateStationCard(slug);
         } else {
-            // SENDER WIRD GESTARTET
             if(activePlayingSlug) {
                 const oldBtn = document.getElementById('btn-' + activePlayingSlug);
                 if(oldBtn) {
                     oldBtn.innerText = "Sender starten";
                     oldBtn.className = "btn-action btn-play";
-                    // Den alten Sender auch sofort aktualisieren
                     updateStationCard(activePlayingSlug);
                 }
             }
@@ -379,7 +394,7 @@
             clickedBtn.innerText = "Sender stoppen";
             clickedBtn.className = "btn-action btn-stop";
             
-            // Sofortige Überprüfung beim Einschalten erzwingen
+            // Sofortige Aktualisierung beim Einschalten
             await updateStationCard(slug);
         }
     }
@@ -388,7 +403,7 @@
         const searchVal = document.getElementById('webSearchInput').value.toLowerCase().trim();
         if(!searchVal) return;
 
-        if(document.getElementById('card-' + searchVal)) return;
+        if(nativeStations.includes(searchVal) || searchedStations.includes(searchVal)) return;
 
         try {
             const res = await fetch(`https://api.laut.fm/station/${searchVal}`);
@@ -403,7 +418,7 @@
                     <img id="logo-${searchVal}" src="${data.images ? data.images.station_120x120 : ''}" class="station-img" alt="Logo">
                     <div class="station-meta">
                         <h3 id="name-${searchVal}">${data.display_name}</h3>
-                        <div class="listener-badge">Hörer online: <b id="listeners-${searchVal}">${data.current_listeners || 0}</b></div>
+                        <div class="listener-badge">Hörer online: <b id="listeners-${searchVal}">Lade...</b></div>
                     </div>
                 </div>
                 <div class="current-track-box">
@@ -416,14 +431,20 @@
                 </div>
             `;
             document.getElementById('webStationGrid').appendChild(newCard);
+            
+            // Zur Liste der überwachten Sender hinzufügen
+            searchedStations.push(searchVal);
+            // Sofort die echten Daten für den gesuchten Sender abrufen!
             updateStationCard(searchVal);
         } catch(e) {}
     }
 
     window.onload = () => {
+        // EXTREM WICHTIG: Wird sofort beim Öffnen der Seite ausgeführt!
         updateAllCards();
-        // Alle 10 Sekunden wird im Hintergrund geprüft
-        setInterval(updateAllCards, 10000); 
+        
+        // Schneller 5-Sekunden-Intervall für absolute Live-Präzision
+        setInterval(updateAllCards, 5000); 
     };
 </script>
 </body>
