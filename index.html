@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NiklasIT Hub - Radio Portal</title>
+    <title>NiklasIT Hub - Radio Portal V50</title>
     <style>
         :root {
             --bg-color: #f4f6f9;
@@ -26,7 +26,6 @@
             min-height: 100vh;
         }
 
-        /* WEBSEITEN HEADER */
         .site-header {
             background-color: var(--header-bg);
             border-bottom: 1px solid var(--border-color);
@@ -80,7 +79,6 @@
             cursor: pointer;
         }
 
-        /* CONTENT */
         .main-container {
             max-width: 1200px;
             width: 100%;
@@ -311,7 +309,7 @@
 
     async function updateStationCard(slug) {
         try {
-            // Cache-Busting für Live-Daten auf GitHub Pages
+            // Holt für jede Station absolut cache-freie Daten direkt von laut.fm
             const sRes = await fetch(`https://api.laut.fm/station/${slug}?nocache=${Date.now()}`);
             if(!sRes.ok) return;
             const station = await sRes.json();
@@ -322,14 +320,9 @@
             if(document.getElementById(`name-${slug}`)) {
                 document.getElementById('name-' + slug).innerText = station.display_name;
                 
-                // Live-Korrektur: Wenn du selbst hörst, erzwingen wir mindestens 1 Hörer für die Anzeige, falls die API verzögert
-                let liveListeners = station.current_listeners || 0;
-                if (activePlayingSlug === slug && liveListeners === 0) {
-                    liveListeners = 1; 
-                }
-                document.getElementById('listeners-' + slug).innerText = liveListeners;
+                // GILT JETZT FÜR ALLE STATIONEN: Es wird immer exakt der echte API-Wert angezeigt!
+                document.getElementById('listeners-' + slug).innerText = station.current_listeners !== undefined ? station.current_listeners : 0;
                 
-                // Cover Fallback-Logik
                 if (song.image && song.image.trim() !== "") {
                     document.getElementById('logo-' + slug).src = song.image;
                 } else if (station.images && station.images.station_120x120) {
@@ -342,7 +335,7 @@
                 }
             }
         } catch(e) {
-            console.log("API Abfrage-Verzögerung bei: " + slug);
+            console.log("Fehler beim API-Abruf für: " + slug);
         }
     }
 
@@ -372,12 +365,11 @@
             }
 
             audioPlayer.src = `https://stream.laut.fm/${slug}`;
-            audioPlayer.play().catch(err => console.log("Stream startet..."));
+            audioPlayer.play().catch(err => console.log("Stream lädt..."));
             activePlayingSlug = slug;
             clickedBtn.innerText = "Sender stoppen";
             clickedBtn.className = "btn-action btn-stop";
             
-            // Sofortige visuelle Aktualisierung
             updateStationCard(slug);
         }
     }
@@ -420,8 +412,7 @@
 
     window.onload = () => {
         updateAllCards();
-        // Auf GitHub Pages fragen wir alle 10 Sekunden ab, um maximale Aktualität zu garantieren
-        setInterval(updateAllCards, 10000); 
+        setInterval(updateAllCards, 10000); // Alle 10 Sekunden sauberer Abgleich
     };
 </script>
 </body>
