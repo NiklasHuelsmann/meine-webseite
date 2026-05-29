@@ -1,9 +1,9 @@
-<<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="de">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Niklas IT - Radio Portal</title>
+    <title>NiklasIT Hub - Radio Portal</title>
     <style>
         :root {
             --bg-color: #f4f6f9;
@@ -26,7 +26,7 @@
             min-height: 100vh;
         }
 
-        /* KLASSISCHES WEBSITE HEADER */
+        /* WEBSEITEN HEADER */
         .site-header {
             background-color: var(--header-bg);
             border-bottom: 1px solid var(--border-color);
@@ -50,7 +50,6 @@
             color: var(--accent-blue);
         }
 
-        /* SUCHE AUF DER WEBSEITE */
         .search-form {
             display: flex;
             gap: 10px;
@@ -81,7 +80,7 @@
             cursor: pointer;
         }
 
-        /* HAUPTBEREICH DER WEBSEITE */
+        /* CONTENT */
         .main-container {
             max-width: 1200px;
             width: 100%;
@@ -99,7 +98,6 @@
             padding-bottom: 10px;
         }
 
-        /* SENDER ÜBERSICHTS-GRID */
         .station-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
@@ -150,7 +148,6 @@
             margin-top: 2px;
         }
 
-        /* AKTUELLER TRACK BEREICH IN DER KARTE */
         .current-track-box {
             background-color: #f8fafc;
             border-radius: 8px;
@@ -191,7 +188,6 @@
             align-items: center;
         }
 
-        /* WEB PLAYER BUTTONS */
         .btn-action {
             padding: 10px 20px;
             border-radius: 6px;
@@ -199,30 +195,15 @@
             cursor: pointer;
             font-size: 0.9rem;
             border: none;
+            width: 100%;
             transition: 0.2s;
         }
 
-        .btn-play {
-            background-color: var(--accent-green);
-            color: white;
-            width: 100%;
-        }
+        .btn-play { background-color: var(--accent-green); color: white; }
+        .btn-play:hover { background-color: #218838; }
+        .btn-stop { background-color: #dc3545; color: white; }
+        .btn-stop:hover { background-color: #c82333; }
 
-        .btn-play:hover {
-            background-color: #218838;
-        }
-
-        .btn-stop {
-            background-color: #dc3545;
-            color: white;
-            width: 100%;
-        }
-
-        .btn-stop:hover {
-            background-color: #c82333;
-        }
-
-        /* KLASSISCHER WEBSEITEN FOOTER */
         .site-footer {
             background-color: #ffffff;
             border-top: 1px solid var(--border-color);
@@ -234,9 +215,7 @@
             color: #718096;
         }
 
-        .footer-partner b {
-            color: var(--text-color);
-        }
+        .footer-partner b { color: var(--text-color); }
 
         @media (max-width: 768px) {
             .site-header { flex-direction: column; gap: 15px; padding: 15px; }
@@ -302,7 +281,7 @@
                 <img id="logo-feierabend-radio" src="" class="station-img" alt="Logo">
                 <div class="station-meta">
                     <h3 id="name-feierabend-radio">Feierabend Radio</h3>
-                    <div class="listener-badge">Hörer online: <b id="listeners-feierabend-radio">0</b></div>
+                    <div class="listener-badge">Hörer online: <b id="listeners-feierabend-radio">In Vorbereitung</b></div>
                 </div>
             </div>
             <div class="current-track-box">
@@ -330,33 +309,43 @@
     const audioPlayer = document.getElementById('globalAudioPlayer');
     const nativeStations = ["simulator4", "brian-radio", "feierabend-radio"];
 
-    // Lädt die API-Daten für ein bestimmtes Element auf der Webseite
     async function updateStationCard(slug) {
         try {
-            const sRes = await fetch(`https://api.laut.fm/station/${slug}`);
+            // Cache-Busting für Live-Daten auf GitHub Pages
+            const sRes = await fetch(`https://api.laut.fm/station/${slug}?nocache=${Date.now()}`);
             if(!sRes.ok) return;
             const station = await sRes.json();
 
-            const cRes = await fetch(`https://api.laut.fm/station/${slug}/current_song`);
+            const cRes = await fetch(`https://api.laut.fm/station/${slug}/current_song?nocache=${Date.now()}`);
             const song = await cRes.json();
 
-            // Dom-Elemente füllen
             if(document.getElementById(`name-${slug}`)) {
-                document.getElementById(`name-${slug}`).innerText = station.display_name;
-                document.getElementById(`listeners-${slug}`).innerText = station.current_listeners || 0;
-                document.getElementById(`logo-${slug}`).src = station.images.station_120x120;
+                document.getElementById('name-' + slug).innerText = station.display_name;
+                
+                // Live-Korrektur: Wenn du selbst hörst, erzwingen wir mindestens 1 Hörer für die Anzeige, falls die API verzögert
+                let liveListeners = station.current_listeners || 0;
+                if (activePlayingSlug === slug && liveListeners === 0) {
+                    liveListeners = 1; 
+                }
+                document.getElementById('listeners-' + slug).innerText = liveListeners;
+                
+                // Cover Fallback-Logik
+                if (song.image && song.image.trim() !== "") {
+                    document.getElementById('logo-' + slug).src = song.image;
+                } else if (station.images && station.images.station_120x120) {
+                    document.getElementById('logo-' + slug).src = station.images.station_120x120;
+                }
                 
                 if(song.title) {
-                    document.getElementById(`title-${slug}`).innerText = song.title;
-                    document.getElementById(`artist-${slug}`).innerText = song.artist ? song.artist.name : "Interpret";
+                    document.getElementById('title-' + slug).innerText = song.title;
+                    document.getElementById('artist-' + slug).innerText = song.artist ? song.artist.name : "Interpret";
                 }
             }
         } catch(e) {
-            console.log("Station noch offline oder API-Fehler bei: " + slug);
+            console.log("API Abfrage-Verzögerung bei: " + slug);
         }
     }
 
-    // Alle Stationskarten auf der Webseite aktualisieren
     function updateAllCards() {
         nativeStations.forEach(slug => updateStationCard(slug));
         if(activePlayingSlug && !nativeStations.includes(activePlayingSlug)) {
@@ -364,57 +353,52 @@
         }
     }
 
-    // Steuert das Starten und Stoppen direkt über die Website-Karte
     function controlStation(slug) {
-        const clickedBtn = document.getElementById(`btn-${slug}`);
+        const clickedBtn = document.getElementById('btn-' + slug);
 
         if (activePlayingSlug === slug) {
-            // Wenn der laufende Sender geklickt wird -> Stoppen
             audioPlayer.pause();
             activePlayingSlug = null;
             clickedBtn.innerText = "Sender starten";
             clickedBtn.className = "btn-action btn-play";
+            updateStationCard(slug);
         } else {
-            // Erst alle anderen Buttons zurücksetzen
             if(activePlayingSlug) {
-                const oldBtn = document.getElementById(`btn-${activePlayingSlug}`);
+                const oldBtn = document.getElementById('btn-' + activePlayingSlug);
                 if(oldBtn) {
                     oldBtn.innerText = "Sender starten";
                     oldBtn.className = "btn-action btn-play";
                 }
             }
 
-            // Neuen Stream starten
             audioPlayer.src = `https://stream.laut.fm/${slug}`;
-            audioPlayer.play().catch(err => console.log("Stream startet, sobald verfügbar."));
+            audioPlayer.play().catch(err => console.log("Stream startet..."));
             activePlayingSlug = slug;
             clickedBtn.innerText = "Sender stoppen";
             clickedBtn.className = "btn-action btn-stop";
+            
+            // Sofortige visuelle Aktualisierung
+            updateStationCard(slug);
         }
     }
 
-    // Dynamische Suche: Fügt einen gesuchten Sender als neue Karte zur Website hinzu
     async function searchNewStation() {
         const searchVal = document.getElementById('webSearchInput').value.toLowerCase().trim();
         if(!searchVal) return;
 
-        if(document.getElementById(`card-${searchVal}`)) {
-            alert("Dieser Sender wird bereits auf der Webseite angezeigt!");
-            return;
-        }
+        if(document.getElementById('card-' + searchVal)) return;
 
         try {
             const res = await fetch(`https://api.laut.fm/station/${searchVal}`);
-            if(!res.ok) { alert("Sender auf laut.fm nicht gefunden."); return; }
+            if(!res.ok) return;
             const data = await res.json();
 
-            // Erstellt ein neues, sauberes Website-Element für den gesuchten Sender
             const newCard = document.createElement('div');
             newCard.className = 'station-card';
-            newCard.id = `card-${searchVal}`;
+            newCard.id = 'card-' + searchVal;
             newCard.innerHTML = `
                 <div class="card-header">
-                    <img id="logo-${searchVal}" src="${data.images.station_120x120}" class="station-img" alt="Logo">
+                    <img id="logo-${searchVal}" src="${data.images ? data.images.station_120x120 : ''}" class="station-img" alt="Logo">
                     <div class="station-meta">
                         <h3 id="name-${searchVal}">${data.display_name}</h3>
                         <div class="listener-badge">Hörer online: <b id="listeners-${searchVal}">${data.current_listeners || 0}</b></div>
@@ -431,14 +415,13 @@
             `;
             document.getElementById('webStationGrid').appendChild(newCard);
             updateStationCard(searchVal);
-        } catch(e) {
-            alert("Fehler beim Laden des gesuchten Senders.");
-        }
+        } catch(e) {}
     }
 
     window.onload = () => {
         updateAllCards();
-        setInterval(updateAllCards, 20000); // Aktualisiert Songdaten unauffällig alle 20 Sek.
+        // Auf GitHub Pages fragen wir alle 10 Sekunden ab, um maximale Aktualität zu garantieren
+        setInterval(updateAllCards, 10000); 
     };
 </script>
 </body>
