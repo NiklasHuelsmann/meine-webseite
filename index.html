@@ -422,7 +422,7 @@
     const audioPlayer = document.getElementById('globalAudioPlayer');
     let searchedStations = [];
 
-    // Verhindert das Überschreiben bereits geladener Daten mit Lade-Texten
+    // Verhindert das Überschreiben funktionierender Titel-Daten
     let initialLoadStatus = {};
 
     function showToast(message) {
@@ -443,9 +443,12 @@
         const savedSearch = localStorage.getItem('niklas_searched_stations');
         if (savedSearch) {
             searchedStations = JSON.parse(savedSearch);
+            // Erst alle Boxen bauen...
             searchedStations.forEach(slug => {
                 renderStationCardDOM(slug);
             });
+            // ...und sofort alle Daten abrufen!
+            updateAllCards();
         }
     }
 
@@ -474,7 +477,7 @@
         }
     }
 
-    // Verbesserte Update-Funktion: Überschreibt niemals funktionierende Daten mit Lade-Meldungen!
+    // Verbesserte API-Abfrage: Holt Infos sofort und sperrt fehlerhafte "Lade..." Überschreibungen
     async function updateStationCard(slug) {
         try {
             let realTimeListeners = 0;
@@ -497,13 +500,13 @@
                 const titleEl = document.getElementById(`title-${slug}`);
 
                 if(titleEl && artistEl) {
-                    // SICHERHEITS-CHECK: Nur updaten, wenn sinnvolle Daten zurückkommen
+                    // Falls echte Song-Daten da sind, werden sie sofort reingeschrieben
                     if(song.title && song.title.trim() !== "") {
                         titleEl.innerText = song.title;
                         artistEl.innerText = song.artist ? song.artist.name : "Interpret";
-                        initialLoadStatus[slug] = true; // Markieren, dass Daten da sind
+                        initialLoadStatus[slug] = true; 
                     } else if (!initialLoadStatus[slug]) {
-                        // Nur wenn noch NIE etwas geladen wurde, zeigen wir den Fallback
+                        // Fallback nur, wenn noch nie ein Song geladen werden konnte
                         artistEl.innerText = "Live-Stream";
                         titleEl.innerText = "Musik läuft...";
                     }
@@ -513,7 +516,9 @@
     }
 
     function updateAllCards() {
-        searchedStations.forEach(slug => updateStationCard(slug));
+        searchedStations.forEach(slug => {
+            updateStationCard(slug);
+        });
     }
 
     async function controlStation(slug) {
@@ -539,7 +544,7 @@
                 }
             }
 
-            // Text nur temporär ändern, wenn vorher absolut gar nichts geladen war
+            // Nur umschalten, wenn vorher wirklich absolut gar nichts geladen war
             if (artistEl && titleEl && !initialLoadStatus[slug]) {
                 artistEl.innerText = "Verbindung wird hergestellt...";
                 titleEl.innerText = "Stream lädt...";
@@ -563,7 +568,9 @@
     function renderStationCardDOM(slug) {
         if(document.getElementById('card-' + slug)) return;
         
-        initialLoadStatus[slug] = false; // Standardmäßig auf Fehlend setzen
+        if(initialLoadStatus[slug] === undefined) {
+            initialLoadStatus[slug] = false;
+        }
 
         const newCard = document.createElement('div');
         newCard.className = 'station-card';
@@ -582,8 +589,8 @@
             </div>
             <div class="current-track-box">
                 <div class="track-label">Jetzt läuft</div>
-                <p class="track-artist" id="artist-${slug}">Bereit</p>
-                <p class="track-name" id="title-${slug}">Klicke auf Starten...</p>
+                <p class="track-artist" id="artist-${slug}">Lade Musik-Infos...</p>
+                <p class="track-name" id="title-${slug}">Verbinde zu laut.fm...</p>
             </div>
             <div class="card-actions">
                 <button id="btn-${slug}" class="btn-action" onclick="controlStation('${slug}')">
@@ -594,6 +601,7 @@
         `;
         document.getElementById('webStationGrid').appendChild(newCard);
         
+        // Holt Logo und Song-Titel SOFORT asynchron ab!
         fetchPermanentLogo(slug);
         updateStationCard(slug); 
     }
@@ -620,26 +628,22 @@
         checkBtn.innerText = "Verarbeite...";
 
         const slugs = rawInput.split(',').map(s => s.trim().toLowerCase()).filter(s => s.length > 0);
-        let addedCount = 0;
-
+        
         for (const slug of slugs) {
             if(!searchedStations.includes(slug)) {
                 renderStationCardDOM(slug);
                 searchedStations.push(slug);
-                addedCount++;
             }
         }
 
         saveStationsToStorage();
+        updateAllCards(); // Sofort alle neu hinzugefügten Stationen abfragen!
+        
         checkBtn.disabled = false;
         checkBtn.innerText = "Überprüfen";
-
-        if(addedCount > 0) {
-            showToast(`${addedCount} Stationen erfolgreich eingelesen!`);
-            document.getElementById('bulkStationInput').value = "";
-        } else {
-            showToast(`Keine neuen Stationen zum Hinzufügen gefunden.`);
-        }
+        
+        showToast("Stationen erfolgreich eingelesen!");
+        document.getElementById('bulkStationInput').value = "";
     }
 
     function removeStation(slug) {
@@ -653,7 +657,6 @@
 
     window.onload = () => {
         loadSavedStations(); 
-        updateAllCards();    
         setInterval(updateAllCards, 5000); 
     };
 </script>
