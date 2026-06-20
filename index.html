@@ -316,75 +316,7 @@
 <main class="main-container">
     <h2 class="page-title">Unsere Radio Stationen</h2>
     
-    <div class="station-grid" id="webStationGrid">
-        
-        <div class="station-card" id="card-niklas-fm">
-            <div class="fav-star-box active" onclick="toggleNativeStation('niklas-fm', this)">★</div>
-            <div class="card-header">
-                <img id="logo-niklas-fm" src="" class="station-img" alt="Logo">
-                <div class="station-meta">
-                    <h3 id="name-niklas-fm">Niklas FM</h3>
-                    <div class="listener-badge">Hörer online: <b id="listeners-niklas-fm">Lade...</b></div>
-                </div>
-            </div>
-            <div class="current-track-box">
-                <div class="track-label">Jetzt läuft</div>
-                <p class="track-artist" id="artist-niklas-fm">Interpret</p>
-                <p class="track-name" id="title-niklas-fm">Lade Titel...</p>
-            </div>
-            <div class="card-actions">
-                <button id="btn-niklas-fm" class="btn-action" onclick="controlStation('niklas-fm')">
-                    <span id="icon-niklas-fm" class="btn-icon-play"></span>
-                    <span id="text-niklas-fm">Sender starten</span>
-                </button>
-            </div>
-        </div>
-
-        <div class="station-card" id="card-ndfm">
-            <div class="fav-star-box active" onclick="toggleNativeStation('ndfm', this)">★</div>
-            <div class="card-header">
-                <img id="logo-ndfm" src="" class="station-img" alt="Logo">
-                <div class="station-meta">
-                    <h3 id="name-ndfm">ndfm</h3>
-                    <div class="listener-badge">Hörer online: <b id="listeners-ndfm">Lade...</b></div>
-                </div>
-            </div>
-            <div class="current-track-box">
-                <div class="track-label">Jetzt läuft</div>
-                <p class="track-artist" id="artist-ndfm">Interpret</p>
-                <p class="track-name" id="title-ndfm">Lade Titel...</p>
-            </div>
-            <div class="card-actions">
-                <button id="btn-ndfm" class="btn-action" onclick="controlStation('ndfm')">
-                    <span id="icon-ndfm" class="btn-icon-play"></span>
-                    <span id="text-ndfm">Sender starten</span>
-                </button>
-            </div>
-        </div>
-
-        <div class="station-card" id="card-ets2-radio">
-            <div class="fav-star-box active" onclick="toggleNativeStation('ets2-radio', this)">★</div>
-            <div class="card-header">
-                <img id="logo-ets2-radio" src="" class="station-img" alt="Logo">
-                <div class="station-meta">
-                    <h3 id="name-ets2-radio">ETS2 Radio</h3>
-                    <div class="listener-badge">Hörer online: <b id="listeners-ets2-radio">Lade...</b></div>
-                </div>
-            </div>
-            <div class="current-track-box">
-                <div class="track-label">Jetzt läuft</div>
-                <p class="track-artist" id="artist-ets2-radio">Interpret</p>
-                <p class="track-name" id="title-ets2-radio">Lade Titel...</p>
-            </div>
-            <div class="card-actions">
-                <button id="btn-ets2-radio" class="btn-action" onclick="controlStation('ets2-radio')">
-                    <span id="icon-ets2-radio" class="btn-icon-play"></span>
-                    <span id="text-ets2-radio">Sender starten</span>
-                </button>
-            </div>
-        </div>
-
-    </div>
+    <div class="station-grid" id="webStationGrid"></div>
 </main>
 
 <div id="toastBanner" class="toast-banner">
@@ -402,9 +334,6 @@
 <script>
     let activePlayingSlug = null;
     const audioPlayer = document.getElementById('globalAudioPlayer');
-    
-    // Die 3 festen Hauptsender
-    let nativeStations = ["niklas-fm", "ndfm", "ets2-radio"];
     let searchedStations = [];
 
     function showToast(message) {
@@ -421,6 +350,7 @@
         }, 3000);
     }
 
+    // Lädt deine eigens hinzugefügten Favoriten aus dem Browser-Speicher
     function loadSavedStations() {
         const savedSearch = localStorage.getItem('niklas_searched_stations');
         if (savedSearch) {
@@ -429,22 +359,13 @@
                 renderStationCardDOM(slug);
             });
         }
-        
-        const savedNativeHidden = localStorage.getItem('niklas_hidden_native_stations');
-        if (savedNativeHidden) {
-            const hiddenNatives = JSON.parse(savedNativeHidden);
-            hiddenNatives.forEach(slug => {
-                const card = document.getElementById('card-' + slug);
-                if (card) card.style.display = 'none';
-                nativeStations = nativeStations.filter(s => s !== slug);
-            });
-        }
     }
 
     function saveStationsToStorage() {
         localStorage.setItem('niklas_searched_stations', JSON.stringify(searchedStations));
     }
 
+    // Aktualisiert Hörerzahlen, Cover und Titel live von der API
     async function updateStationCard(slug) {
         try {
             let realTimeListeners = 0;
@@ -486,7 +407,6 @@
     }
 
     function updateAllCards() {
-        nativeStations.forEach(slug => updateStationCard(slug));
         searchedStations.forEach(slug => updateStationCard(slug));
     }
 
@@ -552,31 +472,8 @@
         const searchVal = document.getElementById('webSearchInput').value.toLowerCase().trim();
         if(!searchVal) return;
 
-        // KORREKTUR: Verhindert doppeltes Hinzufügen, blockiert aber nicht mehr die Suche!
+        // Verhindert doppeltes Hinzufügen desselben Senders
         if(searchedStations.includes(searchVal)) return;
-
-        // Falls ein Standard-Sender ausgeblendet war, blenden wir ihn über die Suche wieder ein
-        const savedNativeHidden = localStorage.getItem('niklas_hidden_native_stations');
-        if (savedNativeHidden) {
-            let hiddenNatives = JSON.parse(savedNativeHidden);
-            if (hiddenNatives.includes(searchVal)) {
-                hiddenNatives = hiddenNatives.filter(s => s !== searchVal);
-                localStorage.setItem('niklas_hidden_native_stations', JSON.stringify(hiddenNatives));
-                const card = document.getElementById('card-' + searchVal);
-                if (card) card.style.display = 'flex';
-                if (!nativeStations.includes(searchVal)) nativeStations.push(searchVal);
-                const star = card.querySelector('.fav-star-box');
-                if (star) star.classList.add('active');
-                
-                showToast(`${searchVal.toUpperCase()} zu Favoriten hinzugefügt`);
-                updateStationCard(searchVal);
-                document.getElementById('webSearchInput').value = "";
-                return;
-            }
-        }
-
-        // Wenn er bereits aktiv auf der Startseite sichtbar ist, brechen wir ab
-        if(nativeStations.includes(searchVal)) return;
 
         try {
             const res = await fetch(`https://api.laut.fm/station/${searchVal}`);
@@ -586,6 +483,7 @@
             searchedStations.push(searchVal);
             saveStationsToStorage();
             
+            // Zeigt die Bestätigung an
             showToast(`${searchVal.toUpperCase()} zu Favoriten hinzugefügt`);
             
             updateStationCard(searchVal);
@@ -593,26 +491,13 @@
         } catch(e) {}
     }
 
+    // Entfernt den Sender restlos beim Klick auf den gelben Stern
     function removeStation(slug) {
         searchedStations = searchedStations.filter(s => s !== slug);
         saveStationsToStorage();
         const card = document.getElementById('card-' + slug);
         if(card) card.remove();
         if(activePlayingSlug === slug) activePlayingSlug = null;
-    }
-
-    function toggleNativeStation(slug, element) {
-        let savedNativeHidden = localStorage.getItem('niklas_hidden_native_stations');
-        let hiddenNatives = savedNativeHidden ? JSON.parse(savedNativeHidden) : [];
-        
-        if (!hiddenNatives.includes(slug)) {
-            hiddenNatives.push(slug);
-            localStorage.setItem('niklas_hidden_native_stations', JSON.stringify(hiddenNatives));
-            const card = document.getElementById('card-' + slug);
-            if (card) card.style.display = 'none';
-            nativeStations = nativeStations.filter(s => s !== slug);
-            if(activePlayingSlug === slug) activePlayingSlug = null;
-        }
     }
 
     window.onload = () => {
