@@ -2,89 +2,101 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-    <title>Radio Live Hub</title>
+    <title>Radio Hub - Live</title>
     <style>
-        :root { --bg: #f4f6f9; --accent: #00a67c; } /* laut.fm grün */
-        body { font-family: sans-serif; background: var(--bg); padding: 20px; }
-        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 15px; }
-        .card { background: white; padding: 12px; border-radius: 8px; border: 1px solid #ddd; position: relative; }
-        .head { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
-        .logo { width: 50px; height: 50px; border-radius: 4px; object-fit: cover; }
-        .info { font-size: 0.85rem; color: #555; margin-bottom: 10px; }
-        /* Der Knopf wie auf laut.fm */
-        .btn { 
-            background: var(--accent); color: white; border: none; 
-            padding: 6px 15px; border-radius: 4px; cursor: pointer; 
-            font-size: 0.9rem; font-weight: bold; display: flex; align-items: center; gap: 6px;
-        }
-        .btn:hover { background: #008f6a; }
+        body { font-family: sans-serif; background: #f4f6f9; margin: 0; padding: 0; }
+        .header { background: white; padding: 20px 50px; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; }
+        .main { max-width: 1200px; margin: 40px auto; padding: 0 20px; }
+        .controls { display: flex; gap: 10px; margin-bottom: 30px; }
+        input { flex: 1; padding: 10px; border: 1px solid #ccc; border-radius: 6px; }
+        button { padding: 10px 20px; background: #007bff; color: white; border: none; border-radius: 6px; cursor: pointer; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
+        .card { background: white; padding: 20px; border-radius: 12px; border: 1px solid #ddd; }
+        .logo { width: 60px; height: 60px; border-radius: 8px; object-fit: cover; }
+        .footer { text-align: center; padding: 40px; color: #718096; border-top: 1px solid #e2e8f0; }
+        .btn-play { background: #00a67c; width: 100%; padding: 10px; border: none; color: white; font-weight: bold; border-radius: 50px; cursor: pointer; margin-top: 15px; }
     </style>
 </head>
 <body>
 
-<div class="grid" id="container"></div>
+<header class="header">
+    <h1>Radio <span>Hub</span></h1>
+    <input type="text" id="searchInput" placeholder="Einzelnen Sender suchen...">
+    <button onclick="addSingle()">Suchen</button>
+</header>
+
+<div class="main">
+    <div class="controls">
+        <input type="text" id="bulkInput" placeholder="Mehrere Sender (Komma getrennt, z.B. niklas-fm, ndfm)">
+        <button onclick="addBulk()">Überprüfen</button>
+    </div>
+    <div class="grid" id="grid"></div>
+</div>
+
+<div class="footer">Partner: <b>laut.fm</b></div>
 <audio id="player"></audio>
 
 <script>
-    let stations = JSON.parse(localStorage.getItem('my_stations')) || ['niklas-fm'];
+    let stations = JSON.parse(localStorage.getItem('my_stations')) || [];
     const player = document.getElementById('player');
 
     function render() {
-        const cont = document.getElementById('container');
-        cont.innerHTML = '';
-        stations.forEach(slug => {
-            const div = document.createElement('div');
-            div.className = 'card';
-            div.innerHTML = `
-                <div class="head">
-                    <img id="logo-${slug}" class="logo" src="https://api.laut.fm/favicon.ico">
-                    <div>
-                        <div style="font-weight:bold">${slug.toUpperCase()}</div>
-                        <div style="font-size:0.75rem">Hörer: <span id="list-${slug}">0</span></div>
+        const grid = document.getElementById('grid');
+        grid.innerHTML = '';
+        stations.forEach(s => {
+            grid.innerHTML += `
+                <div class="card" id="card-${s}">
+                    <div style="display:flex; align-items:center; gap:15px;">
+                        <img id="img-${s}" src="https://api.laut.fm/favicon.ico" class="logo">
+                        <div><b>${s.toUpperCase()}</b><br>Hörer: <span id="list-${s}">0</span></div>
                     </div>
+                    <div style="margin-top:15px; font-size:0.9rem;">
+                        <div id="art-${s}" style="font-weight:bold">Lade...</div>
+                        <div id="tit-${s}">...</div>
+                    </div>
+                    <button class="btn-play" onclick="toggle('${s}')" id="btn-${s}">▶ Sender starten</button>
+                    <button onclick="del('${s}')" style="background:none; border:none; color:red; font-size:0.7rem; cursor:pointer; margin-top:5px;">Entfernen</button>
                 </div>
-                <div class="info">
-                    <div id="art-${slug}" style="font-weight:bold; color:black">Lade...</div>
-                    <div id="tit-${slug}">Verbinde...</div>
-                </div>
-                <button class="btn" onclick="toggle('${slug}')" id="btn-${slug}">
-                    <span id="icon-${slug}">▶</span> Sender starten
-                </button>
             `;
-            cont.appendChild(div);
-            update(slug);
+            update(s);
         });
     }
 
-    async function update(slug) {
-        // API Aufrufe für Bilder, Hörer und Songs
-        fetch(`https://api.laut.fm/station/${slug}`)
-            .then(r => r.json())
-            .then(d => {
-                const img = document.getElementById(`logo-${slug}`);
-                if(img && d.images) img.src = d.images.station_120x120;
-            });
-            
-        fetch(`https://api.laut.fm/station/${slug}/listeners`).then(r => r.text()).then(t => document.getElementById(`list-${slug}`).innerText = t);
-        fetch(`https://api.laut.fm/station/${slug}/current_song`).then(r => r.json()).then(s => {
-            document.getElementById(`art-${slug}`).innerText = s.artist?.name || "-";
-            document.getElementById(`tit-${slug}`).innerText = s.title || "-";
+    async function update(s) {
+        fetch(`https://api.laut.fm/station/${s}`).then(r => r.json()).then(d => {
+            if(d.images) document.getElementById(`img-${s}`).src = d.images.station_120x120;
+        });
+        fetch(`https://api.laut.fm/station/${s}/listeners`).then(r => r.text()).then(t => document.getElementById(`list-${s}`).innerText = t);
+        fetch(`https://api.laut.fm/station/${s}/current_song`).then(r => r.json()).then(d => {
+            document.getElementById(`art-${s}`).innerText = d.artist?.name || "-";
+            document.getElementById(`tit-${s}`).innerText = d.title || "-";
         });
     }
 
-    function toggle(slug) {
-        const icon = document.getElementById(`icon-${slug}`);
-        const btn = document.getElementById(`btn-${slug}`);
-        
-        if (player.src.includes(slug) && !player.paused) {
+    function addSingle() {
+        const val = document.getElementById('searchInput').value.toLowerCase().trim();
+        if(val && !stations.includes(val)) { stations.push(val); save(); render(); }
+    }
+
+    function addBulk() {
+        const val = document.getElementById('bulkInput').value.split(',');
+        val.forEach(s => {
+            const clean = s.trim().toLowerCase();
+            if(clean && !stations.includes(clean)) stations.push(clean);
+        });
+        save(); render();
+    }
+
+    function save() { localStorage.setItem('my_stations', JSON.stringify(stations)); }
+    function del(s) { stations = stations.filter(x => x !== s); save(); render(); }
+    function toggle(s) {
+        if(!player.paused && player.src.includes(s)) {
             player.pause();
-            icon.innerText = "▶";
-            btn.innerHTML = `<span id="icon-${slug}">▶</span> Sender starten`;
+            document.getElementById(`btn-${s}`).innerText = "▶ Sender starten";
         } else {
-            player.src = `https://stream.laut.fm/${slug}`;
+            player.src = `https://stream.laut.fm/${s}`;
             player.play();
-            icon.innerText = "⏹";
-            btn.innerHTML = `<span id="icon-${slug}">⏹</span> Sender stoppen`;
+            document.getElementById(`btn-${s}`).innerText = "⏹ Sender stoppen";
         }
     }
 
