@@ -10,7 +10,7 @@
             --header-bg: #ffffff;
             --text-color: #2d3748;
             --accent-blue: #007bff;
-            --accent-green: #00a67c; /* Original laut.fm Grün */
+            --accent-green: #00a67c;
             --card-bg: #ffffff;
             --border-color: #e2e8f0;
         }
@@ -204,7 +204,6 @@
             padding-top: 5px;
         }
 
-        /* Pillenförmiger laut.fm Button mit dauerhaft SCHWARZER Schrift */
         .btn-action {
             background-color: var(--accent-green);
             color: #000000;
@@ -243,7 +242,6 @@
             box-sizing: border-box;
         }
 
-        /* Info-Toast-Banner unten am Bildschirm */
         .toast-banner {
             position: fixed;
             bottom: 20px;
@@ -315,7 +313,6 @@
 
 <main class="main-container">
     <h2 class="page-title">Unsere Radio Stationen</h2>
-    
     <div class="station-grid" id="webStationGrid"></div>
 </main>
 
@@ -350,8 +347,12 @@
         }, 3000);
     }
 
-    // Lädt deine eigens hinzugefügten Favoriten aus dem Browser-Speicher
     function loadSavedStations() {
+        // NEU: Alte Überschneidungs-Reste löschen, falls vorhanden
+        if (localStorage.getItem('niklas_hidden_native_stations')) {
+            localStorage.removeItem('niklas_hidden_native_stations');
+        }
+
         const savedSearch = localStorage.getItem('niklas_searched_stations');
         if (savedSearch) {
             searchedStations = JSON.parse(savedSearch);
@@ -365,7 +366,6 @@
         localStorage.setItem('niklas_searched_stations', JSON.stringify(searchedStations));
     }
 
-    // Aktualisiert Hörerzahlen, Cover und Titel live von der API
     async function updateStationCard(slug) {
         try {
             let realTimeListeners = 0;
@@ -472,7 +472,6 @@
         const searchVal = document.getElementById('webSearchInput').value.toLowerCase().trim();
         if(!searchVal) return;
 
-        // Verhindert doppeltes Hinzufügen desselben Senders
         if(searchedStations.includes(searchVal)) return;
 
         try {
@@ -483,7 +482,6 @@
             searchedStations.push(searchVal);
             saveStationsToStorage();
             
-            // Zeigt die Bestätigung an
             showToast(`${searchVal.toUpperCase()} zu Favoriten hinzugefügt`);
             
             updateStationCard(searchVal);
@@ -491,7 +489,6 @@
         } catch(e) {}
     }
 
-    // Entfernt den Sender restlos beim Klick auf den gelben Stern
     function removeStation(slug) {
         searchedStations = searchedStations.filter(s => s !== slug);
         saveStationsToStorage();
