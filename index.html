@@ -138,7 +138,6 @@
             margin-top: 2px;
         }
 
-        /* Das runde Favoriten-Sternchen-Symbol im Kasten */
         .fav-star-box {
             position: absolute;
             top: 20px;
@@ -197,23 +196,6 @@
             text-overflow: ellipsis;
         }
 
-        /* Playlist / Zuletzt gelaufen Box aus Screenshot */
-        .history-box {
-            font-size: 0.8rem;
-            color: #718096;
-            border-top: 1px dashed var(--border-color);
-            padding-top: 8px;
-            margin-top: 4px;
-        }
-
-        .history-title {
-            font-weight: 700;
-            text-transform: uppercase;
-            font-size: 0.7rem;
-            color: #a0aec0;
-            margin-bottom: 3px;
-        }
-
         .card-actions {
             margin-top: auto;
             display: flex;
@@ -222,10 +204,10 @@
             padding-top: 5px;
         }
 
-        /* Pillenförmiger, grüner laut.fm Button */
+        /* Pillenförmiger laut.fm Button mit dauerhaft SCHWARZER Schrift */
         .btn-action {
             background-color: var(--accent-green);
-            color: #ffffff;
+            color: #000000; /* Textfarbe dauerhaft schwarz */
             font-family: inherit;
             font-size: 0.95rem;
             font-weight: 700;
@@ -259,6 +241,48 @@
             border-right: 3px solid #000000;
             display: inline-block;
             box-sizing: border-box;
+        }
+
+        /* NEU: Das Info-Toast-Banner aus dem Screenshot */
+        .toast-banner {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%) translateY(150%);
+            background-color: #1a202c;
+            color: #ffffff;
+            padding: 14px 24px;
+            border-radius: 6px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            z-index: 2000;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            transition: transform 0.3s ease-in-out;
+            min-width: 320px;
+            overflow: hidden;
+        }
+
+        .toast-banner.show {
+            transform: translateX(-50%) translateY(0);
+        }
+
+        /* Der Ladebalken, der nach links durchläuft */
+        .toast-progress {
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            height: 3px;
+            background-color: var(--accent-green);
+            width: 100%;
+        }
+
+        .toast-banner.show .toast-progress {
+            animation: shrinkProgress 3s linear forwards;
+        }
+
+        @keyframes shrinkProgress {
+            from { width: 100%; }
+            to { width: 0%; }
         }
 
         .site-footer {
@@ -297,86 +321,35 @@
     
     <div class="station-grid" id="webStationGrid">
         
-        <div class="station-card" id="card-simulator4">
-            <div class="fav-star-box active" onclick="toggleNativeStation('simulator4', this)">★</div>
+        <div class="station-card" id="card-niklas-fm">
+            <div class="fav-star-box active" onclick="toggleNativeStation('niklas-fm', this)">★</div>
             <div class="card-header">
-                <img id="logo-simulator4" src="" class="station-img" alt="Logo">
+                <img id="logo-niklas-fm" src="" class="station-img" alt="Logo">
                 <div class="station-meta">
-                    <h3 id="name-simulator4">Simulator 4</h3>
-                    <div class="listener-badge">Hörer online: <b id="listeners-simulator4">Lade...</b></div>
+                    <h3 id="name-niklas-fm">Niklas FM</h3>
+                    <div class="listener-badge">Hörer online: <b id="listeners-niklas-fm">Lade...</b></div>
                 </div>
             </div>
             <div class="current-track-box">
                 <div class="track-label">Jetzt läuft</div>
-                <p class="track-artist" id="artist-simulator4">Interpret</p>
-                <p class="track-name" id="title-simulator4">Lade Titel...</p>
-                <div class="history-box">
-                    <div class="history-title">Zuletzt gelaufen</div>
-                    <div id="history-simulator4">-</div>
-                </div>
+                <p class="track-artist" id="artist-niklas-fm">Interpret</p>
+                <p class="track-name" id="title-niklas-fm">Lade Titel...</p>
             </div>
             <div class="card-actions">
-                <button id="btn-simulator4" class="btn-action" onclick="controlStation('simulator4')">
-                    <span id="icon-simulator4" class="btn-icon-play"></span>
-                    <span id="text-simulator4">Sender starten</span>
-                </button>
-            </div>
-        </div>
-
-        <div class="station-card" id="card-brian-radio">
-            <div class="fav-star-box active" onclick="toggleNativeStation('brian-radio', this)">★</div>
-            <div class="card-header">
-                <img id="logo-brian-radio" src="" class="station-img" alt="Logo">
-                <div class="station-meta">
-                    <h3 id="name-brian-radio">Brian Radio</h3>
-                    <div class="listener-badge">Hörer online: <b id="listeners-brian-radio">Lade...</b></div>
-                </div>
-            </div>
-            <div class="current-track-box">
-                <div class="track-label">Jetzt läuft</div>
-                <p class="track-artist" id="artist-brian-radio">Interpret</p>
-                <p class="track-name" id="title-brian-radio">Lade Titel...</p>
-                <div class="history-box">
-                    <div class="history-title">Zuletzt gelaufen</div>
-                    <div id="history-brian-radio">-</div>
-                </div>
-            </div>
-            <div class="card-actions">
-                <button id="btn-brian-radio" class="btn-action" onclick="controlStation('brian-radio')">
-                    <span id="icon-brian-radio" class="btn-icon-play"></span>
-                    <span id="text-brian-radio">Sender starten</span>
-                </button>
-            </div>
-        </div>
-
-        <div class="station-card" id="card-feierabend-radio">
-            <div class="fav-star-box active" onclick="toggleNativeStation('feierabend-radio', this)">★</div>
-            <div class="card-header">
-                <img id="logo-feierabend-radio" src="" class="station-img" alt="Logo">
-                <div class="station-meta">
-                    <h3 id="name-feierabend-radio">Feierabend Radio</h3>
-                    <div class="listener-badge">Hörer online: <b id="listeners-feierabend-radio">Lade...</b></div>
-                </div>
-            </div>
-            <div class="current-track-box">
-                <div class="track-label">Jetzt läuft</div>
-                <p class="track-artist" id="artist-feierabend-radio">Demnächst verfügbar</p>
-                <p class="track-name" id="title-feierabend-radio">In Vorbereitung</p>
-                <div class="history-box">
-                    <div class="history-title">Zuletzt gelaufen</div>
-                    <div id="history-feierabend-radio">-</div>
-                </div>
-            </div>
-            <div class="card-actions">
-                <button id="btn-feierabend-radio" class="btn-action" onclick="controlStation('feierabend-radio')">
-                    <span id="icon-feierabend-radio" class="btn-icon-play"></span>
-                    <span id="text-feierabend-radio">Sender starten</span>
+                <button id="btn-niklas-fm" class="btn-action" onclick="controlStation('niklas-fm')">
+                    <span id="icon-niklas-fm" class="btn-icon-play"></span>
+                    <span id="text-niklas-fm">Sender starten</span>
                 </button>
             </div>
         </div>
 
     </div>
 </main>
+
+<div id="toastBanner" class="toast-banner">
+    <span id="toastMessage">Sender zu Favoriten hinzugefügt</span>
+    <div class="toast-progress"></div>
+</div>
 
 <footer class="site-footer">
     <div>&copy; 2026 NiklasIT Hub. Alle Rechte vorbehalten.</div>
@@ -389,11 +362,23 @@
     let activePlayingSlug = null;
     const audioPlayer = document.getElementById('globalAudioPlayer');
     
-    // Standard-Sender auf der Startseite
-    let nativeStations = ["simulator4", "brian-radio", "feierabend-radio"];
+    let nativeStations = ["niklas-fm"];
     let searchedStations = [];
 
-    // Lade alle Favoriten aus dem Speicher
+    function showToast(message) {
+        const toast = document.getElementById('toastBanner');
+        const msgSpan = document.getElementById('toastMessage');
+        msgSpan.innerText = message;
+        
+        toast.classList.remove('show');
+        void toast.offsetWidth; // Trigger Reflow für die Animation
+        toast.classList.add('show');
+        
+        setTimeout(() => {
+            toast.classList.remove('show');
+        }, 3000);
+    }
+
     function loadSavedStations() {
         const savedSearch = localStorage.getItem('niklas_searched_stations');
         if (savedSearch) {
@@ -408,9 +393,7 @@
             const hiddenNatives = JSON.parse(savedNativeHidden);
             hiddenNatives.forEach(slug => {
                 const card = document.getElementById('card-' + slug);
-                if (card) {
-                    card.style.display = 'none';
-                }
+                if (card) card.style.display = 'none';
                 nativeStations = nativeStations.filter(s => s !== slug);
             });
         }
@@ -420,7 +403,6 @@
         localStorage.setItem('niklas_searched_stations', JSON.stringify(searchedStations));
     }
 
-    // Aktualisiert die Track-Informationen, Hörerzahlen & Playlist aus der API
     async function updateStationCard(slug) {
         try {
             let realTimeListeners = 0;
@@ -458,18 +440,6 @@
                     document.getElementById('artist-' + slug).innerText = song.artist ? song.artist.name : "Interpret";
                 }
             }
-
-            // Playlist-Verlauf abrufen (Zuletzt gelaufen Box)
-            try {
-                const hRes = await fetch(`https://api.laut.fm/station/${slug}/last_songs`);
-                if(hRes.ok) {
-                    const historyData = await hRes.json();
-                    if(historyData && historyData.length > 0 && document.getElementById(`history-${slug}`)) {
-                        document.getElementById(`history-${slug}`).innerText = historyData[0].artist.name + " - " + historyData[0].title;
-                    }
-                }
-            } catch(e) {}
-
         } catch(e) {}
     }
 
@@ -525,10 +495,6 @@
                 <div class="track-label">Jetzt läuft</div>
                 <p class="track-artist" id="artist-${slug}">Interpret</p>
                 <p class="track-name" id="title-${slug}">Lade Titel...</p>
-                <div class="history-box">
-                    <div class="history-title">Zuletzt gelaufen</div>
-                    <div id="history-${slug}">-</div>
-                </div>
             </div>
             <div class="card-actions">
                 <button id="btn-${slug}" class="btn-action" onclick="controlStation('${slug}')">
@@ -544,7 +510,6 @@
         const searchVal = document.getElementById('webSearchInput').value.toLowerCase().trim();
         if(!searchVal) return;
 
-        // Wenn er bereits ausgeblendet war, blenden wir ihn wieder ein
         const savedNativeHidden = localStorage.getItem('niklas_hidden_native_stations');
         if (savedNativeHidden) {
             let hiddenNatives = JSON.parse(savedNativeHidden);
@@ -556,6 +521,8 @@
                 if (!nativeStations.includes(searchVal)) nativeStations.push(searchVal);
                 const star = card.querySelector('.fav-star-box');
                 if (star) star.classList.add('active');
+                
+                showToast(`${searchVal.toUpperCase()} zu Favoriten hinzugefügt`);
                 updateStationCard(searchVal);
                 document.getElementById('webSearchInput').value = "";
                 return;
@@ -571,12 +538,15 @@
             renderStationCardDOM(searchVal);
             searchedStations.push(searchVal);
             saveStationsToStorage();
+            
+            // Animation / Anzeige beim erfolgreichen Hinzufügen auslösen
+            showToast(`${searchVal.toUpperCase()} zu Favoriten hinzugefügt`);
+            
             updateStationCard(searchVal);
             document.getElementById('webSearchInput').value = "";
         } catch(e) {}
     }
 
-    // Löscht selbst gesuchte Sender aus den Favoriten
     function removeStation(slug) {
         searchedStations = searchedStations.filter(s => s !== slug);
         saveStationsToStorage();
@@ -585,7 +555,6 @@
         if(activePlayingSlug === slug) activePlayingSlug = null;
     }
 
-    // Schaltet die Standard-Sender auf der Startseite stumm/aus
     function toggleNativeStation(slug, element) {
         let savedNativeHidden = localStorage.getItem('niklas_hidden_native_stations');
         let hiddenNatives = savedNativeHidden ? JSON.parse(savedNativeHidden) : [];
