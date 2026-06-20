@@ -449,6 +449,7 @@
                 document.getElementById('name-' + slug).innerText = station.display_name || slug.toUpperCase();
                 document.getElementById('listeners-' + slug).innerText = realTimeListeners;
                 
+                // Falls ein echtes Song-Cover existiert, nimm das. Ansonsten nimm das offizielle Sender-Logo von laut.fm
                 if (song.image && song.image.trim() !== "") {
                     document.getElementById('logo-' + slug).src = song.image;
                 } else if (station.images && station.images.station_120x120) {
@@ -503,13 +504,16 @@
     function renderStationCardDOM(slug) {
         if(document.getElementById('card-' + slug)) return;
         
+        // Nutzt direkt die offizielle laut.fm URL als primäre Quelle, damit das Logo sofort zieht!
+        const defaultLogo = `https://api.laut.fm/station/${slug}/images/station_120x120.png`;
+        
         const newCard = document.createElement('div');
         newCard.className = 'station-card';
         newCard.id = 'card-' + slug;
         newCard.innerHTML = `
             <div class="fav-star-box" onclick="removeStation('${slug}')" title="Sender entfernen">★</div>
             <div class="card-header">
-                <img id="logo-${slug}" src="" class="station-img" alt="Logo" onerror="this.src='https://laut.fm/images/laut_fm_logo_black.png'">
+                <img id="logo-${slug}" src="${defaultLogo}" class="station-img" alt="Logo" onerror="this.src='https://images.laut.fm/laut_fm_logo_black.png'">
                 <div class="station-meta">
                     <h3 id="name-${slug}">${slug.toUpperCase()}</h3>
                     <div class="listener-badge">Hörer online: <b id="listeners-${slug}">0</b></div>
@@ -544,7 +548,6 @@
         document.getElementById('webSearchInput').value = "";
     }
 
-    // Paddys-Tool-Modus: Fügt JEDEN eingetragenen Namen sofort hinzu!
     async function checkMultipleStations() {
         const rawInput = document.getElementById('bulkStationInput').value;
         if(!rawInput.trim()) return;
@@ -558,10 +561,8 @@
 
         for (const slug of slugs) {
             if(!searchedStations.includes(slug)) {
-                // NEU: Keine API-Bremse mehr, wir klatschen die Karte sofort rein!
                 renderStationCardDOM(slug);
                 searchedStations.push(slug);
-                // Versucht Daten im Hintergrund zu laden, bricht aber nicht ab, wenn es fehlschlägt
                 updateStationCard(slug);
                 addedCount++;
             }
@@ -587,10 +588,11 @@
         if(activePlayingSlug === slug) activePlayingSlug = null;
     }
 
-    window.onload = () => {
-        loadSavedStations();
-        updateAllCards();
-        setInterval(updateAllCards, 5000); 
+    // BEIM LADEN DER SEITE: Führt sofort das API-Update für alle gespeicherten Sender aus!
+    window.onload = async () => {
+        loadSavedStations(); // Baut die Karten aus dem Speicher auf
+        updateAllCards();    // Holt SOFORT die echten Logos und Live-Daten von laut.fm ab!
+        setInterval(updateAllCards, 5000); // Hält die Daten alle 5 Sekunden aktuell
     };
 </script>
 </body>
