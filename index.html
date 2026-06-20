@@ -394,7 +394,6 @@
     let activePlayingSlug = null;
     const audioPlayer = document.getElementById('globalAudioPlayer');
     let searchedStations = [];
-    let cachedLogos = {}; // Unser lokaler Bild-Cache im Arbeitsspeicher
 
     function showToast(message) {
         const toast = document.getElementById('toastBanner');
@@ -410,15 +409,8 @@
         }, 3000);
     }
 
-    // Lädt die gespeicherten Sender und die gecachten Logos aus dem Speicher
     function loadSavedStations() {
         const savedSearch = localStorage.getItem('niklas_searched_stations');
-        const savedLogos = localStorage.getItem('niklas_logo_cache');
-        
-        if (savedLogos) {
-            cachedLogos = JSON.parse(savedLogos);
-        }
-        
         if (savedSearch) {
             searchedStations = JSON.parse(savedSearch);
             searchedStations.forEach(slug => {
@@ -431,29 +423,7 @@
         localStorage.setItem('niklas_searched_stations', JSON.stringify(searchedStations));
     }
 
-    // Wandelt ein geladenes Web-Bild im Hintergrund in einen Base64-String um und speichert ihn ab
-    function cacheImageAsBase64(slug, url) {
-        if (!url || url.startsWith('data:')) return;
-        
-        const img = new Image();
-        img.crossOrigin = 'Anonymous';
-        img.src = url;
-        img.onload = function () {
-            const canvas = document.createElement('canvas');
-            canvas.width = img.width;
-            canvas.height = img.height;
-            const ctx = canvas.getContext('2d');
-            ctx.drawImage(img, 0, 0);
-            try {
-                const dataURL = canvas.toDataURL('image/png');
-                cachedLogos[slug] = dataURL;
-                localStorage.setItem('niklas_logo_cache', JSON.stringify(cachedLogos));
-            } catch (e) {
-                console.log("Cache-Speicherung blockiert durch CORS, nutze Live-URL.");
-            }
-        };
-    }
-
+    // Aktualisiert nur Text, Hörer und falls vorhanden Lied-Cover (ohne das Senderlogo kaputt zu machen)
     async function updateStationCard(slug) {
         try {
             let realTimeListeners = 0;
@@ -477,9 +447,9 @@
                         document.getElementById(`title-${slug}`).innerText = song.title;
                         document.getElementById(`artist-${slug}`).innerText = song.artist ? song.artist.name : "Interpret";
                         
+                        // Nur wenn das aktuelle Lied ein echtes, eigenes Cover mitbringt, tauschen wir das Bild aus
                         if (song.image && song.image.trim() !== "") {
                             document.getElementById(`logo-${slug}`).src = song.image;
-                            cacheImageAsBase64(slug, song.image);
                         }
                     } else {
                         document.getElementById(`title-${slug}`).innerText = "Keine Titel-Info";
@@ -527,9 +497,8 @@
     function renderStationCardDOM(slug) {
         if(document.getElementById('card-' + slug)) return;
         
-        // CACHE-PRÜFUNG: Gibt es ein bereits gespeichertes Logo im Browser? Wenn ja, nimm das!
-        // Wenn nicht, nimm den laut.fm Pfad als Fallback.
-        const storedLogo = cachedLogos[slug] ? cachedLogos[slug] : `https://api.laut.fm/station/${slug}/images/station_120x120.png`;
+        // Die originale, direkte Bild-URL von laut.fm ohne Scripte. So werden die Bilder sofort sauber geladen!
+        const defaultLogoUrl = `https://api.laut.fm/station/${slug}/images/station_120x120.png`;
         
         const newCard = document.createElement('div');
         newCard.className = 'station-card';
@@ -537,7 +506,7 @@
         newCard.innerHTML = `
             <div class="fav-star-box" onclick="removeStation('${slug}')" title="Sender entfernen">★</div>
             <div class="card-header">
-                <img id="logo-${slug}" src="${storedLogo}" class="station-img" alt="Logo" onload="if(!this.src.startsWith('data:')) cacheImageAsBase64('${slug}', this.src)" onerror="this.src='https://images.laut.fm/laut_fm_logo_black.png'">
+                <img id="logo-${slug}" src="${defaultLogoUrl}" class="station-img" alt="Logo" onerror="this.src='https://images.laut.fm/laut_fm_logo_black.png'">
                 <div class="station-meta">
                     <h3 id="name-${slug}">${slug.toUpperCase()}</h3>
                     <div class="listener-badge">Hörer online: <b id="listeners-${slug}">0</b></div>
@@ -607,21 +576,14 @@
     function removeStation(slug) {
         searchedStations = searchedStations.filter(s => s !== slug);
         saveStationsToStorage();
-        
-        // Auch aus dem Logo-Cache löschen
-        if (cachedLogos[slug]) {
-            delete cachedLogos[slug];
-            localStorage.setItem('niklas_logo_cache', JSON.stringify(cachedLogos));
-        }
-        
         const card = document.getElementById('card-' + slug);
         if(card) card.remove();
         if(activePlayingSlug === slug) activePlayingSlug = null;
     }
 
     window.onload = () => {
-        loadSavedStations(); // Holt die Sender UND die gespeicherten Logos sofort aus dem Browser-Speicher!
-        updateAllCards();    
+        loadSavedStations(); // Erstellt die Karten und lädt die Bilder SOFORT über den Browser
+        updateAllCards();    // Holt Titel und Hörerzahlen ab
         setInterval(updateAllCards, 5000); 
     };
 </script>
