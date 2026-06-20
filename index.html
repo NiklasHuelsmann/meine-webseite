@@ -195,7 +195,6 @@
             display: block;
         }
 
-        /* Schicker Ladeindikator statt grauem Kasten */
         .img-loader {
             width: 20px;
             height: 20px;
@@ -423,6 +422,9 @@
     const audioPlayer = document.getElementById('globalAudioPlayer');
     let searchedStations = [];
 
+    // Verhindert das Überschreiben bereits geladener Daten mit Lade-Texten
+    let initialLoadStatus = {};
+
     function showToast(message) {
         const toast = document.getElementById('toastBanner');
         const msgSpan = document.getElementById('toastMessage');
@@ -451,7 +453,6 @@
         localStorage.setItem('niklas_searched_stations', JSON.stringify(searchedStations));
     }
 
-    // Holt die echten Senderlogos über die Haupt-API ab (Wird nur EINMAL ausgeführt)
     async function fetchPermanentLogo(slug) {
         try {
             const res = await fetch(`https://api.laut.fm/station/${slug}`);
@@ -462,7 +463,7 @@
                 
                 if (imgElement && data.images && data.images.station_120x120) {
                     imgElement.src = data.images.station_120x120;
-                    if (loader) loader.remove(); // Ladekreis entfernen
+                    if (loader) loader.remove(); 
                 } else if (imgElement && data.image_url) {
                     imgElement.src = data.image_url;
                     if (loader) loader.remove();
@@ -473,7 +474,7 @@
         }
     }
 
-    // Aktualisiert im Intervall AUSSCHLIESSLICH Text und Hörerzahlen. Logos bleiben unberührt!
+    // Verbesserte Update-Funktion: Überschreibt niemals funktionierende Daten mit Lade-Meldungen!
     async function updateStationCard(slug) {
         try {
             let realTimeListeners = 0;
@@ -492,13 +493,19 @@
             const cRes = await fetch(`https://api.laut.fm/station/${slug}/current_song?nocache=${Date.now()}`);
             if(cRes.ok) {
                 const song = await cRes.json();
-                if(document.getElementById(`title-${slug}`)) {
-                    if(song.title) {
-                        document.getElementById(`title-${slug}`).innerText = song.title;
-                        document.getElementById(`artist-${slug}`).innerText = song.artist ? song.artist.name : "Interpret";
-                    } else {
-                        document.getElementById(`title-${slug}`).innerText = "Keine Titel-Info";
-                        document.getElementById(`artist-${slug}`).innerText = "Live";
+                const artistEl = document.getElementById(`artist-${slug}`);
+                const titleEl = document.getElementById(`title-${slug}`);
+
+                if(titleEl && artistEl) {
+                    // SICHERHEITS-CHECK: Nur updaten, wenn sinnvolle Daten zurückkommen
+                    if(song.title && song.title.trim() !== "") {
+                        titleEl.innerText = song.title;
+                        artistEl.innerText = song.artist ? song.artist.name : "Interpret";
+                        initialLoadStatus[slug] = true; // Markieren, dass Daten da sind
+                    } else if (!initialLoadStatus[slug]) {
+                        // Nur wenn noch NIE etwas geladen wurde, zeigen wir den Fallback
+                        artistEl.innerText = "Live-Stream";
+                        titleEl.innerText = "Musik läuft...";
                     }
                 }
             }
@@ -512,6 +519,8 @@
     async function controlStation(slug) {
         const clickedTxt = document.getElementById('text-' + slug);
         const clickedIcon = document.getElementById('icon-' + slug);
+        const artistEl = document.getElementById(`artist-${slug}`);
+        const titleEl = document.getElementById(`title-${slug}`);
 
         if (activePlayingSlug === slug) {
             audioPlayer.pause();
@@ -530,18 +539,32 @@
                 }
             }
 
+            // Text nur temporär ändern, wenn vorher absolut gar nichts geladen war
+            if (artistEl && titleEl && !initialLoadStatus[slug]) {
+                artistEl.innerText = "Verbindung wird hergestellt...";
+                titleEl.innerText = "Stream lädt...";
+            }
+
             audioPlayer.src = `https://stream.laut.fm/${slug}`;
-            audioPlayer.play().catch(err => console.log("Stream lädt..."));
+            audioPlayer.play()
+                .then(() => {
+                    updateStationCard(slug);
+                })
+                .catch(err => {
+                    console.log("Stream lädt...");
+                });
+
             activePlayingSlug = slug;
             clickedTxt.innerText = "Sender stoppen";
             clickedIcon.className = "btn-icon-stop";
-            await updateStationCard(slug);
         }
     }
 
     function renderStationCardDOM(slug) {
         if(document.getElementById('card-' + slug)) return;
         
+        initialLoadStatus[slug] = false; // Standardmäßig auf Fehlend setzen
+
         const newCard = document.createElement('div');
         newCard.className = 'station-card';
         newCard.id = 'card-' + slug;
@@ -559,8 +582,8 @@
             </div>
             <div class="current-track-box">
                 <div class="track-label">Jetzt läuft</div>
-                <p class="track-artist" id="artist-${slug}">Lade...</p>
-                <p class="track-name" id="title-${slug}">Verbinde zu laut.fm...</p>
+                <p class="track-artist" id="artist-${slug}">Bereit</p>
+                <p class="track-name" id="title-${slug}">Klicke auf Starten...</p>
             </div>
             <div class="card-actions">
                 <button id="btn-${slug}" class="btn-action" onclick="controlStation('${slug}')">
@@ -571,8 +594,8 @@
         `;
         document.getElementById('webStationGrid').appendChild(newCard);
         
-        // Holt das Logo asynchron einmalig direkt nach dem Rendern ab!
         fetchPermanentLogo(slug);
+        updateStationCard(slug); 
     }
 
     async function searchNewStation() {
@@ -585,7 +608,6 @@
         saveStationsToStorage();
         
         showToast(`${searchVal.toUpperCase()} hinzugefügt`);
-        updateStationCard(searchVal);
         document.getElementById('webSearchInput').value = "";
     }
 
@@ -604,7 +626,6 @@
             if(!searchedStations.includes(slug)) {
                 renderStationCardDOM(slug);
                 searchedStations.push(slug);
-                updateStationCard(slug);
                 addedCount++;
             }
         }
@@ -627,6 +648,7 @@
         const card = document.getElementById('card-' + slug);
         if(card) card.remove();
         if(activePlayingSlug === slug) activePlayingSlug = null;
+        delete initialLoadStatus[slug];
     }
 
     window.onload = () => {
