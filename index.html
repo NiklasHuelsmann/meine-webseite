@@ -45,7 +45,7 @@
             text-decoration: none;
         }
 
-        .site-logo span { color: var(--accent-blue); }
+        .site-logo span { color: var(--accent-green); }
 
         .search-form {
             display: flex;
@@ -63,11 +63,11 @@
             outline: none;
         }
 
-        .search-input:focus { border-color: var(--accent-blue); }
+        .search-input:focus { border-color: var(--accent-green); }
 
         .search-button {
-            background-color: var(--accent-blue);
-            color: white;
+            background-color: var(--accent-green);
+            color: black;
             border: none;
             padding: 8px 20px;
             border-radius: 6px;
@@ -119,13 +119,13 @@
         }
 
         .bulk-textarea:focus {
-            border-color: var(--accent-blue);
-            box-shadow: 0 0 0 3px rgba(0,123,255,0.1);
+            border-color: var(--accent-green);
+            box-shadow: 0 0 0 3px rgba(0, 166, 124, 0.1);
         }
 
         .bulk-button {
-            background-color: var(--accent-blue);
-            color: white;
+            background-color: var(--accent-green);
+            color: black;
             border: none;
             padding: 0 25px;
             border-radius: 6px;
@@ -141,7 +141,7 @@
         }
 
         .bulk-button:hover {
-            background-color: #0056b3;
+            background-color: #008f6a;
         }
 
         .bulk-button:disabled {
@@ -195,6 +195,22 @@
             display: block;
         }
 
+        .img-loader {
+            width: 20px;
+            height: 20px;
+            border: 2px solid #cbd5e0;
+            border-top: 2px solid var(--accent-green);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            position: absolute;
+            z-index: 5;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
         .station-meta h3 {
             margin: 0;
             font-size: 1.2rem;
@@ -231,7 +247,7 @@
             background-color: #f8fafc;
             border-radius: 8px;
             padding: 12px;
-            border-left: 4px solid var(--accent-blue);
+            border-left: 4px solid var(--accent-green);
         }
 
         .track-label {
@@ -406,8 +422,6 @@
     let activePlayingSlug = null;
     const audioPlayer = document.getElementById('globalAudioPlayer');
     let searchedStations = [];
-
-    // Fallback-Struktur, falls der Speicher gelöscht wurde
     let stationCache = JSON.parse(localStorage.getItem('niklas_station_cache')) || {};
 
     function showToast(message) {
@@ -435,7 +449,6 @@
             searchedStations.forEach(slug => {
                 renderStationCardDOM(slug);
             });
-            // Feuert SOFORT den Turbo-Load im Hintergrund ab, um gelöschte Caches neu zu befüllen
             triggerTurboLoad();
         }
     }
@@ -444,12 +457,16 @@
         localStorage.setItem('niklas_searched_stations', JSON.stringify(searchedStations));
     }
 
-    // Extrem schnelles, paralleles Abrufen aller Sender-Daten gleichzeitig
     function triggerTurboLoad() {
         searchedStations.forEach(slug => {
             fetchPermanentLogo(slug);
             updateStationCard(slug);
         });
+    }
+
+    function removeImageLoader(slug) {
+        const loader = document.getElementById(`loader-${slug}`);
+        if (loader) loader.remove();
     }
 
     async function fetchPermanentLogo(slug) {
@@ -476,6 +493,7 @@
             }
         } catch (e) {
             console.log("Logo-Abfrage fehlgeschlagen: " + slug);
+            removeImageLoader(slug);
         }
     }
 
@@ -561,20 +579,23 @@
         if (document.getElementById('card-' + slug)) return;
         
         const cachedData = stationCache[slug] || {};
-        // Falls gelöscht, nutzen wir sofort saubere Standard-Daten statt Lade-Texte
         const savedLogo = cachedData.logo || 'https://images.laut.fm/laut_fm_logo_black.png';
-        const savedArtist = cachedData.artist || 'Bereit';
-        const savedTitle = cachedData.title || 'Musik läuft...';
+        const savedArtist = cachedData.artist || 'Lade Informationen...';
+        const savedTitle = cachedData.title || 'Verbindung zu laut.fm...';
         const savedListeners = cachedData.listeners || '0';
 
         const newCard = document.createElement('div');
         newCard.className = 'station-card';
         newCard.id = 'card-' + slug;
+        
         newCard.innerHTML = `
             <div class="fav-star-box" onclick="removeStation('${slug}')" title="Sender entfernen">★</div>
             <div class="card-header">
                 <div class="station-img-container">
-                    <img id="logo-${slug}" src="${savedLogo}" class="station-img" alt="Logo" onerror="this.src='https://images.laut.fm/laut_fm_logo_black.png'">
+                    <div class="img-loader" id="loader-${slug}"></div>
+                    <img id="logo-${slug}" src="${savedLogo}" class="station-img" alt="Logo" 
+                         onload="removeImageLoader('${slug}')"
+                         onerror="this.src='https://images.laut.fm/laut_fm_logo_black.png'; removeImageLoader('${slug}')">
                 </div>
                 <div class="station-meta">
                     <h3 id="name-${slug}">${slug.toUpperCase()}</h3>
@@ -652,7 +673,7 @@
 
     window.onload = () => {
         loadSavedStations(); 
-        setInterval(triggerTurboLoad, 5000); // Hält den Intervall synchron
+        setInterval(triggerTurboLoad, 5000); 
     };
 </script>
 </body>
