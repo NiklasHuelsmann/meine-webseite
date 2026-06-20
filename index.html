@@ -84,12 +84,11 @@
             flex: 1;
         }
 
-        /* REFORMULIERT: Der Balken sitzt nun exakt dort, wo vorher der Titel war */
         .title-bulk-balken {
             display: flex;
             align-items: flex-end;
             gap: 15px;
-            border-bottom: 2px solid var(--border-color); /* Die Linie bleibt genau hier */
+            border-bottom: 2px solid var(--border-color);
             padding-bottom: 15px;
             margin-bottom: 35px;
         }
@@ -101,7 +100,6 @@
             gap: 5px;
         }
 
-        /* Stilisiert das Eingabefeld unauffällig, passend als Überschriften-Ersatz */
         .bulk-textarea {
             width: 100%;
             min-height: 45px;
@@ -111,9 +109,9 @@
             border: 1px solid var(--border-color);
             border-radius: 6px;
             font-family: inherit;
-            font-size: 1.1rem; /* Schön groß wie ein Titel */
+            font-size: 1.1rem;
             font-weight: 600;
-            resize: vertical; /* Lässt sich an den Linien ziehen */
+            resize: vertical;
             box-sizing: border-box;
             outline: none;
             color: var(--text-color);
@@ -125,7 +123,6 @@
             box-shadow: 0 0 0 3px rgba(0,123,255,0.1);
         }
 
-        /* Der Überprüfen-Knopf ganz auf der rechten Seite des Balkens */
         .bulk-button {
             background-color: var(--accent-blue);
             color: white;
@@ -135,7 +132,7 @@
             font-weight: 600;
             font-size: 1rem;
             cursor: pointer;
-            height: 48px; /* Gleiche Höhe wie das Textfeld */
+            height: 48px;
             white-space: nowrap;
             transition: background-color 0.2s;
             display: inline-flex;
@@ -145,6 +142,11 @@
 
         .bulk-button:hover {
             background-color: #0056b3;
+        }
+
+        .bulk-button:disabled {
+            background-color: #a0aec0;
+            cursor: not-allowed;
         }
 
         .station-grid {
@@ -199,22 +201,17 @@
             right: 20px;
             width: 28px;
             height: 28px;
-            background-color: #f1f3f5;
+            background-color: #fff3cd;
+            color: #ffc107;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
             font-size: 1.1rem;
-            color: #a0aec0;
             cursor: pointer;
             transition: 0.2s;
             user-select: none;
             border: 1px solid var(--border-color);
-        }
-
-        .fav-star-box.active {
-            background-color: #fff3cd;
-            color: #ffc107;
         }
 
         .current-track-box {
@@ -374,7 +371,7 @@
         <div class="bulk-textarea-wrapper">
             <textarea id="bulkStationInput" class="bulk-textarea" placeholder="Unsere Radio Stationen (Sender hier eintragen, z.B.: niklas-fm, ndfm, ets2-radio)"></textarea>
         </div>
-        <button class="bulk-button" onclick="checkMultipleStations()">Überprüfen</button>
+        <button id="bulkCheckBtn" class="bulk-button" onclick="checkMultipleStations()">Überprüfen</button>
     </div>
 
     <div class="station-grid" id="webStationGrid"></div>
@@ -506,7 +503,7 @@
         newCard.className = 'station-card';
         newCard.id = 'card-' + slug;
         newCard.innerHTML = `
-            <div class="fav-star-box active" onclick="removeStation('${slug}')" title="Sender entfernen">★</div>
+            <div class="fav-star-box" onclick="removeStation('${slug}')" title="Sender entfernen">★</div>
             <div class="card-header">
                 <img id="logo-${slug}" src="" class="station-img" alt="Logo">
                 <div class="station-meta">
@@ -548,16 +545,23 @@
         } catch(e) {}
     }
 
+    // Funktion mit asynchroner Warteschlange (Verhindert verschluckte Sender!)
     async function checkMultipleStations() {
         const rawInput = document.getElementById('bulkStationInput').value;
         if(!rawInput.trim()) return;
 
+        const checkBtn = document.getElementById('bulkCheckBtn');
+        checkBtn.disabled = true;
+        checkBtn.innerText = "Prüfe...";
+
+        // Bereinigt Leerzeichen und wandelt ALLES in Kleinbuchstaben um (wichtig für laut.fm APIs!)
         const slugs = rawInput.split(',').map(s => s.trim().toLowerCase()).filter(s => s.length > 0);
         let addedCount = 0;
 
         for (const slug of slugs) {
             if(!searchedStations.includes(slug)) {
                 try {
+                    // Schickt die Anfrage ab und wartet sauber auf Antwort
                     const res = await fetch(`https://api.laut.fm/station/${slug}`);
                     if(res.ok) {
                         renderStationCardDOM(slug);
@@ -565,16 +569,23 @@
                         updateStationCard(slug);
                         addedCount++;
                     }
-                } catch(e) {}
+                    // Winziger IT-Puffer (50 Millisekunden) für maximale Datenstabilität
+                    await new Promise(resolve => setTimeout(resolve, 50));
+                } catch(e) {
+                    console.error("Fehler beim Laden von: " + slug, e);
+                }
             }
         }
 
+        saveStationsToStorage();
+        checkBtn.disabled = false;
+        checkBtn.innerText = "Überprüfen";
+
         if(addedCount > 0) {
-            saveStationsToStorage();
             showToast(`${addedCount} neue Sender erfolgreich überprüft & hinzugefügt!`);
             document.getElementById('bulkStationInput').value = "";
         } else {
-            showToast(`Keine neuen oder gültigen Sender gefunden.`);
+            showToast(`Keine neuen oder gültigen Sender zum Hinzufügen gefunden.`);
         }
     }
 
