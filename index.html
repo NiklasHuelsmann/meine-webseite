@@ -175,12 +175,40 @@
             padding-right: 35px;
         }
 
-        .station-img {
+        .station-img-container {
             width: 60px;
             height: 60px;
             border-radius: 8px;
+            background-color: #edf2f7;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+            border: 1px solid var(--border-color);
+        }
+
+        .station-img {
+            width: 100%;
+            height: 100%;
             object-fit: cover;
-            background-color: #eee;
+            display: block;
+        }
+
+        /* Schicker Ladeindikator statt grauem Kasten */
+        .img-loader {
+            width: 20px;
+            height: 20px;
+            border: 2px solid #cbd5e0;
+            border-top: 2px solid var(--accent-blue);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            position: absolute;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
 
         .station-meta h3 {
@@ -423,7 +451,29 @@
         localStorage.setItem('niklas_searched_stations', JSON.stringify(searchedStations));
     }
 
-    // Aktualisiert nur Text, Hörer und falls vorhanden Lied-Cover (ohne das Senderlogo kaputt zu machen)
+    // Holt die echten Senderlogos über die Haupt-API ab (Wird nur EINMAL ausgeführt)
+    async function fetchPermanentLogo(slug) {
+        try {
+            const res = await fetch(`https://api.laut.fm/station/${slug}`);
+            if (res.ok) {
+                const data = await res.json();
+                const imgElement = document.getElementById(`logo-${slug}`);
+                const loader = document.getElementById(`loader-${slug}`);
+                
+                if (imgElement && data.images && data.images.station_120x120) {
+                    imgElement.src = data.images.station_120x120;
+                    if (loader) loader.remove(); // Ladekreis entfernen
+                } else if (imgElement && data.image_url) {
+                    imgElement.src = data.image_url;
+                    if (loader) loader.remove();
+                }
+            }
+        } catch (e) {
+            console.log("Logo-Abfrage fehlgeschlagen für: " + slug);
+        }
+    }
+
+    // Aktualisiert im Intervall AUSSCHLIESSLICH Text und Hörerzahlen. Logos bleiben unberührt!
     async function updateStationCard(slug) {
         try {
             let realTimeListeners = 0;
@@ -446,11 +496,6 @@
                     if(song.title) {
                         document.getElementById(`title-${slug}`).innerText = song.title;
                         document.getElementById(`artist-${slug}`).innerText = song.artist ? song.artist.name : "Interpret";
-                        
-                        // Nur wenn das aktuelle Lied ein echtes, eigenes Cover mitbringt, tauschen wir das Bild aus
-                        if (song.image && song.image.trim() !== "") {
-                            document.getElementById(`logo-${slug}`).src = song.image;
-                        }
                     } else {
                         document.getElementById(`title-${slug}`).innerText = "Keine Titel-Info";
                         document.getElementById(`artist-${slug}`).innerText = "Live";
@@ -497,16 +542,16 @@
     function renderStationCardDOM(slug) {
         if(document.getElementById('card-' + slug)) return;
         
-        // Die originale, direkte Bild-URL von laut.fm ohne Scripte. So werden die Bilder sofort sauber geladen!
-        const defaultLogoUrl = `https://api.laut.fm/station/${slug}/images/station_120x120.png`;
-        
         const newCard = document.createElement('div');
         newCard.className = 'station-card';
         newCard.id = 'card-' + slug;
         newCard.innerHTML = `
             <div class="fav-star-box" onclick="removeStation('${slug}')" title="Sender entfernen">★</div>
             <div class="card-header">
-                <img id="logo-${slug}" src="${defaultLogoUrl}" class="station-img" alt="Logo" onerror="this.src='https://images.laut.fm/laut_fm_logo_black.png'">
+                <div class="station-img-container">
+                    <div class="img-loader" id="loader-${slug}"></div>
+                    <img id="logo-${slug}" src="https://images.laut.fm/laut_fm_logo_black.png" class="station-img" alt="Logo" onerror="this.src='https://images.laut.fm/laut_fm_logo_black.png'">
+                </div>
                 <div class="station-meta">
                     <h3 id="name-${slug}">${slug.toUpperCase()}</h3>
                     <div class="listener-badge">Hörer online: <b id="listeners-${slug}">0</b></div>
@@ -525,6 +570,9 @@
             </div>
         `;
         document.getElementById('webStationGrid').appendChild(newCard);
+        
+        // Holt das Logo asynchron einmalig direkt nach dem Rendern ab!
+        fetchPermanentLogo(slug);
     }
 
     async function searchNewStation() {
@@ -582,8 +630,8 @@
     }
 
     window.onload = () => {
-        loadSavedStations(); // Erstellt die Karten und lädt die Bilder SOFORT über den Browser
-        updateAllCards();    // Holt Titel und Hörerzahlen ab
+        loadSavedStations(); 
+        updateAllCards();    
         setInterval(updateAllCards, 5000); 
     };
 </script>
