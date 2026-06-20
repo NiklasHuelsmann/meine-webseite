@@ -9,7 +9,7 @@
             --bg-color: #f4f6f9;
             --header-bg: #ffffff;
             --text-color: #2d3748;
-            --accent-blue: #007bff;
+            --accent-blue: #007bff; /* Wieder das schöne Original-Blau */
             --accent-green: #00a67c;
             --card-bg: #ffffff;
             --border-color: #e2e8f0;
@@ -45,7 +45,7 @@
             text-decoration: none;
         }
 
-        .site-logo span { color: var(--accent-green); }
+        .site-logo span { color: var(--accent-blue); }
 
         .search-form {
             display: flex;
@@ -63,11 +63,11 @@
             outline: none;
         }
 
-        .search-input:focus { border-color: var(--accent-green); }
+        .search-input:focus { border-color: var(--accent-blue); }
 
         .search-button {
-            background-color: var(--accent-green);
-            color: black;
+            background-color: var(--accent-blue);
+            color: white;
             border: none;
             padding: 8px 20px;
             border-radius: 6px;
@@ -119,13 +119,13 @@
         }
 
         .bulk-textarea:focus {
-            border-color: var(--accent-green);
-            box-shadow: 0 0 0 3px rgba(0, 166, 124, 0.1);
+            border-color: var(--accent-blue);
+            box-shadow: 0 0 0 3px rgba(0,123,255,0.1);
         }
 
         .bulk-button {
-            background-color: var(--accent-green);
-            color: black;
+            background-color: var(--accent-blue);
+            color: white;
             border: none;
             padding: 0 25px;
             border-radius: 6px;
@@ -141,7 +141,7 @@
         }
 
         .bulk-button:hover {
-            background-color: #008f6a;
+            background-color: #0056b3;
         }
 
         .bulk-button:disabled {
@@ -199,7 +199,7 @@
             width: 20px;
             height: 20px;
             border: 2px solid #cbd5e0;
-            border-top: 2px solid var(--accent-green);
+            border-top: 2px solid var(--accent-blue);
             border-radius: 50%;
             animation: spin 0.8s linear infinite;
             position: absolute;
@@ -247,7 +247,7 @@
             background-color: #f8fafc;
             border-radius: 8px;
             padding: 12px;
-            border-left: 4px solid var(--accent-green);
+            border-left: 4px solid var(--accent-blue);
         }
 
         .track-label {
@@ -459,7 +459,6 @@
 
     function triggerTurboLoad() {
         searchedStations.forEach(slug => {
-            fetchPermanentLogo(slug);
             updateStationCard(slug);
         });
     }
@@ -467,34 +466,6 @@
     function removeImageLoader(slug) {
         const loader = document.getElementById(`loader-${slug}`);
         if (loader) loader.remove();
-    }
-
-    async function fetchPermanentLogo(slug) {
-        try {
-            const res = await fetch(`https://api.laut.fm/station/${slug}`);
-            if (res.ok) {
-                const data = await res.json();
-                const imgElement = document.getElementById(`logo-${slug}`);
-                let logoUrl = 'https://images.laut.fm/laut_fm_logo_black.png';
-                
-                if (data.images && data.images.station_120x120) {
-                    logoUrl = data.images.station_120x120;
-                } else if (data.image_url) {
-                    logoUrl = data.image_url;
-                }
-
-                if (imgElement) {
-                    imgElement.src = logoUrl;
-                }
-
-                if (!stationCache[slug]) stationCache[slug] = {};
-                stationCache[slug].logo = logoUrl;
-                saveCacheToStorage();
-            }
-        } catch (e) {
-            console.log("Logo-Abfrage fehlgeschlagen: " + slug);
-            removeImageLoader(slug);
-        }
     }
 
     async function updateStationCard(slug) {
@@ -579,9 +550,12 @@
         if (document.getElementById('card-' + slug)) return;
         
         const cachedData = stationCache[slug] || {};
-        const savedLogo = cachedData.logo || 'https://images.laut.fm/laut_fm_logo_black.png';
-        const savedArtist = cachedData.artist || 'Lade Informationen...';
-        const savedTitle = cachedData.title || 'Verbindung zu laut.fm...';
+        
+        // Schneller, direkter Bildpfad ohne API-Stau
+        const directLogoUrl = `https://images.laut.fm/${slug}_120x120.png`;
+        
+        const savedArtist = cachedData.artist || 'Musik-Stream';
+        const savedTitle = cachedData.title || 'Inhalte werden synchronisiert...';
         const savedListeners = cachedData.listeners || '0';
 
         const newCard = document.createElement('div');
@@ -593,7 +567,7 @@
             <div class="card-header">
                 <div class="station-img-container">
                     <div class="img-loader" id="loader-${slug}"></div>
-                    <img id="logo-${slug}" src="${savedLogo}" class="station-img" alt="Logo" 
+                    <img id="logo-${slug}" src="${directLogoUrl}" class="station-img" alt="Logo" 
                          onload="removeImageLoader('${slug}')"
                          onerror="this.src='https://images.laut.fm/laut_fm_logo_black.png'; removeImageLoader('${slug}')">
                 </div>
@@ -626,7 +600,6 @@
         searchedStations.push(searchVal);
         saveStationsToStorage();
         
-        fetchPermanentLogo(searchVal);
         updateStationCard(searchVal);
 
         showToast(`${searchVal.toUpperCase()} hinzugefügt`);
