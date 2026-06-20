@@ -84,12 +84,67 @@
             flex: 1;
         }
 
-        .page-title {
-            font-size: 1.8rem;
+        /* REFORMULIERT: Der Balken sitzt nun exakt dort, wo vorher der Titel war */
+        .title-bulk-balken {
+            display: flex;
+            align-items: flex-end;
+            gap: 15px;
+            border-bottom: 2px solid var(--border-color); /* Die Linie bleibt genau hier */
+            padding-bottom: 15px;
+            margin-bottom: 35px;
+        }
+
+        .bulk-textarea-wrapper {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        /* Stilisiert das Eingabefeld unauffällig, passend als Überschriften-Ersatz */
+        .bulk-textarea {
+            width: 100%;
+            min-height: 45px;
+            height: 48px;
+            max-height: 250px;
+            padding: 10px 14px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            font-family: inherit;
+            font-size: 1.1rem; /* Schön groß wie ein Titel */
             font-weight: 600;
-            margin-bottom: 30px;
-            border-bottom: 2px solid var(--border-color);
-            padding-bottom: 10px;
+            resize: vertical; /* Lässt sich an den Linien ziehen */
+            box-sizing: border-box;
+            outline: none;
+            color: var(--text-color);
+            background: #ffffff;
+        }
+
+        .bulk-textarea:focus {
+            border-color: var(--accent-blue);
+            box-shadow: 0 0 0 3px rgba(0,123,255,0.1);
+        }
+
+        /* Der Überprüfen-Knopf ganz auf der rechten Seite des Balkens */
+        .bulk-button {
+            background-color: var(--accent-blue);
+            color: white;
+            border: none;
+            padding: 0 25px;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            height: 48px; /* Gleiche Höhe wie das Textfeld */
+            white-space: nowrap;
+            transition: background-color 0.2s;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .bulk-button:hover {
+            background-color: #0056b3;
         }
 
         .station-grid {
@@ -296,6 +351,8 @@
         @media (max-width: 768px) {
             .site-header { flex-direction: column; gap: 15px; padding: 15px; }
             .search-form { max-width: 100%; }
+            .title-bulk-balken { flex-direction: column; align-items: stretch; }
+            .bulk-button { height: 48px; }
             .site-footer { flex-direction: column; gap: 10px; text-align: center; }
         }
     </style>
@@ -312,7 +369,14 @@
 </header>
 
 <main class="main-container">
-    <h2 class="page-title">Unsere Radio Stationen</h2>
+    
+    <div class="title-bulk-balken">
+        <div class="bulk-textarea-wrapper">
+            <textarea id="bulkStationInput" class="bulk-textarea" placeholder="Unsere Radio Stationen (Sender hier eintragen, z.B.: niklas-fm, ndfm, ets2-radio)"></textarea>
+        </div>
+        <button class="bulk-button" onclick="checkMultipleStations()">Überprüfen</button>
+    </div>
+
     <div class="station-grid" id="webStationGrid"></div>
 </main>
 
@@ -348,11 +412,6 @@
     }
 
     function loadSavedStations() {
-        // NEU: Alte Überschneidungs-Reste löschen, falls vorhanden
-        if (localStorage.getItem('niklas_hidden_native_stations')) {
-            localStorage.removeItem('niklas_hidden_native_stations');
-        }
-
         const savedSearch = localStorage.getItem('niklas_searched_stations');
         if (savedSearch) {
             searchedStations = JSON.parse(savedSearch);
@@ -441,6 +500,8 @@
     }
 
     function renderStationCardDOM(slug) {
+        if(document.getElementById('card-' + slug)) return;
+        
         const newCard = document.createElement('div');
         newCard.className = 'station-card';
         newCard.id = 'card-' + slug;
@@ -471,7 +532,6 @@
     async function searchNewStation() {
         const searchVal = document.getElementById('webSearchInput').value.toLowerCase().trim();
         if(!searchVal) return;
-
         if(searchedStations.includes(searchVal)) return;
 
         try {
@@ -483,10 +543,39 @@
             saveStationsToStorage();
             
             showToast(`${searchVal.toUpperCase()} zu Favoriten hinzugefügt`);
-            
             updateStationCard(searchVal);
             document.getElementById('webSearchInput').value = "";
         } catch(e) {}
+    }
+
+    async function checkMultipleStations() {
+        const rawInput = document.getElementById('bulkStationInput').value;
+        if(!rawInput.trim()) return;
+
+        const slugs = rawInput.split(',').map(s => s.trim().toLowerCase()).filter(s => s.length > 0);
+        let addedCount = 0;
+
+        for (const slug of slugs) {
+            if(!searchedStations.includes(slug)) {
+                try {
+                    const res = await fetch(`https://api.laut.fm/station/${slug}`);
+                    if(res.ok) {
+                        renderStationCardDOM(slug);
+                        searchedStations.push(slug);
+                        updateStationCard(slug);
+                        addedCount++;
+                    }
+                } catch(e) {}
+            }
+        }
+
+        if(addedCount > 0) {
+            saveStationsToStorage();
+            showToast(`${addedCount} neue Sender erfolgreich überprüft & hinzugefügt!`);
+            document.getElementById('bulkStationInput').value = "";
+        } else {
+            showToast(`Keine neuen oder gültigen Sender gefunden.`);
+        }
     }
 
     function removeStation(slug) {
