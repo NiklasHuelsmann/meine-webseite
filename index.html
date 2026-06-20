@@ -187,6 +187,7 @@
             margin: 0;
             font-size: 1.2rem;
             font-weight: 600;
+            text-transform: uppercase;
         }
 
         .listener-badge {
@@ -445,7 +446,7 @@
             const song = await cRes.json();
 
             if(document.getElementById(`name-${slug}`)) {
-                document.getElementById('name-' + slug).innerText = station.display_name;
+                document.getElementById('name-' + slug).innerText = station.display_name || slug.toUpperCase();
                 document.getElementById('listeners-' + slug).innerText = realTimeListeners;
                 
                 if (song.image && song.image.trim() !== "") {
@@ -457,6 +458,9 @@
                 if(song.title) {
                     document.getElementById('title-' + slug).innerText = song.title;
                     document.getElementById('artist-' + slug).innerText = song.artist ? song.artist.name : "Interpret";
+                } else {
+                    document.getElementById('title-' + slug).innerText = "Keine Titel-Info";
+                    document.getElementById('artist-' + slug).innerText = "Live";
                 }
             }
         } catch(e) {}
@@ -505,16 +509,16 @@
         newCard.innerHTML = `
             <div class="fav-star-box" onclick="removeStation('${slug}')" title="Sender entfernen">★</div>
             <div class="card-header">
-                <img id="logo-${slug}" src="" class="station-img" alt="Logo">
+                <img id="logo-${slug}" src="" class="station-img" alt="Logo" onerror="this.src='https://laut.fm/images/laut_fm_logo_black.png'">
                 <div class="station-meta">
-                    <h3 id="name-${slug}">${slug}</h3>
-                    <div class="listener-badge">Hörer online: <b id="listeners-${slug}">Lade...</b></div>
+                    <h3 id="name-${slug}">${slug.toUpperCase()}</h3>
+                    <div class="listener-badge">Hörer online: <b id="listeners-${slug}">0</b></div>
                 </div>
             </div>
             <div class="current-track-box">
                 <div class="track-label">Jetzt läuft</div>
-                <p class="track-artist" id="artist-${slug}">Interpret</p>
-                <p class="track-name" id="title-${slug}">Lade Titel...</p>
+                <p class="track-artist" id="artist-${slug}">Lade...</p>
+                <p class="track-name" id="title-${slug}">Verbinde zu laut.fm...</p>
             </div>
             <div class="card-actions">
                 <button id="btn-${slug}" class="btn-action" onclick="controlStation('${slug}')">
@@ -531,49 +535,35 @@
         if(!searchVal) return;
         if(searchedStations.includes(searchVal)) return;
 
-        try {
-            const res = await fetch(`https://api.laut.fm/station/${searchVal}`);
-            if(!res.ok) return;
-
-            renderStationCardDOM(searchVal);
-            searchedStations.push(searchVal);
-            saveStationsToStorage();
-            
-            showToast(`${searchVal.toUpperCase()} zu Favoriten hinzugefügt`);
-            updateStationCard(searchVal);
-            document.getElementById('webSearchInput').value = "";
-        } catch(e) {}
+        renderStationCardDOM(searchVal);
+        searchedStations.push(searchVal);
+        saveStationsToStorage();
+        
+        showToast(`${searchVal.toUpperCase()} hinzugefügt`);
+        updateStationCard(searchVal);
+        document.getElementById('webSearchInput').value = "";
     }
 
-    // Funktion mit asynchroner Warteschlange (Verhindert verschluckte Sender!)
+    // Paddys-Tool-Modus: Fügt JEDEN eingetragenen Namen sofort hinzu!
     async function checkMultipleStations() {
         const rawInput = document.getElementById('bulkStationInput').value;
         if(!rawInput.trim()) return;
 
         const checkBtn = document.getElementById('bulkCheckBtn');
         checkBtn.disabled = true;
-        checkBtn.innerText = "Prüfe...";
+        checkBtn.innerText = "Verarbeite...";
 
-        // Bereinigt Leerzeichen und wandelt ALLES in Kleinbuchstaben um (wichtig für laut.fm APIs!)
         const slugs = rawInput.split(',').map(s => s.trim().toLowerCase()).filter(s => s.length > 0);
         let addedCount = 0;
 
         for (const slug of slugs) {
             if(!searchedStations.includes(slug)) {
-                try {
-                    // Schickt die Anfrage ab und wartet sauber auf Antwort
-                    const res = await fetch(`https://api.laut.fm/station/${slug}`);
-                    if(res.ok) {
-                        renderStationCardDOM(slug);
-                        searchedStations.push(slug);
-                        updateStationCard(slug);
-                        addedCount++;
-                    }
-                    // Winziger IT-Puffer (50 Millisekunden) für maximale Datenstabilität
-                    await new Promise(resolve => setTimeout(resolve, 50));
-                } catch(e) {
-                    console.error("Fehler beim Laden von: " + slug, e);
-                }
+                // NEU: Keine API-Bremse mehr, wir klatschen die Karte sofort rein!
+                renderStationCardDOM(slug);
+                searchedStations.push(slug);
+                // Versucht Daten im Hintergrund zu laden, bricht aber nicht ab, wenn es fehlschlägt
+                updateStationCard(slug);
+                addedCount++;
             }
         }
 
@@ -582,10 +572,10 @@
         checkBtn.innerText = "Überprüfen";
 
         if(addedCount > 0) {
-            showToast(`${addedCount} neue Sender erfolgreich überprüft & hinzugefügt!`);
+            showToast(`${addedCount} Stationen erfolgreich eingelesen!`);
             document.getElementById('bulkStationInput').value = "";
         } else {
-            showToast(`Keine neuen oder gültigen Sender zum Hinzufügen gefunden.`);
+            showToast(`Keine neuen Stationen zum Hinzufügen gefunden.`);
         }
     }
 
