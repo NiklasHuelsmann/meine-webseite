@@ -394,6 +394,7 @@
     let activePlayingSlug = null;
     const audioPlayer = document.getElementById('globalAudioPlayer');
     let searchedStations = [];
+    let cachedLogos = {}; // Unser lokaler Bild-Cache im Arbeitsspeicher
 
     function showToast(message) {
         const toast = document.getElementById('toastBanner');
@@ -409,8 +410,15 @@
         }, 3000);
     }
 
+    // Lädt die gespeicherten Sender und die gecachten Logos aus dem Speicher
     function loadSavedStations() {
         const savedSearch = localStorage.getItem('niklas_searched_stations');
+        const savedLogos = localStorage.getItem('niklas_logo_cache');
+        
+        if (savedLogos) {
+            cachedLogos = JSON.parse(savedLogos);
+        }
+        
         if (savedSearch) {
             searchedStations = JSON.parse(savedSearch);
             searchedStations.forEach(slug => {
@@ -421,6 +429,29 @@
 
     function saveStationsToStorage() {
         localStorage.setItem('niklas_searched_stations', JSON.stringify(searchedStations));
+    }
+
+    // Wandelt ein geladenes Web-Bild im Hintergrund in einen Base64-String um und speichert ihn ab
+    function cacheImageAsBase64(slug, url) {
+        if (!url || url.startsWith('data:')) return;
+        
+        const img = new Image();
+        img.crossOrigin = 'Anonymous';
+        img.src = url;
+        img.onload = function () {
+            const canvas = document.createElement('canvas');
+            canvas.width = img.width;
+            canvas.height = img.height;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0);
+            try {
+                const dataURL = canvas.toDataURL('image/png');
+                cachedLogos[slug] = dataURL;
+                localStorage.setItem('niklas_logo_cache', JSON.stringify(cachedLogos));
+            } catch (e) {
+                console.log("Cache-Speicherung blockiert durch CORS, nutze Live-URL.");
+            }
+        };
     }
 
     async function updateStationCard(slug) {
@@ -434,34 +465,26 @@
                 }
             } catch(e) {}
 
-            const sRes = await fetch(`https://api.laut.fm/station/${slug}?nocache=${Date.now()}`);
-            if(!sRes.ok) {
-                if(document.getElementById(`listeners-${slug}`)) {
-                    document.getElementById(`listeners-${slug}`).innerText = realTimeListeners;
-                }
-                return;
+            if(document.getElementById(`listeners-${slug}`)) {
+                document.getElementById(`listeners-${slug}`).innerText = realTimeListeners;
             }
-            const station = await sRes.json();
-            const cRes = await fetch(`https://api.laut.fm/station/${slug}/current_song?nocache=${Date.now()}`);
-            const song = await cRes.json();
 
-            if(document.getElementById(`name-${slug}`)) {
-                document.getElementById('name-' + slug).innerText = station.display_name || slug.toUpperCase();
-                document.getElementById('listeners-' + slug).innerText = realTimeListeners;
-                
-                // Falls ein echtes Song-Cover existiert, nimm das. Ansonsten nimm das offizielle Sender-Logo von laut.fm
-                if (song.image && song.image.trim() !== "") {
-                    document.getElementById('logo-' + slug).src = song.image;
-                } else if (station.images && station.images.station_120x120) {
-                    document.getElementById('logo-' + slug).src = station.images.station_120x120;
-                }
-                
-                if(song.title) {
-                    document.getElementById('title-' + slug).innerText = song.title;
-                    document.getElementById('artist-' + slug).innerText = song.artist ? song.artist.name : "Interpret";
-                } else {
-                    document.getElementById('title-' + slug).innerText = "Keine Titel-Info";
-                    document.getElementById('artist-' + slug).innerText = "Live";
+            const cRes = await fetch(`https://api.laut.fm/station/${slug}/current_song?nocache=${Date.now()}`);
+            if(cRes.ok) {
+                const song = await cRes.json();
+                if(document.getElementById(`title-${slug}`)) {
+                    if(song.title) {
+                        document.getElementById(`title-${slug}`).innerText = song.title;
+                        document.getElementById(`artist-${slug}`).innerText = song.artist ? song.artist.name : "Interpret";
+                        
+                        if (song.image && song.image.trim() !== "") {
+                            document.getElementById(`logo-${slug}`).src = song.image;
+                            cacheImageAsBase64(slug, song.image);
+                        }
+                    } else {
+                        document.getElementById(`title-${slug}`).innerText = "Keine Titel-Info";
+                        document.getElementById(`artist-${slug}`).innerText = "Live";
+                    }
                 }
             }
         } catch(e) {}
@@ -504,8 +527,9 @@
     function renderStationCardDOM(slug) {
         if(document.getElementById('card-' + slug)) return;
         
-        // Nutzt direkt die offizielle laut.fm URL als primäre Quelle, damit das Logo sofort zieht!
-        const defaultLogo = `https://api.laut.fm/station/${slug}/images/station_120x120.png`;
+        // CACHE-PRÜFUNG: Gibt es ein bereits gespeichertes Logo im Browser? Wenn ja, nimm das!
+        // Wenn nicht, nimm den laut.fm Pfad als Fallback.
+        const storedLogo = cachedLogos[slug] ? cachedLogos[slug] : `https://api.laut.fm/station/${slug}/images/station_120x120.png`;
         
         const newCard = document.createElement('div');
         newCard.className = 'station-card';
@@ -513,7 +537,7 @@
         newCard.innerHTML = `
             <div class="fav-star-box" onclick="removeStation('${slug}')" title="Sender entfernen">★</div>
             <div class="card-header">
-                <img id="logo-${slug}" src="${defaultLogo}" class="station-img" alt="Logo" onerror="this.src='https://images.laut.fm/laut_fm_logo_black.png'">
+                <img id="logo-${slug}" src="${storedLogo}" class="station-img" alt="Logo" onload="if(!this.src.startsWith('data:')) cacheImageAsBase64('${slug}', this.src)" onerror="this.src='https://images.laut.fm/laut_fm_logo_black.png'">
                 <div class="station-meta">
                     <h3 id="name-${slug}">${slug.toUpperCase()}</h3>
                     <div class="listener-badge">Hörer online: <b id="listeners-${slug}">0</b></div>
@@ -583,16 +607,22 @@
     function removeStation(slug) {
         searchedStations = searchedStations.filter(s => s !== slug);
         saveStationsToStorage();
+        
+        // Auch aus dem Logo-Cache löschen
+        if (cachedLogos[slug]) {
+            delete cachedLogos[slug];
+            localStorage.setItem('niklas_logo_cache', JSON.stringify(cachedLogos));
+        }
+        
         const card = document.getElementById('card-' + slug);
         if(card) card.remove();
         if(activePlayingSlug === slug) activePlayingSlug = null;
     }
 
-    // BEIM LADEN DER SEITE: Führt sofort das API-Update für alle gespeicherten Sender aus!
-    window.onload = async () => {
-        loadSavedStations(); // Baut die Karten aus dem Speicher auf
-        updateAllCards();    // Holt SOFORT die echten Logos und Live-Daten von laut.fm ab!
-        setInterval(updateAllCards, 5000); // Hält die Daten alle 5 Sekunden aktuell
+    window.onload = () => {
+        loadSavedStations(); // Holt die Sender UND die gespeicherten Logos sofort aus dem Browser-Speicher!
+        updateAllCards();    
+        setInterval(updateAllCards, 5000); 
     };
 </script>
 </body>
