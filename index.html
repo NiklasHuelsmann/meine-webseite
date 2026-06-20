@@ -207,7 +207,7 @@
         /* Pillenförmiger laut.fm Button mit dauerhaft SCHWARZER Schrift */
         .btn-action {
             background-color: var(--accent-green);
-            color: #000000; /* Textfarbe dauerhaft schwarz */
+            color: #000000;
             font-family: inherit;
             font-size: 0.95rem;
             font-weight: 700;
@@ -243,7 +243,7 @@
             box-sizing: border-box;
         }
 
-        /* NEU: Das Info-Toast-Banner aus dem Screenshot */
+        /* Info-Toast-Banner unten am Bildschirm */
         .toast-banner {
             position: fixed;
             bottom: 20px;
@@ -262,11 +262,8 @@
             overflow: hidden;
         }
 
-        .toast-banner.show {
-            transform: translateX(-50%) translateY(0);
-        }
+        .toast-banner.show { transform: translateX(-50%) translateY(0); }
 
-        /* Der Ladebalken, der nach links durchläuft */
         .toast-progress {
             position: absolute;
             bottom: 0;
@@ -343,6 +340,50 @@
             </div>
         </div>
 
+        <div class="station-card" id="card-ndfm">
+            <div class="fav-star-box active" onclick="toggleNativeStation('ndfm', this)">★</div>
+            <div class="card-header">
+                <img id="logo-ndfm" src="" class="station-img" alt="Logo">
+                <div class="station-meta">
+                    <h3 id="name-ndfm">ndfm</h3>
+                    <div class="listener-badge">Hörer online: <b id="listeners-ndfm">Lade...</b></div>
+                </div>
+            </div>
+            <div class="current-track-box">
+                <div class="track-label">Jetzt läuft</div>
+                <p class="track-artist" id="artist-ndfm">Interpret</p>
+                <p class="track-name" id="title-ndfm">Lade Titel...</p>
+            </div>
+            <div class="card-actions">
+                <button id="btn-ndfm" class="btn-action" onclick="controlStation('ndfm')">
+                    <span id="icon-ndfm" class="btn-icon-play"></span>
+                    <span id="text-ndfm">Sender starten</span>
+                </button>
+            </div>
+        </div>
+
+        <div class="station-card" id="card-ets2-radio">
+            <div class="fav-star-box active" onclick="toggleNativeStation('ets2-radio', this)">★</div>
+            <div class="card-header">
+                <img id="logo-ets2-radio" src="" class="station-img" alt="Logo">
+                <div class="station-meta">
+                    <h3 id="name-ets2-radio">ETS2 Radio</h3>
+                    <div class="listener-badge">Hörer online: <b id="listeners-ets2-radio">Lade...</b></div>
+                </div>
+            </div>
+            <div class="current-track-box">
+                <div class="track-label">Jetzt läuft</div>
+                <p class="track-artist" id="artist-ets2-radio">Interpret</p>
+                <p class="track-name" id="title-ets2-radio">Lade Titel...</p>
+            </div>
+            <div class="card-actions">
+                <button id="btn-ets2-radio" class="btn-action" onclick="controlStation('ets2-radio')">
+                    <span id="icon-ets2-radio" class="btn-icon-play"></span>
+                    <span id="text-ets2-radio">Sender starten</span>
+                </button>
+            </div>
+        </div>
+
     </div>
 </main>
 
@@ -362,7 +403,8 @@
     let activePlayingSlug = null;
     const audioPlayer = document.getElementById('globalAudioPlayer');
     
-    let nativeStations = ["niklas-fm"];
+    // Die 3 festen Hauptsender
+    let nativeStations = ["niklas-fm", "ndfm", "ets2-radio"];
     let searchedStations = [];
 
     function showToast(message) {
@@ -371,7 +413,7 @@
         msgSpan.innerText = message;
         
         toast.classList.remove('show');
-        void toast.offsetWidth; // Trigger Reflow für die Animation
+        void toast.offsetWidth; 
         toast.classList.add('show');
         
         setTimeout(() => {
@@ -510,6 +552,10 @@
         const searchVal = document.getElementById('webSearchInput').value.toLowerCase().trim();
         if(!searchVal) return;
 
+        // KORREKTUR: Verhindert doppeltes Hinzufügen, blockiert aber nicht mehr die Suche!
+        if(searchedStations.includes(searchVal)) return;
+
+        // Falls ein Standard-Sender ausgeblendet war, blenden wir ihn über die Suche wieder ein
         const savedNativeHidden = localStorage.getItem('niklas_hidden_native_stations');
         if (savedNativeHidden) {
             let hiddenNatives = JSON.parse(savedNativeHidden);
@@ -529,7 +575,8 @@
             }
         }
 
-        if(nativeStations.includes(searchVal) || searchedStations.includes(searchVal)) return;
+        // Wenn er bereits aktiv auf der Startseite sichtbar ist, brechen wir ab
+        if(nativeStations.includes(searchVal)) return;
 
         try {
             const res = await fetch(`https://api.laut.fm/station/${searchVal}`);
@@ -539,7 +586,6 @@
             searchedStations.push(searchVal);
             saveStationsToStorage();
             
-            // Animation / Anzeige beim erfolgreichen Hinzufügen auslösen
             showToast(`${searchVal.toUpperCase()} zu Favoriten hinzugefügt`);
             
             updateStationCard(searchVal);
