@@ -5,33 +5,26 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Unsere Radio Stationen - Live Hub</title>
     <style>
-        :root {
-            --bg-color: #f4f6f9;
-            --header-bg: #ffffff;
-            --text-color: #2d3748;
-            --accent-blue: #007bff;
-            --accent-green: #00a67c;
-            --card-bg: #ffffff;
-            --border-color: #e2e8f0;
-        }
-
-        body { font-family: 'Segoe UI', sans-serif; background-color: var(--bg-color); color: var(--text-color); margin: 0; padding: 0; display: flex; flex-direction: column; min-height: 100vh; }
+        :root { --bg-color: #f4f6f9; --header-bg: #ffffff; --text-color: #2d3748; --accent-blue: #007bff; --accent-green: #00a67c; --border-color: #e2e8f0; }
+        body { font-family: 'Segoe UI', sans-serif; background-color: var(--bg-color); color: var(--text-color); margin: 0; display: flex; flex-direction: column; min-height: 100vh; }
         .site-header { background-color: var(--header-bg); border-bottom: 1px solid var(--border-color); padding: 15px 50px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 1000; }
-        .site-logo { font-size: 1.4rem; font-weight: 700; color: var(--text-color); text-decoration: none; }
+        .site-logo { font-size: 1.4rem; font-weight: 700; }
         .site-logo span { color: var(--accent-blue); }
-        .search-form { display: flex; gap: 10px; max-width: 400px; width: 100%; }
-        .search-input { flex: 1; padding: 8px 15px; border: 1px solid var(--border-color); border-radius: 6px; outline: none; }
-        .search-button { background-color: var(--accent-blue); color: white; border: none; padding: 8px 20px; border-radius: 6px; cursor: pointer; }
-        .main-container { max-width: 1200px; width: 100%; margin: 40px auto; padding: 0 20px; box-sizing: border-box; }
+        .search-form { display: flex; gap: 10px; }
+        .search-input { padding: 8px 15px; border: 1px solid var(--border-color); border-radius: 6px; }
+        .search-button, .bulk-button { background-color: var(--accent-blue); color: white; border: none; padding: 8px 20px; border-radius: 6px; cursor: pointer; }
+        .main-container { max-width: 1200px; width: 100%; margin: 40px auto; padding: 0 20px; flex: 1; }
+        .title-bulk-balken { display: flex; gap: 15px; margin-bottom: 35px; }
+        .bulk-textarea { flex: 1; padding: 10px; border: 1px solid var(--border-color); border-radius: 6px; height: 40px; }
         .station-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 25px; }
-        .station-card { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px; padding: 20px; cursor: pointer; transition: 0.2s; position: relative; }
+        .station-card { background: white; border: 1px solid var(--border-color); border-radius: 12px; padding: 20px; cursor: pointer; transition: 0.2s; position: relative; }
         .station-card:hover { transform: translateY(-2px); box-shadow: 0 6px 12px rgba(0,0,0,0.05); }
         .station-img-container { width: 60px; height: 60px; border-radius: 8px; overflow: hidden; border: 1px solid var(--border-color); }
         .station-img { width: 100%; height: 100%; object-fit: cover; }
         .fav-star-box { position: absolute; top: 20px; right: 20px; color: #ffc107; font-size: 1.2rem; cursor: pointer; z-index: 10; }
         .current-track-box { background-color: #f8fafc; border-radius: 8px; padding: 12px; border-left: 4px solid var(--accent-blue); margin-top: 15px; }
-        .listener-badge { font-size: 0.85rem; color: #718096; margin-top: 5px; }
         .btn-action { background-color: var(--accent-green); color: black; border: none; padding: 10px 20px; border-radius: 50px; margin-top: 15px; cursor: pointer; font-weight: bold; width: 100%; }
+        .site-footer { background: white; border-top: 1px solid var(--border-color); padding: 20px 50px; text-align: center; color: #718096; }
     </style>
 </head>
 <body>
@@ -39,68 +32,57 @@
 <header class="site-header">
     <a href="#" class="site-logo">Unsere Radio <span>Stationen</span></a>
     <div class="search-form">
-        <input type="text" id="webSearchInput" class="search-input" placeholder="Sender-Slug...">
-        <button class="search-button" onclick="addStation()">Hinzufügen</button>
+        <input type="text" id="webSearchInput" class="search-input" placeholder="Sender suchen...">
+        <button class="search-button" onclick="searchNewStation()">Suchen</button>
     </div>
 </header>
 
 <main class="main-container">
+    <div class="title-bulk-balken">
+        <textarea id="bulkStationInput" class="bulk-textarea" placeholder="Mehrere Sender durch Komma trennen (z.B. niklas-fm, ndfm)"></textarea>
+        <button class="bulk-button" onclick="checkMultipleStations()">Überprüfen</button>
+    </div>
     <div class="station-grid" id="webStationGrid"></div>
 </main>
+
+<footer class="site-footer">Partner: <b>laut.fm</b></footer>
 
 <audio id="globalAudioPlayer"></audio>
 
 <script>
-    let activePlayingSlug = null;
-    const audioPlayer = document.getElementById('globalAudioPlayer');
     let searchedStations = JSON.parse(localStorage.getItem('my_stations')) || [];
-
-    function save() { localStorage.setItem('my_stations', JSON.stringify(searchedStations)); }
+    const audioPlayer = document.getElementById('globalAudioPlayer');
 
     async function updateData(slug) {
-        // Hier werden nun Logo, Hörer UND Song-Infos gleichzeitig geladen
         const [stationRes, listenersRes, songRes] = await Promise.all([
             fetch(`https://api.laut.fm/station/${slug}`).catch(() => null),
             fetch(`https://api.laut.fm/station/${slug}/listeners`).catch(() => null),
             fetch(`https://api.laut.fm/station/${slug}/current_song`).catch(() => null)
         ]);
-
-        if (stationRes && stationRes.ok) {
-            const sData = await stationRes.json();
+        if (stationRes?.ok) {
+            const data = await stationRes.json();
             const img = document.getElementById(`logo-${slug}`);
-            if (img && sData.images) img.src = sData.images.station_120x120 || sData.image_url;
+            if (img) img.src = data.images?.station_120x120 || data.image_url;
         }
-
-        if (listenersRes && listenersRes.ok) {
-            const lCount = await listenersRes.text();
-            const listEl = document.getElementById(`listeners-${slug}`);
-            if (listEl) listEl.innerText = lCount;
-        }
-
-        if (songRes && songRes.ok) {
+        if (listenersRes?.ok) document.getElementById(`listeners-${slug}`).innerText = await listenersRes.text();
+        if (songRes?.ok) {
             const song = await songRes.json();
-            const art = document.getElementById(`artist-${slug}`);
-            const tit = document.getElementById(`title-${slug}`);
-            if (art && tit) {
-                art.innerText = song.artist ? song.artist.name : "Interpret";
-                tit.innerText = song.title || "Läuft gerade...";
-            }
+            document.getElementById(`artist-${slug}`).innerText = song.artist?.name || "Interpret";
+            document.getElementById(`title-${slug}`).innerText = song.title || "Läuft gerade...";
         }
     }
 
     function renderCard(slug) {
+        if(document.getElementById('card-' + slug)) return;
         const div = document.createElement('div');
         div.className = 'station-card';
         div.id = 'card-' + slug;
-        div.onclick = (e) => { if (!e.target.closest('.btn-action, .fav-star-box')) window.open(`https://laut.fm/${slug}`, '_blank'); };
+        div.onclick = (e) => { if(!e.target.closest('.btn-action, .fav-star-box')) window.open(`https://laut.fm/${slug}`, '_blank'); };
         div.innerHTML = `
             <div class="fav-star-box" onclick="removeStation('${slug}')">★</div>
             <div style="display:flex; align-items:center; gap:15px;">
                 <div class="station-img-container"><img id="logo-${slug}" class="station-img" src="https://api.laut.fm/favicon.ico"></div>
-                <div>
-                    <h3 style="margin:0;">${slug.toUpperCase()}</h3>
-                    <div class="listener-badge">Hörer online: <b id="listeners-${slug}">0</b></div>
-                </div>
+                <div><h3 style="margin:0;">${slug.toUpperCase()}</h3><div style="font-size:0.85rem;">Hörer: <b id="listeners-${slug}">0</b></div></div>
             </div>
             <div class="current-track-box">
                 <p id="artist-${slug}" style="margin:0; font-weight:bold;">Lade...</p>
@@ -113,36 +95,41 @@
     }
 
     function togglePlay(slug) {
-        if (activePlayingSlug === slug) {
-            audioPlayer.pause();
-            activePlayingSlug = null;
-            document.getElementById(`btn-${slug}`).innerText = "Sender starten";
-        } else {
-            audioPlayer.src = `https://stream.laut.fm/${slug}`;
-            audioPlayer.play();
-            activePlayingSlug = slug;
-            document.getElementById(`btn-${slug}`).innerText = "Sender stoppen";
-        }
+        audioPlayer.src = `https://stream.laut.fm/${slug}`;
+        audioPlayer.play();
+        document.getElementById(`btn-${slug}`).innerText = "Sender stoppen";
     }
 
-    function addStation() {
+    function searchNewStation() {
         const val = document.getElementById('webSearchInput').value.toLowerCase().trim();
         if (val && !searchedStations.includes(val)) {
             searchedStations.push(val);
-            save();
+            localStorage.setItem('my_stations', JSON.stringify(searchedStations));
             renderCard(val);
         }
     }
 
+    function checkMultipleStations() {
+        const input = document.getElementById('bulkStationInput').value.split(',');
+        input.forEach(s => {
+            const slug = s.trim().toLowerCase();
+            if (slug && !searchedStations.includes(slug)) {
+                searchedStations.push(slug);
+                renderCard(slug);
+            }
+        });
+        localStorage.setItem('my_stations', JSON.stringify(searchedStations));
+    }
+
     function removeStation(slug) {
         searchedStations = searchedStations.filter(s => s !== slug);
-        save();
+        localStorage.setItem('my_stations', JSON.stringify(searchedStations));
         document.getElementById('card-' + slug).remove();
     }
 
     window.onload = () => {
         searchedStations.forEach(renderCard);
-        setInterval(() => searchedStations.forEach(updateData), 10000); // Alle 10s Updates für Hörer & Songs
+        setInterval(() => searchedStations.forEach(updateData), 15000);
     };
 </script>
 </body>
