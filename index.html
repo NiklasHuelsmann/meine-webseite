@@ -195,21 +195,6 @@
             display: block;
         }
 
-        .img-loader {
-            width: 20px;
-            height: 20px;
-            border: 2px solid #cbd5e0;
-            border-top: 2px solid var(--accent-blue);
-            border-radius: 50%;
-            animation: spin 0.8s linear infinite;
-            position: absolute;
-        }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
         .station-meta h3 {
             margin: 0;
             font-size: 1.2rem;
@@ -422,8 +407,8 @@
     const audioPlayer = document.getElementById('globalAudioPlayer');
     let searchedStations = [];
 
-    // Verhindert das Überschreiben funktionierender Titel-Daten
-    let initialLoadStatus = {};
+    // Fallback-Struktur, falls der Speicher gelöscht wurde
+    let stationCache = JSON.parse(localStorage.getItem('niklas_station_cache')) || {};
 
     function showToast(message) {
         const toast = document.getElementById('toastBanner');
@@ -439,21 +424,32 @@
         }, 3000);
     }
 
+    function saveCacheToStorage() {
+        localStorage.setItem('niklas_station_cache', JSON.stringify(stationCache));
+    }
+
     function loadSavedStations() {
         const savedSearch = localStorage.getItem('niklas_searched_stations');
         if (savedSearch) {
             searchedStations = JSON.parse(savedSearch);
-            // Erst alle Boxen bauen...
             searchedStations.forEach(slug => {
                 renderStationCardDOM(slug);
             });
-            // ...und sofort alle Daten abrufen!
-            updateAllCards();
+            // Feuert SOFORT den Turbo-Load im Hintergrund ab, um gelöschte Caches neu zu befüllen
+            triggerTurboLoad();
         }
     }
 
     function saveStationsToStorage() {
         localStorage.setItem('niklas_searched_stations', JSON.stringify(searchedStations));
+    }
+
+    // Extrem schnelles, paralleles Abrufen aller Sender-Daten gleichzeitig
+    function triggerTurboLoad() {
+        searchedStations.forEach(slug => {
+            fetchPermanentLogo(slug);
+            updateStationCard(slug);
+        });
     }
 
     async function fetchPermanentLogo(slug) {
@@ -462,70 +458,72 @@
             if (res.ok) {
                 const data = await res.json();
                 const imgElement = document.getElementById(`logo-${slug}`);
-                const loader = document.getElementById(`loader-${slug}`);
+                let logoUrl = 'https://images.laut.fm/laut_fm_logo_black.png';
                 
-                if (imgElement && data.images && data.images.station_120x120) {
-                    imgElement.src = data.images.station_120x120;
-                    if (loader) loader.remove(); 
-                } else if (imgElement && data.image_url) {
-                    imgElement.src = data.image_url;
-                    if (loader) loader.remove();
+                if (data.images && data.images.station_120x120) {
+                    logoUrl = data.images.station_120x120;
+                } else if (data.image_url) {
+                    logoUrl = data.image_url;
                 }
+
+                if (imgElement) {
+                    imgElement.src = logoUrl;
+                }
+
+                if (!stationCache[slug]) stationCache[slug] = {};
+                stationCache[slug].logo = logoUrl;
+                saveCacheToStorage();
             }
         } catch (e) {
-            console.log("Logo-Abfrage fehlgeschlagen für: " + slug);
+            console.log("Logo-Abfrage fehlgeschlagen: " + slug);
         }
     }
 
-    // Verbesserte API-Abfrage: Holt Infos sofort und sperrt fehlerhafte "Lade..." Überschreibungen
     async function updateStationCard(slug) {
         try {
-            let realTimeListeners = 0;
-            try {
-                const lRes = await fetch(`https://api.laut.fm/station/${slug}/listeners?nocache=${Date.now()}`);
-                if(lRes.ok) {
-                    const lData = await lRes.text();
-                    realTimeListeners = parseInt(lData.trim()) || 0;
-                }
-            } catch(e) {}
+            const [listenersRes, songRes] = await Promise.all([
+                fetch(`https://api.laut.fm/station/${slug}/listeners?nocache=${Date.now()}`).catch(() => null),
+                fetch(`https://api.laut.fm/station/${slug}/current_song?nocache=${Date.now()}`).catch(() => null)
+            ]);
 
-            if(document.getElementById(`listeners-${slug}`)) {
-                document.getElementById(`listeners-${slug}`).innerText = realTimeListeners;
+            if (listenersRes && listenersRes.ok) {
+                const lData = await listenersRes.text();
+                const realTimeListeners = parseInt(lData.trim()) || 0;
+                const listenerEl = document.getElementById(`listeners-${slug}`);
+                if (listenerEl) listenerEl.innerText = realTimeListeners;
+                
+                if (!stationCache[slug]) stationCache[slug] = {};
+                stationCache[slug].listeners = realTimeListeners;
             }
 
-            const cRes = await fetch(`https://api.laut.fm/station/${slug}/current_song?nocache=${Date.now()}`);
-            if(cRes.ok) {
-                const song = await cRes.json();
+            if (songRes && songRes.ok) {
+                const song = await songRes.json();
                 const artistEl = document.getElementById(`artist-${slug}`);
                 const titleEl = document.getElementById(`title-${slug}`);
 
-                if(titleEl && artistEl) {
-                    // Falls echte Song-Daten da sind, werden sie sofort reingeschrieben
-                    if(song.title && song.title.trim() !== "") {
-                        titleEl.innerText = song.title;
-                        artistEl.innerText = song.artist ? song.artist.name : "Interpret";
-                        initialLoadStatus[slug] = true; 
-                    } else if (!initialLoadStatus[slug]) {
-                        // Fallback nur, wenn noch nie ein Song geladen werden konnte
-                        artistEl.innerText = "Live-Stream";
-                        titleEl.innerText = "Musik läuft...";
+                if (titleEl && artistEl) {
+                    if (song.title && song.title.trim() !== "") {
+                        const currentArtist = song.artist ? song.artist.name : "Interpret";
+                        const currentTitle = song.title;
+
+                        artistEl.innerText = currentArtist;
+                        titleEl.innerText = currentTitle;
+
+                        if (!stationCache[slug]) stationCache[slug] = {};
+                        stationCache[slug].artist = currentArtist;
+                        stationCache[slug].title = currentTitle;
+                        saveCacheToStorage();
                     }
                 }
             }
-        } catch(e) {}
-    }
-
-    function updateAllCards() {
-        searchedStations.forEach(slug => {
-            updateStationCard(slug);
-        });
+        } catch (e) {
+            console.log("Fehler beim Abruf von: " + slug);
+        }
     }
 
     async function controlStation(slug) {
         const clickedTxt = document.getElementById('text-' + slug);
         const clickedIcon = document.getElementById('icon-' + slug);
-        const artistEl = document.getElementById(`artist-${slug}`);
-        const titleEl = document.getElementById(`title-${slug}`);
 
         if (activePlayingSlug === slug) {
             audioPlayer.pause();
@@ -534,20 +532,14 @@
             clickedIcon.className = "btn-icon-play";
             await updateStationCard(slug);
         } else {
-            if(activePlayingSlug) {
+            if (activePlayingSlug) {
                 const oldTxt = document.getElementById('text-' + activePlayingSlug);
                 const oldIcon = document.getElementById('icon-' + activePlayingSlug);
-                if(oldTxt && oldIcon) {
+                if (oldTxt && oldIcon) {
                     oldTxt.innerText = "Sender starten";
                     oldIcon.className = "btn-icon-play";
                     updateStationCard(activePlayingSlug);
                 }
-            }
-
-            // Nur umschalten, wenn vorher wirklich absolut gar nichts geladen war
-            if (artistEl && titleEl && !initialLoadStatus[slug]) {
-                artistEl.innerText = "Verbindung wird hergestellt...";
-                titleEl.innerText = "Stream lädt...";
             }
 
             audioPlayer.src = `https://stream.laut.fm/${slug}`;
@@ -566,11 +558,14 @@
     }
 
     function renderStationCardDOM(slug) {
-        if(document.getElementById('card-' + slug)) return;
+        if (document.getElementById('card-' + slug)) return;
         
-        if(initialLoadStatus[slug] === undefined) {
-            initialLoadStatus[slug] = false;
-        }
+        const cachedData = stationCache[slug] || {};
+        // Falls gelöscht, nutzen wir sofort saubere Standard-Daten statt Lade-Texte
+        const savedLogo = cachedData.logo || 'https://images.laut.fm/laut_fm_logo_black.png';
+        const savedArtist = cachedData.artist || 'Bereit';
+        const savedTitle = cachedData.title || 'Musik läuft...';
+        const savedListeners = cachedData.listeners || '0';
 
         const newCard = document.createElement('div');
         newCard.className = 'station-card';
@@ -579,18 +574,17 @@
             <div class="fav-star-box" onclick="removeStation('${slug}')" title="Sender entfernen">★</div>
             <div class="card-header">
                 <div class="station-img-container">
-                    <div class="img-loader" id="loader-${slug}"></div>
-                    <img id="logo-${slug}" src="https://images.laut.fm/laut_fm_logo_black.png" class="station-img" alt="Logo" onerror="this.src='https://images.laut.fm/laut_fm_logo_black.png'">
+                    <img id="logo-${slug}" src="${savedLogo}" class="station-img" alt="Logo" onerror="this.src='https://images.laut.fm/laut_fm_logo_black.png'">
                 </div>
                 <div class="station-meta">
                     <h3 id="name-${slug}">${slug.toUpperCase()}</h3>
-                    <div class="listener-badge">Hörer online: <b id="listeners-${slug}">0</b></div>
+                    <div class="listener-badge">Hörer online: <b id="listeners-${slug}">${savedListeners}</b></div>
                 </div>
             </div>
             <div class="current-track-box">
                 <div class="track-label">Jetzt läuft</div>
-                <p class="track-artist" id="artist-${slug}">Lade Musik-Infos...</p>
-                <p class="track-name" id="title-${slug}">Verbinde zu laut.fm...</p>
+                <p class="track-artist" id="artist-${slug}">${savedArtist}</p>
+                <p class="track-name" id="title-${slug}">${savedTitle}</p>
             </div>
             <div class="card-actions">
                 <button id="btn-${slug}" class="btn-action" onclick="controlStation('${slug}')">
@@ -600,28 +594,27 @@
             </div>
         `;
         document.getElementById('webStationGrid').appendChild(newCard);
-        
-        // Holt Logo und Song-Titel SOFORT asynchron ab!
-        fetchPermanentLogo(slug);
-        updateStationCard(slug); 
     }
 
     async function searchNewStation() {
         const searchVal = document.getElementById('webSearchInput').value.toLowerCase().trim();
-        if(!searchVal) return;
-        if(searchedStations.includes(searchVal)) return;
+        if (!searchVal) return;
+        if (searchedStations.includes(searchVal)) return;
 
         renderStationCardDOM(searchVal);
         searchedStations.push(searchVal);
         saveStationsToStorage();
         
+        fetchPermanentLogo(searchVal);
+        updateStationCard(searchVal);
+
         showToast(`${searchVal.toUpperCase()} hinzugefügt`);
         document.getElementById('webSearchInput').value = "";
     }
 
     async function checkMultipleStations() {
         const rawInput = document.getElementById('bulkStationInput').value;
-        if(!rawInput.trim()) return;
+        if (!rawInput.trim()) return;
 
         const checkBtn = document.getElementById('bulkCheckBtn');
         checkBtn.disabled = true;
@@ -630,14 +623,14 @@
         const slugs = rawInput.split(',').map(s => s.trim().toLowerCase()).filter(s => s.length > 0);
         
         for (const slug of slugs) {
-            if(!searchedStations.includes(slug)) {
+            if (!searchedStations.includes(slug)) {
                 renderStationCardDOM(slug);
                 searchedStations.push(slug);
             }
         }
 
         saveStationsToStorage();
-        updateAllCards(); // Sofort alle neu hinzugefügten Stationen abfragen!
+        triggerTurboLoad(); 
         
         checkBtn.disabled = false;
         checkBtn.innerText = "Überprüfen";
@@ -650,14 +643,16 @@
         searchedStations = searchedStations.filter(s => s !== slug);
         saveStationsToStorage();
         const card = document.getElementById('card-' + slug);
-        if(card) card.remove();
-        if(activePlayingSlug === slug) activePlayingSlug = null;
-        delete initialLoadStatus[slug];
+        if (card) card.remove();
+        if (activePlayingSlug === slug) activePlayingSlug = null;
+        
+        delete stationCache[slug];
+        saveCacheToStorage();
     }
 
     window.onload = () => {
         loadSavedStations(); 
-        setInterval(updateAllCards, 5000); 
+        setInterval(triggerTurboLoad, 5000); // Hält den Intervall synchron
     };
 </script>
 </body>
