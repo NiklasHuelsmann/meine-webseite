@@ -9,7 +9,7 @@
             --bg-color: #f4f6f9;
             --header-bg: #ffffff;
             --text-color: #2d3748;
-            --accent-blue: #007bff; /* Wieder das schöne Original-Blau */
+            --accent-blue: #007bff;
             --accent-green: #00a67c;
             --card-bg: #ffffff;
             --border-color: #e2e8f0;
@@ -166,6 +166,13 @@
             flex-direction: column;
             gap: 15px;
             position: relative;
+            cursor: pointer; /* Zeigt, dass der ganze Kasten anklickbar ist */
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .station-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.05);
         }
 
         .card-header {
@@ -241,6 +248,7 @@
             transition: 0.2s;
             user-select: none;
             border: 1px solid var(--border-color);
+            z-index: 10;
         }
 
         .current-track-box {
@@ -283,6 +291,8 @@
             justify-content: center;
             align-items: center;
             padding-top: 5px;
+            position: relative;
+            z-index: 10;
         }
 
         .btn-action {
@@ -546,12 +556,20 @@
         }
     }
 
+    // Funktion, um beim Klick auf den Kasten die laut.fm-Webseite zu öffnen
+    function openLautFmPage(event, slug) {
+        // Falls der Klick auf den Favoriten-Stern oder den Abspiel-Button ging, NICHT weiterleiten!
+        if (event.target.closest('.fav-star-box') || event.target.closest('.btn-action')) {
+            return;
+        }
+        // Öffnet die offizielle Seite in einem neuen Tab
+        window.open(`https://laut.fm/${slug}`, '_blank');
+    }
+
     function renderStationCardDOM(slug) {
         if (document.getElementById('card-' + slug)) return;
         
         const cachedData = stationCache[slug] || {};
-        
-        // Schneller, direkter Bildpfad ohne API-Stau
         const directLogoUrl = `https://images.laut.fm/${slug}_120x120.png`;
         
         const savedArtist = cachedData.artist || 'Musik-Stream';
@@ -561,6 +579,9 @@
         const newCard = document.createElement('div');
         newCard.className = 'station-card';
         newCard.id = 'card-' + slug;
+        
+        // ZUSATZ: onclick-Event leitet auf die laut.fm-Webseite weiter
+        newCard.setAttribute('onclick', `openLautFmPage(event, '${slug}')`);
         
         newCard.innerHTML = `
             <div class="fav-star-box" onclick="removeStation('${slug}')" title="Sender entfernen">★</div>
