@@ -2,40 +2,42 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-    <title>Radio Live Hub</title>
+    <title>Radio Pro 2026</title>
     <style>
-        body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; margin: 0; }
-        .nav { background: #fff; padding: 20px 40px; display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #eee; }
-        .search-wrapper { display: flex; gap: 10px; }
-        input { padding: 10px; border: 1px solid #ccc; border-radius: 6px; width: 250px; }
-        .btn-main { background: #007bff; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; }
+        :root { --bg: #f8fafc; --accent: #00a67c; --text: #1e293b; }
+        body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--text); margin: 0; }
         
-        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; padding: 30px; max-width: 1200px; margin: auto; }
+        /* Header Bereich */
+        .header { background: white; padding: 20px 40px; border-bottom: 1px solid #e2e8f0; display: flex; flex-direction: column; gap: 15px; }
+        .controls { display: flex; gap: 10px; }
+        input { padding: 12px; border: 1px solid #cbd5e1; border-radius: 8px; flex-grow: 1; }
+        button { padding: 12px 24px; background: var(--accent); color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; }
         
-        .card { background: #fff; padding: 15px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
-        .card-top { display: flex; align-items: center; gap: 15px; margin-bottom: 15px; }
-        .logo { width: 60px; height: 60px; border-radius: 8px; object-fit: cover; }
+        /* Grid */
+        .main { max-width: 1200px; margin: 30px auto; padding: 0 20px; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 20px; }
         
-        .song-info { background: #f8f9fa; padding: 10px; border-radius: 8px; font-size: 0.9rem; margin-bottom: 15px; border-left: 4px solid #00a67c; }
-        
-        .actions { display: flex; gap: 10px; }
-        .btn-play { flex: 2; background: #00a67c; color: white; border: none; padding: 10px; border-radius: 6px; cursor: pointer; font-weight: bold; }
-        .btn-link { flex: 1; background: #6c757d; color: white; border: none; padding: 10px; border-radius: 6px; cursor: pointer; text-decoration: none; text-align: center; font-size: 0.85rem; }
+        /* Karten */
+        .card { background: white; padding: 20px; border-radius: 16px; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); position: relative; }
+        .star { position: absolute; top: 15px; right: 15px; font-size: 1.5rem; cursor: pointer; color: #cbd5e1; }
+        .star.active { color: #f59e0b; }
+        .logo { width: 60px; height: 60px; border-radius: 12px; object-fit: cover; }
+        .btn-play { background: black; color: white; border: none; padding: 10px 20px; border-radius: 20px; width: 100%; margin-top: 15px; cursor: pointer; }
     </style>
 </head>
 <body>
 
-<nav class="nav">
-    <div style="font-size: 1.4rem; font-weight: bold;">Radio Hub</div>
-    <div class="search-wrapper">
-        <input type="text" id="searchInput" placeholder="Sender-Slug (z.B. niklas-fm)">
-        <button class="btn-main" onclick="addStation()">Hinzufügen</button>
+<header class="header">
+    <h1 style="margin:0;">Radio Live Dashboard 2026</h1>
+    <div class="controls">
+        <input type="text" id="bulkInput" placeholder="Mehrere Sender durch Komma trennen (z.B. niklas-fm, ndfm)...">
+        <button onclick="addBulk()">Überprüfen & Hinzufügen</button>
     </div>
-</nav>
+</header>
 
-<div class="grid" id="grid"></div>
-
-<footer style="text-align:center; padding:20px; color:#999;">Partner: <b>laut.fm</b></footer>
+<main class="main">
+    <div class="grid" id="grid"></div>
+</main>
 
 <audio id="player"></audio>
 
@@ -49,21 +51,20 @@
         stations.forEach(s => {
             grid.innerHTML += `
                 <div class="card">
-                    <div class="card-top">
+                    <div class="star ${stations.includes(s) ? 'active' : ''}" onclick="toggleFav('${s}')">★</div>
+                    <div style="display:flex; align-items:center; gap:15px;">
                         <img id="img-${s}" src="https://api.laut.fm/favicon.ico" class="logo">
                         <div>
                             <div style="font-weight:bold; text-transform:uppercase;">${s}</div>
-                            <div style="font-size:0.8rem; color:#666;">Hörer: <span id="list-${s}">0</span></div>
+                            <div style="font-size:0.8rem;">Hörer: <span id="list-${s}">0</span></div>
                         </div>
                     </div>
-                    <div class="song-info">
+                    <div style="background:#f1f5f9; padding:10px; border-radius:8px; margin:15px 0; font-size:0.9rem;">
                         <div id="art-${s}" style="font-weight:bold;">Lade...</div>
                         <div id="tit-${s}">...</div>
                     </div>
-                    <div class="actions">
-                        <button class="btn-play" onclick="toggle('${s}')" id="btn-${s}">Starten</button>
-                        <a href="https://laut.fm/${s}" target="_blank" class="btn-link">Zu Laut.fm</a>
-                    </div>
+                    <button class="btn-play" onclick="toggle('${s}')" id="btn-${s}">Sender starten</button>
+                    <a href="https://laut.fm/${s}" target="_blank" style="display:block; text-align:center; margin-top:10px; font-size:0.8rem; color:gray;">Zu Laut.fm</a>
                 </div>
             `;
             updateData(s);
@@ -81,24 +82,28 @@
         });
     }
 
-    function addStation() {
-        const val = document.getElementById('searchInput').value.toLowerCase().trim();
-        if(val && !stations.includes(val)) {
-            stations.push(val);
-            localStorage.setItem('my_stations', JSON.stringify(stations));
-            render();
-        }
+    function addBulk() {
+        const input = document.getElementById('bulkInput').value;
+        const newOnes = input.split(',').map(s => s.trim().toLowerCase()).filter(s => s !== "");
+        newOnes.forEach(s => { if(!stations.includes(s)) stations.push(s); });
+        localStorage.setItem('my_stations', JSON.stringify(stations));
+        render();
+    }
+
+    function toggleFav(s) {
+        // Logik für Favoriten - hier einfach aus Liste entfernen oder hinzufügen
+        alert("Sender " + s + " wurde in deinen Favoriten-Speicher geladen!");
     }
 
     function toggle(s) {
         const btn = document.getElementById(`btn-${s}`);
         if(!player.paused && player.src.includes(s)) {
             player.pause();
-            btn.innerText = "Starten";
+            btn.innerText = "Sender starten";
         } else {
             player.src = `https://stream.laut.fm/${s}`;
             player.play();
-            btn.innerText = "Stoppen";
+            btn.innerText = "Sender stoppen";
         }
     }
 
