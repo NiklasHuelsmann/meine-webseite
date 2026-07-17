@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-    <title>Radio Live Hub 2026</title>
+    <title>Radio Pro 2026</title>
     <style>
         body { font-family: sans-serif; background: #f4f6f9; margin: 0; }
         .header { background: white; padding: 15px 40px; border-bottom: 2px solid #eee; display: flex; justify-content: flex-end; align-items: center; gap: 10px; }
@@ -12,13 +12,9 @@
         .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; padding: 30px; }
         .card { background: white; padding: 15px; border-radius: 8px; border: 1px solid #ddd; position: relative; }
         
-        /* Viereck-Link Bereich */
-        .clickable-logo { cursor: pointer; display: inline-block; }
-        
-        /* Grüne Buttons */
+        .clickable-logo { cursor: pointer; display: inline-block; border-radius: 4px; overflow: hidden; }
         .btn-play { background: #00a67c; color: white; border: none; padding: 10px 15px; border-radius: 4px; cursor: pointer; width: 100%; font-weight: bold; }
         
-        /* Sterne-Logik */
         .star { font-size: 1.5rem; cursor: pointer; color: #ccc; float: right; }
         .star.active { display: none; }
     </style>
@@ -38,28 +34,29 @@
     let savedFavs = JSON.parse(localStorage.getItem('my_saved_favs')) || [];
     const player = document.getElementById('player');
 
-    // ... in deiner render() Funktion:
-
-card.innerHTML = `
-    <div class="star ${isSaved ? 'active' : ''}" onclick="saveStation('${s}')">★</div>
-    
-    <!-- Hier ist der Bereich, den du meinst: Das Logo-Viereck -->
-    <div class="clickable-logo" 
-         onclick="window.open('https://laut.fm/${s}', '_blank')" 
-         style="cursor: pointer; display: inline-block; border-radius: 4px; overflow: hidden;">
-        <img id="img-${s}" src="https://api.laut.fm/favicon.ico" 
-             style="width:60px; height:60px; object-fit: cover;">
-    </div>
-    
-    <div><b style="text-transform:uppercase;">${s}</b><br><small id="list-${s}">0 Hörer</small></div>
-    
-    <div style="margin:10px 0; font-size:0.9rem;">
-        <div id="art-${s}" style="font-weight:bold;">Lade...</div>
-        <div id="tit-${s}">...</div>
-    </div>
-    
-    <button class="btn-play" onclick="toggle('${s}')" id="btn-${s}">▶ Sender starten</button>
-`;
+    function render() {
+        const grid = document.getElementById('grid');
+        grid.innerHTML = '';
+        stations.forEach(s => {
+            const isSaved = savedFavs.includes(s);
+            const isPlaying = !player.paused && player.src.includes(s);
+            const card = document.createElement('div');
+            card.className = 'card';
+            
+            card.innerHTML = `
+                <div class="star ${isSaved ? 'active' : ''}" onclick="saveStation('${s}')">★</div>
+                <div class="clickable-logo" onclick="window.open('https://laut.fm/${s}', '_blank')">
+                    <img id="img-${s}" src="https://api.laut.fm/favicon.ico" style="width:60px; height:60px; object-fit: cover;">
+                </div>
+                <div><b style="text-transform:uppercase;">${s}</b><br><small id="list-${s}">0 Hörer</small></div>
+                <div style="margin:10px 0; font-size:0.9rem;">
+                    <div id="art-${s}" style="font-weight:bold;">Lade...</div>
+                    <div id="tit-${s}">...</div>
+                </div>
+                <button class="btn-play" onclick="toggle('${s}')" id="btn-${s}">
+                    ${isPlaying ? '⏹ Sender stoppen' : '▶ Sender starten'}
+                </button>
+            `;
             grid.appendChild(card);
             updateData(s);
         });
@@ -75,19 +72,12 @@ card.innerHTML = `
 
     function toggle(s) {
         const btn = document.getElementById(`btn-${s}`);
-        
-        // Wenn der Sender, den wir gerade anklicken, schon läuft: Stoppen
         if (!player.paused && player.src.includes(s)) {
             player.pause();
             btn.innerHTML = "▶ Sender starten";
         } else {
-            // Wenn ein anderer Sender läuft, diesen erst stoppen
             player.pause();
-            
-            // Text auf allen Buttons zurücksetzen
             document.querySelectorAll('.btn-play').forEach(b => b.innerHTML = "▶ Sender starten");
-            
-            // Neuen Sender laden und starten
             player.src = `https://stream.laut.fm/${s}`;
             player.play();
             btn.innerHTML = "⏹ Sender stoppen";
@@ -96,36 +86,31 @@ card.innerHTML = `
 
     async function updateData(s) {
         fetch(`https://api.laut.fm/station/${s}`).then(r => r.json()).then(d => {
-            if(d.images) document.getElementById(`img-${s}`).src = d.images.station_120x120;
-        });
-        fetch(`https://api.laut.fm/station/${s}/listeners`).then(r => r.text()).then(t => document.getElementById(`list-${s}`).innerText = t + " Hörer");
-        fetch(`https://api.laut.fm/station/${s}/current_song`).then(r => r.json()).then(d => {
-            document.getElementById(`art-${s}`).innerText = d.artist?.name || "-";
-            document.getElementById(`tit-${s}`).innerText = d.title || "-";
-        });
-    }
-
-    async function updateData(s) {
-        fetch(`https://api.laut.fm/station/${s}`).then(r => r.json()).then(d => {
             if (d.images) {
-                // Wir suchen nach den großen Formaten (640x640, 800x800)
-                // Wenn diese nicht existieren, fallen wir auf die 120er zurück.
                 const img = d.images.station_640x640 || d.images.station_800x800 || d.images.station_120x120;
                 document.getElementById(`img-${s}`).src = img;
             }
         });
-        
         fetch(`https://api.laut.fm/station/${s}/listeners`).then(r => r.text()).then(t => {
             document.getElementById(`list-${s}`).innerText = t + " Hörer";
         });
-        
         fetch(`https://api.laut.fm/station/${s}/current_song`).then(r => r.json()).then(d => {
             document.getElementById(`art-${s}`).innerText = d.artist?.name || "-";
             document.getElementById(`tit-${s}`).innerText = d.title || "-";
         });
     }
 
+    function addStation() {
+        const val = document.getElementById('searchInput').value.toLowerCase().trim();
+        if(val && !stations.includes(val)) {
+            stations.push(val);
+            localStorage.setItem('my_stations', JSON.stringify(stations));
+            render();
+        }
+    }
+
     window.onload = render;
+    setInterval(() => stations.forEach(updateData), 15000);
 </script>
 </body>
 </html>
