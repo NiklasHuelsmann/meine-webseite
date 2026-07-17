@@ -43,13 +43,15 @@
         grid.innerHTML = '';
         stations.forEach(s => {
             const isSaved = savedFavs.includes(s);
+            // Prüfen, ob dieser spezifische Sender gerade läuft
+            const isPlaying = !player.paused && player.src.includes(s);
+            
             const card = document.createElement('div');
             card.className = 'card';
             
             card.innerHTML = `
                 <div class="star ${isSaved ? 'active' : ''}" onclick="saveStation('${s}')">★</div>
                 
-                <!-- Hier klicken für Laut.fm -->
                 <div class="clickable-logo" onclick="window.open('https://laut.fm/${s}', '_blank')">
                     <img id="img-${s}" src="https://api.laut.fm/favicon.ico" style="width:50px; height:50px; border-radius:4px;">
                 </div>
@@ -60,7 +62,10 @@
                     <div id="art-${s}" style="font-weight:bold;">Lade...</div>
                     <div id="tit-${s}">...</div>
                 </div>
-                <button class="btn-play" onclick="toggle('${s}')" id="btn-${s}">▶ Sender starten</button>
+                <!-- Hier setzen wir den Text je nach Status -->
+                <button class="btn-play" onclick="toggle('${s}')" id="btn-${s}">
+                    ${isPlaying ? '⏹ Sender stoppen' : '▶ Sender starten'}
+                </button>
             `;
             grid.appendChild(card);
             updateData(s);
