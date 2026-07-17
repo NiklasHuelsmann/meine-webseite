@@ -82,10 +82,19 @@
 
     function toggle(s) {
         const btn = document.getElementById(`btn-${s}`);
+        
+        // Wenn der Sender, den wir gerade anklicken, schon läuft: Stoppen
         if (!player.paused && player.src.includes(s)) {
             player.pause();
             btn.innerHTML = "▶ Sender starten";
         } else {
+            // Wenn ein anderer Sender läuft, diesen erst stoppen
+            player.pause();
+            
+            // Text auf allen Buttons zurücksetzen
+            document.querySelectorAll('.btn-play').forEach(b => b.innerHTML = "▶ Sender starten");
+            
+            // Neuen Sender laden und starten
             player.src = `https://stream.laut.fm/${s}`;
             player.play();
             btn.innerHTML = "⏹ Sender stoppen";
