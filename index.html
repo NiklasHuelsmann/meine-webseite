@@ -38,35 +38,28 @@
     let savedFavs = JSON.parse(localStorage.getItem('my_saved_favs')) || [];
     const player = document.getElementById('player');
 
-    function render() {
-        const grid = document.getElementById('grid');
-        grid.innerHTML = '';
-        stations.forEach(s => {
-            const isSaved = savedFavs.includes(s);
-            // Prüfen, ob dieser spezifische Sender gerade läuft
-            const isPlaying = !player.paused && player.src.includes(s);
-            
-            const card = document.createElement('div');
-            card.className = 'card';
-            
-            card.innerHTML = `
-                <div class="star ${isSaved ? 'active' : ''}" onclick="saveStation('${s}')">★</div>
-                
-                <div class="clickable-logo" onclick="window.open('https://laut.fm/${s}', '_blank')">
-                    <img id="img-${s}" src="https://api.laut.fm/favicon.ico" style="width:50px; height:50px; border-radius:4px;">
-                </div>
-                
-                <div><b style="text-transform:uppercase;">${s}</b><br><small id="list-${s}">0 Hörer</small></div>
-                
-                <div style="margin:10px 0; font-size:0.9rem;">
-                    <div id="art-${s}" style="font-weight:bold;">Lade...</div>
-                    <div id="tit-${s}">...</div>
-                </div>
-                <!-- Hier setzen wir den Text je nach Status -->
-                <button class="btn-play" onclick="toggle('${s}')" id="btn-${s}">
-                    ${isPlaying ? '⏹ Sender stoppen' : '▶ Sender starten'}
-                </button>
-            `;
+    // ... in deiner render() Funktion:
+
+card.innerHTML = `
+    <div class="star ${isSaved ? 'active' : ''}" onclick="saveStation('${s}')">★</div>
+    
+    <!-- Hier ist der Bereich, den du meinst: Das Logo-Viereck -->
+    <div class="clickable-logo" 
+         onclick="window.open('https://laut.fm/${s}', '_blank')" 
+         style="cursor: pointer; display: inline-block; border-radius: 4px; overflow: hidden;">
+        <img id="img-${s}" src="https://api.laut.fm/favicon.ico" 
+             style="width:60px; height:60px; object-fit: cover;">
+    </div>
+    
+    <div><b style="text-transform:uppercase;">${s}</b><br><small id="list-${s}">0 Hörer</small></div>
+    
+    <div style="margin:10px 0; font-size:0.9rem;">
+        <div id="art-${s}" style="font-weight:bold;">Lade...</div>
+        <div id="tit-${s}">...</div>
+    </div>
+    
+    <button class="btn-play" onclick="toggle('${s}')" id="btn-${s}">▶ Sender starten</button>
+`;
             grid.appendChild(card);
             updateData(s);
         });
