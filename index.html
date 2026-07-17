@@ -112,13 +112,24 @@
         });
     }
 
-    function addStation() {
-        const val = document.getElementById('searchInput').value.toLowerCase().trim();
-        if(val && !stations.includes(val)) {
-            stations.push(val);
-            localStorage.setItem('my_stations', JSON.stringify(stations));
-            render();
-        }
+    async function updateData(s) {
+        fetch(`https://api.laut.fm/station/${s}`).then(r => r.json()).then(d => {
+            if (d.images) {
+                // Wir suchen nach den großen Formaten (640x640, 800x800)
+                // Wenn diese nicht existieren, fallen wir auf die 120er zurück.
+                const img = d.images.station_640x640 || d.images.station_800x800 || d.images.station_120x120;
+                document.getElementById(`img-${s}`).src = img;
+            }
+        });
+        
+        fetch(`https://api.laut.fm/station/${s}/listeners`).then(r => r.text()).then(t => {
+            document.getElementById(`list-${s}`).innerText = t + " Hörer";
+        });
+        
+        fetch(`https://api.laut.fm/station/${s}/current_song`).then(r => r.json()).then(d => {
+            document.getElementById(`art-${s}`).innerText = d.artist?.name || "-";
+            document.getElementById(`tit-${s}`).innerText = d.title || "-";
+        });
     }
 
     window.onload = render;
