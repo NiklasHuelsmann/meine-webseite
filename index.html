@@ -2,24 +2,40 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-    <title>Radio Pro 2026</title>
+    <title>Radio Pro 2026 - Dashboard</title>
     <style>
         body { font-family: sans-serif; background: #f4f6f9; margin: 0; }
+        
+        /* Status-Anzeige (Admin-Bereich) */
+        #status-container { position: fixed; top: 10px; left: 10px; z-index: 1000; background: white; padding: 15px; border-radius: 8px; border: 1px solid #ccc; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        
+        /* Header & Suchleiste */
         .header { background: white; padding: 15px 40px; border-bottom: 2px solid #eee; display: flex; justify-content: flex-end; align-items: center; gap: 10px; }
         input { padding: 8px; border: 1px solid #ccc; border-radius: 4px; width: 200px; }
         .btn-add { padding: 8px 16px; background: #00a67c; color: white; border: none; border-radius: 4px; cursor: pointer; }
         
+        /* Grid & Karten */
         .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; padding: 30px; }
         .card { background: white; padding: 15px; border-radius: 8px; border: 1px solid #ddd; position: relative; }
-        
         .clickable-logo { cursor: pointer; display: inline-block; border-radius: 4px; overflow: hidden; }
-        .btn-play { background: #00a67c; color: white; border: none; padding: 10px 15px; border-radius: 4px; cursor: pointer; width: 100%; font-weight: bold; }
         
+        .btn-play { background: #00a67c; color: white; border: none; padding: 10px 15px; border-radius: 4px; cursor: pointer; width: 100%; font-weight: bold; }
         .star { font-size: 1.5rem; cursor: pointer; color: #ccc; float: right; }
         .star.active { display: none; }
     </style>
 </head>
 <body>
+
+<!-- Status-Anzeige & Login (Oben Links) -->
+<div id="status-container">
+    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
+        <div id="status-dot" style="width: 12px; height: 12px; border-radius: 50%; background-color: gray;"></div>
+        <span id="status-text" style="font-weight: bold; font-family: sans-serif;">Prüfe System...</span>
+    </div>
+    <button onclick="window.open('https://radioadmin.laut.fm', '_blank')" style="width: 100%; padding: 8px; background: #00a67c; color: white; border: none; border-radius: 4px; cursor: pointer;">
+        Zum Admin-Login
+    </button>
+</div>
 
 <header class="header">
     <input type="text" id="searchInput" placeholder="Sender-Slug...">
@@ -34,6 +50,20 @@
     let savedFavs = JSON.parse(localStorage.getItem('my_saved_favs')) || [];
     const player = document.getElementById('player');
 
+    // Admin Status Abfrage
+    async function checkStatus() {
+        const dot = document.getElementById('status-dot');
+        const text = document.getElementById('status-text');
+        try {
+            await fetch('https://radioadmin.laut.fm', { mode: 'no-cors' });
+            dot.style.backgroundColor = '#22c55e';
+            text.innerText = 'System Online';
+        } catch (e) {
+            dot.style.backgroundColor = '#ef4444';
+            text.innerText = 'System Offline';
+        }
+    }
+
     function render() {
         const grid = document.getElementById('grid');
         grid.innerHTML = '';
@@ -42,7 +72,6 @@
             const isPlaying = !player.paused && player.src.includes(s);
             const card = document.createElement('div');
             card.className = 'card';
-            
             card.innerHTML = `
                 <div class="star ${isSaved ? 'active' : ''}" onclick="saveStation('${s}')">★</div>
                 <div class="clickable-logo" onclick="window.open('https://laut.fm/${s}', '_blank')">
@@ -109,8 +138,8 @@
         }
     }
 
-    window.onload = render;
-    setInterval(() => stations.forEach(updateData), 15000);
+    window.onload = () => { render(); checkStatus(); };
+    setInterval(() => { stations.forEach(updateData); checkStatus(); }, 30000);
 </script>
 </body>
 </html>
