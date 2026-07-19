@@ -16,12 +16,14 @@
         
         /* Grid & Karten */
         .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; padding: 30px; }
-        .card { background: white; padding: 15px; border-radius: 8px; border: 1px solid #ddd; position: relative; }
-        .clickable-logo { cursor: pointer; display: inline-block; border-radius: 4px; overflow: hidden; }
+        .card { background: white; padding: 15px; border-radius: 8px; border: 2px solid transparent; transition: border 0.3s; position: relative; }
+        .active-card { border: 3px solid #ef4444 !important; }
         
+        .clickable-logo { cursor: pointer; display: inline-block; border-radius: 4px; overflow: hidden; }
         .btn-play { background: #00a67c; color: white; border: none; padding: 10px 15px; border-radius: 4px; cursor: pointer; width: 100%; font-weight: bold; }
         .star { font-size: 1.5rem; cursor: pointer; color: #ccc; float: right; }
         .star.active { display: none; }
+        .status-badge { color: #ef4444; font-weight: bold; font-size: 0.8rem; margin-bottom: 5px; display: none; }
     </style>
 </head>
 <body>
@@ -32,10 +34,9 @@
         <div id="status-dot" style="width: 12px; height: 12px; border-radius: 50%; background-color: gray;"></div>
         <span id="status-text" style="font-weight: bold; font-family: sans-serif;">Prüfe System...</span>
     </div>
-    <button onclick="window.open('https://radioadmin.laut.fm', '_blank', 'noopener,noreferrer')" 
-        style="width: 100%; padding: 8px; background: #00a67c; color: white; border: none; border-radius: 4px; cursor: pointer;">
-    Login
-</button>
+    <button onclick="window.open('https://radioadmin.laut.fm', '_blank', 'noopener,noreferrer')" style="width: 100%; padding: 8px; background: #00a67c; color: white; border: none; border-radius: 4px; cursor: pointer;">
+        Login
+    </button>
 </div>
 
 <header class="header">
@@ -51,7 +52,6 @@
     let savedFavs = JSON.parse(localStorage.getItem('my_saved_favs')) || [];
     const player = document.getElementById('player');
 
-    // Admin Status Abfrage
     async function checkStatus() {
         const dot = document.getElementById('status-dot');
         const text = document.getElementById('status-text');
@@ -72,9 +72,10 @@
             const isSaved = savedFavs.includes(s);
             const isPlaying = !player.paused && player.src.includes(s);
             const card = document.createElement('div');
-            card.className = 'card';
+            card.className = `card ${isPlaying ? 'active-card' : ''}`;
             card.innerHTML = `
                 <div class="star ${isSaved ? 'active' : ''}" onclick="saveStation('${s}')">★</div>
+                <div class="status-badge" id="badge-${s}" style="display:${isPlaying ? 'block' : 'none'};">AKTIV - Läuft gerade</div>
                 <div class="clickable-logo" onclick="window.open('https://laut.fm/${s}', '_blank')">
                     <img id="img-${s}" src="https://api.laut.fm/favicon.ico" style="width:60px; height:60px; object-fit: cover;">
                 </div>
@@ -92,16 +93,11 @@
         });
     }
 
-    function saveStation(s) {
-        if (!savedFavs.includes(s)) {
-            savedFavs.push(s);
-            localStorage.setItem('my_saved_favs', JSON.stringify(savedFavs));
-            render();
-        }
-    }
-
     function toggle(s) {
         const btn = document.getElementById(`btn-${s}`);
+        const allCards = document.querySelectorAll('.card');
+        allCards.forEach(c => { c.classList.remove('active-card'); c.querySelector('.status-badge').style.display = 'none'; });
+
         if (!player.paused && player.src.includes(s)) {
             player.pause();
             btn.innerHTML = "▶ Sender starten";
@@ -111,21 +107,17 @@
             player.src = `https://stream.laut.fm/${s}`;
             player.play();
             btn.innerHTML = "⏹ Sender stoppen";
+            btn.closest('.card').classList.add('active-card');
+            btn.closest('.card').querySelector('.status-badge').style.display = 'block';
         }
     }
 
-   async function updateData(s) {
-        // Erst die Basis-Informationen für Bilder abrufen
+    async function updateData(s) {
         fetch(`https://api.laut.fm/station/${s}`).then(r => r.json()).then(d => {
             if (d.images && d.images.station) {
-                // Wir nehmen die Basis-URL aus dem API-Objekt und hängen das Format an
-                const baseUrl = d.images.station; 
-                // Hier setzen wir dein gewünschtes Format (z.B. 640x640)
-                document.getElementById(`img-${s}`).src = `${baseUrl}?t=640x640`;
+                document.getElementById(`img-${s}`).src = `${d.images.station}?t=640x640`;
             }
         });
-        
-        // ... (restlicher Code für Hörer und Song bleibt identisch)
         fetch(`https://api.laut.fm/station/${s}/listeners`).then(r => r.text()).then(t => {
             document.getElementById(`list-${s}`).innerText = t + " Hörer";
         });
@@ -133,6 +125,23 @@
             document.getElementById(`art-${s}`).innerText = d.artist?.name || "-";
             document.getElementById(`tit-${s}`).innerText = d.title || "-";
         });
+    }
+
+    function addStation() {
+        const val = document.getElementById('searchInput').value.toLowerCase().trim();
+        if(val && !stations.includes(val)) {
+            stations.push(val);
+            localStorage.setItem('my_stations', JSON.stringify(stations));
+            render();
+        }
+    }
+
+    function saveStation(s) {
+        if (!savedFavs.includes(s)) {
+            savedFavs.push(s);
+            localStorage.setItem('my_saved_favs', JSON.stringify(savedFavs));
+            render();
+        }
     }
 
     window.onload = () => { render(); checkStatus(); };
