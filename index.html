@@ -2,90 +2,79 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-    <title>Radio Pro 2026 - Dashboard</title>
+    <title>Niklas Radio-Dashboard</title>
+    <!-- Dark-Mode Support & Hintergrund -->
     <style>
-        body { font-family: sans-serif; background: #f4f6f9; margin: 0; }
-        
-        /* Status-Anzeige (Admin-Bereich) */
-        #status-container { position: fixed; top: 10px; left: 10px; z-index: 1000; background: white; padding: 15px; border-radius: 8px; border: 1px solid #ccc; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-        
-        /* Header & Suchleiste */
-        .header { background: white; padding: 15px 40px; border-bottom: 2px solid #eee; display: flex; justify-content: flex-end; align-items: center; gap: 10px; }
-        input { padding: 8px; border: 1px solid #ccc; border-radius: 4px; width: 200px; }
-        .btn-add { padding: 8px 16px; background: #00a67c; color: white; border: none; border-radius: 4px; cursor: pointer; }
-        
-        /* Grid & Karten */
+        :root {
+            --bg-color: #f4f6f9;
+            --text-color: #333;
+            --card-bg: white;
+        }
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --bg-color: #1a1a2e;
+                --text-color: #f0f0f0;
+                --card-bg: #16213e;
+            }
+        }
+        body { 
+            font-family: sans-serif; 
+            background-color: var(--bg-color); 
+            background-image: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            background-attachment: fixed;
+            color: var(--text-color);
+            margin: 0; 
+        }
+        #status-container { position: fixed; top: 10px; left: 10px; z-index: 1000; background: var(--card-bg); padding: 15px; border-radius: 8px; border: 1px solid #ccc; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
+        .header { background: var(--card-bg); padding: 15px 40px; border-bottom: 2px solid #333; display: flex; justify-content: flex-end; align-items: center; gap: 10px; }
         .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; padding: 30px; }
-        .card { background: white; padding: 15px; border-radius: 8px; border: 2px solid transparent; transition: border 0.3s; position: relative; }
+        .card { background: var(--card-bg); padding: 15px; border-radius: 8px; border: 3px solid transparent; cursor: grab; }
         .active-card { border: 3px solid #ef4444 !important; }
-        
-        .clickable-logo { cursor: pointer; display: inline-block; border-radius: 4px; overflow: hidden; }
-        .btn-play { background: #00a67c; color: white; border: none; padding: 10px 15px; border-radius: 4px; cursor: pointer; width: 100%; font-weight: bold; }
-        .star { font-size: 1.5rem; cursor: pointer; color: #ccc; float: right; }
-        .star.active { display: none; }
-        .status-badge { color: #ef4444; font-weight: bold; font-size: 0.8rem; margin-bottom: 5px; display: none; }
+        .btn-play { background: #00a67c; color: white; border: none; padding: 10px; border-radius: 4px; cursor: pointer; width: 100%; }
     </style>
 </head>
 <body>
 
-<!-- Status-Anzeige & Login (Oben Links) -->
 <div id="status-container">
-    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
-        <div id="status-dot" style="width: 12px; height: 12px; border-radius: 50%; background-color: gray;"></div>
-        <span id="status-text" style="font-weight: bold; font-family: sans-serif;">Prüfe System...</span>
-    </div>
-    <button onclick="window.open('https://radioadmin.laut.fm', '_blank', 'noopener,noreferrer')" style="width: 100%; padding: 8px; background: #00a67c; color: white; border: none; border-radius: 4px; cursor: pointer;">
-        Login
-    </button>
+    <div style="display: flex; align-items: center; gap: 10px;"><div id="status-dot" style="width: 12px; height: 12px; border-radius: 50%; background-color: gray;"></div>
+    <span id="status-text" style="font-weight: bold;">Prüfe...</span></div>
+    <button onclick="window.open('https://radioadmin.laut.fm', '_blank', 'noopener')" style="width: 100%; margin-top:10px; background:#00a67c; color:white; border:none; padding:5px;">Login</button>
 </div>
 
 <header class="header">
     <input type="text" id="searchInput" placeholder="Sender-Slug...">
-    <button class="btn-add" onclick="addStation()">Hinzufügen</button>
+    <button onclick="addStation()">Hinzufügen</button>
 </header>
 
 <div class="grid" id="grid"></div>
 <audio id="player"></audio>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
 <script>
     let stations = JSON.parse(localStorage.getItem('my_stations')) || [];
-    let savedFavs = JSON.parse(localStorage.getItem('my_saved_favs')) || [];
+    const grid = document.getElementById('grid');
     const player = document.getElementById('player');
 
-    async function checkStatus() {
-        const dot = document.getElementById('status-dot');
-        const text = document.getElementById('status-text');
-        try {
-            await fetch('https://radioadmin.laut.fm', { mode: 'no-cors' });
-            dot.style.backgroundColor = '#22c55e';
-            text.innerText = 'System Online';
-        } catch (e) {
-            dot.style.backgroundColor = '#ef4444';
-            text.innerText = 'System Offline';
-        }
+    // Drag & Drop Sortierung aktivieren
+    new Sortable(grid, { animation: 150, onEnd: saveOrder });
+
+    function saveOrder() {
+        const newOrder = Array.from(document.querySelectorAll('.card')).map(c => c.dataset.id);
+        localStorage.setItem('my_stations', JSON.stringify(newOrder));
     }
 
     function render() {
-        const grid = document.getElementById('grid');
         grid.innerHTML = '';
         stations.forEach(s => {
-            const isSaved = savedFavs.includes(s);
             const isPlaying = !player.paused && player.src.includes(s);
             const card = document.createElement('div');
             card.className = `card ${isPlaying ? 'active-card' : ''}`;
+            card.dataset.id = s;
             card.innerHTML = `
-                <div class="star ${isSaved ? 'active' : ''}" onclick="saveStation('${s}')">★</div>
-                <div class="status-badge" id="badge-${s}" style="display:${isPlaying ? 'block' : 'none'};">AKTIV - Läuft gerade</div>
-                <div class="clickable-logo" onclick="window.open('https://laut.fm/${s}', '_blank')">
-                    <img id="img-${s}" src="https://api.laut.fm/favicon.ico" style="width:60px; height:60px; object-fit: cover;">
-                </div>
-                <div><b style="text-transform:uppercase;">${s}</b><br><small id="list-${s}">0 Hörer</small></div>
-                <div style="margin:10px 0; font-size:0.9rem;">
-                    <div id="art-${s}" style="font-weight:bold;">Lade...</div>
-                    <div id="tit-${s}">...</div>
-                </div>
-                <button class="btn-play" onclick="toggle('${s}')" id="btn-${s}">
-                    ${isPlaying ? '⏹ Sender stoppen' : '▶ Sender starten'}
+                <div style="text-transform:uppercase; font-weight:bold;">${s}</div>
+                <div id="art-${s}">Lade...</div>
+                <button class="btn-play" onclick="toggle('${s}')">
+                    ${isPlaying ? '⏹ Stopp' : '▶ Start'}
                 </button>
             `;
             grid.appendChild(card);
@@ -94,36 +83,18 @@
     }
 
     function toggle(s) {
-        const btn = document.getElementById(`btn-${s}`);
-        const allCards = document.querySelectorAll('.card');
-        allCards.forEach(c => { c.classList.remove('active-card'); c.querySelector('.status-badge').style.display = 'none'; });
-
         if (!player.paused && player.src.includes(s)) {
             player.pause();
-            btn.innerHTML = "▶ Sender starten";
         } else {
-            player.pause();
-            document.querySelectorAll('.btn-play').forEach(b => b.innerHTML = "▶ Sender starten");
             player.src = `https://stream.laut.fm/${s}`;
             player.play();
-            btn.innerHTML = "⏹ Sender stoppen";
-            btn.closest('.card').classList.add('active-card');
-            btn.closest('.card').querySelector('.status-badge').style.display = 'block';
         }
+        render();
     }
 
     async function updateData(s) {
-        fetch(`https://api.laut.fm/station/${s}`).then(r => r.json()).then(d => {
-            if (d.images && d.images.station) {
-                document.getElementById(`img-${s}`).src = `${d.images.station}?t=640x640`;
-            }
-        });
-        fetch(`https://api.laut.fm/station/${s}/listeners`).then(r => r.text()).then(t => {
-            document.getElementById(`list-${s}`).innerText = t + " Hörer";
-        });
         fetch(`https://api.laut.fm/station/${s}/current_song`).then(r => r.json()).then(d => {
             document.getElementById(`art-${s}`).innerText = d.artist?.name || "-";
-            document.getElementById(`tit-${s}`).innerText = d.title || "-";
         });
     }
 
@@ -136,16 +107,7 @@
         }
     }
 
-    function saveStation(s) {
-        if (!savedFavs.includes(s)) {
-            savedFavs.push(s);
-            localStorage.setItem('my_saved_favs', JSON.stringify(savedFavs));
-            render();
-        }
-    }
-
-    window.onload = () => { render(); checkStatus(); };
-    setInterval(() => { stations.forEach(updateData); checkStatus(); }, 30000);
+    window.onload = render;
 </script>
 </body>
 </html>
