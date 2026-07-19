@@ -58,7 +58,8 @@
     function render() {
         grid.innerHTML = '';
         stations.forEach(s => {
-            const isPlaying = !player.paused && player.src.includes(s);
+            // Prüfung: Läuft genau dieser Sender? (Nicht nur "enthält")
+            const isPlaying = !player.paused && player.src === `https://stream.laut.fm/${s}`;
             const isFav = savedFavs.includes(s);
             
             const card = document.createElement('div');
@@ -68,7 +69,7 @@
             card.innerHTML = `
                 <div class="delete-btn" onclick="removeStation('${s}')">×</div>
                 ${!isFav ? `<div class="star" onclick="saveStation('${s}')">★</div>` : ''}
-                <div class="status-badge">AKTIV - Läuft gerade</div>
+                <div class="status-badge" style="display:${isPlaying ? 'block' : 'none'}">AKTIV - Läuft gerade</div>
                 <img id="img-${s}" src="https://api.laut.fm/favicon.ico" style="width:100px; height:100px; object-fit:cover; border-radius:8px; margin-top:5px;">
                 <div style="text-transform:uppercase; font-weight:bold; margin-top:10px;">${s}</div>
                 <div id="art-${s}" style="font-size:0.9rem; margin-top:5px;">Lade...</div>
@@ -79,6 +80,20 @@
             grid.appendChild(card);
             updateData(s);
         });
+    }
+
+    function toggle(s) {
+        const streamUrl = `https://stream.laut.fm/${s}`;
+        
+        // Prüfen, ob genau dieser Sender läuft
+        if (!player.paused && player.src === streamUrl) {
+            player.pause();
+            player.src = ""; // Player komplett leeren
+        } else {
+            player.src = streamUrl;
+            player.play();
+        }
+        render(); // Ansicht neu aufbauen, um Rahmen zu korrigieren
     }
 
     // Sender löschen
