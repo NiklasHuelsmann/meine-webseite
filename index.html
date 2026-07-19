@@ -114,13 +114,18 @@
         }
     }
 
-    async function updateData(s) {
+   async function updateData(s) {
+        // Erst die Basis-Informationen für Bilder abrufen
         fetch(`https://api.laut.fm/station/${s}`).then(r => r.json()).then(d => {
-            if (d.images) {
-                const img = d.images.station_640x640 || d.images.station_800x800 || d.images.station_120x120;
-                document.getElementById(`img-${s}`).src = img;
+            if (d.images && d.images.station) {
+                // Wir nehmen die Basis-URL aus dem API-Objekt und hängen das Format an
+                const baseUrl = d.images.station; 
+                // Hier setzen wir dein gewünschtes Format (z.B. 640x640)
+                document.getElementById(`img-${s}`).src = `${baseUrl}?t=640x640`;
             }
         });
+        
+        // ... (restlicher Code für Hörer und Song bleibt identisch)
         fetch(`https://api.laut.fm/station/${s}/listeners`).then(r => r.text()).then(t => {
             document.getElementById(`list-${s}`).innerText = t + " Hörer";
         });
@@ -128,15 +133,6 @@
             document.getElementById(`art-${s}`).innerText = d.artist?.name || "-";
             document.getElementById(`tit-${s}`).innerText = d.title || "-";
         });
-    }
-
-    function addStation() {
-        const val = document.getElementById('searchInput').value.toLowerCase().trim();
-        if(val && !stations.includes(val)) {
-            stations.push(val);
-            localStorage.setItem('my_stations', JSON.stringify(stations));
-            render();
-        }
     }
 
     window.onload = () => { render(); checkStatus(); };
