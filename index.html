@@ -8,14 +8,7 @@
         @media (prefers-color-scheme: dark) {
             :root { --bg-color: #1a1a2e; --text-color: #f0f0f0; --card-bg: #16213e; }
         }
-        body { 
-            font-family: sans-serif; 
-            background-color: var(--bg-color); 
-            background-image: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); 
-            background-attachment: fixed; 
-            color: var(--text-color); 
-            margin: 0; 
-        }
+        body { font-family: sans-serif; background-color: var(--bg-color); background-image: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); background-attachment: fixed; color: var(--text-color); margin: 0; }
         #status-container { position: fixed; top: 10px; left: 10px; z-index: 1000; background: var(--card-bg); padding: 15px; border-radius: 8px; border: 1px solid #777; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
         .header { background: var(--card-bg); padding: 15px 40px; border-bottom: 2px solid #333; display: flex; justify-content: flex-end; align-items: center; gap: 10px; }
         .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; padding: 30px; }
@@ -23,13 +16,14 @@
         .active-card { border: 3px solid #ef4444 !important; }
         .btn-play { background: #00a67c; color: white; border: none; padding: 10px; border-radius: 4px; cursor: pointer; width: 100%; margin-top: 10px; font-weight: bold; }
         .star { position: absolute; top: 10px; right: 10px; font-size: 1.5rem; cursor: pointer; color: #facc15; }
+        /* Der neue Löschen-Button */
+        .delete-btn { position: absolute; top: 10px; left: 10px; font-size: 1.2rem; cursor: pointer; color: #ef4444; background: rgba(0,0,0,0.1); border-radius: 50%; width: 25px; height: 25px; display: flex; align-items: center; justify-content: center; }
         .status-badge { color: #ef4444; font-weight: bold; font-size: 0.8rem; margin-bottom: 5px; display: none; }
         .active-card .status-badge { display: block; }
     </style>
 </head>
 <body>
 
-<!-- Status Anzeige -->
 <div id="status-container">
     <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
         <div id="status-dot" style="width: 12px; height: 12px; border-radius: 50%; background-color: gray;"></div>
@@ -38,17 +32,14 @@
     <button onclick="window.open('https://radioadmin.laut.fm', '_blank', 'noopener')" style="width: 100%; padding: 8px; background: #00a67c; color: white; border: none; border-radius: 4px; cursor: pointer;">Login</button>
 </div>
 
-<!-- Suchleiste -->
 <header class="header">
     <input type="text" id="searchInput" placeholder="Sender-Slug (z.B. brian)..." style="padding: 8px; border-radius: 4px; border: 1px solid #ccc;">
     <button onclick="addStation()" style="padding: 8px 16px; background: #00a67c; color: white; border: none; border-radius: 4px; cursor: pointer;">Hinzufügen</button>
 </header>
 
-<!-- Hier kommen die Sender rein -->
 <div class="grid" id="grid"></div>
 <audio id="player"></audio>
 
-<!-- Skripte -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
 <script>
     let stations = JSON.parse(localStorage.getItem('my_stations')) || [];
@@ -56,18 +47,14 @@
     const grid = document.getElementById('grid');
     const player = document.getElementById('player');
 
-    // 1. Drag & Drop aktivieren
-    new Sortable(grid, { 
-        animation: 150, 
-        onEnd: saveOrder 
-    });
+    new Sortable(grid, { animation: 150, onEnd: saveOrder });
 
     function saveOrder() {
         const newOrder = Array.from(document.querySelectorAll('.card')).map(c => c.dataset.id);
-        localStorage.setItem('my_stations', JSON.stringify(newOrder));
+        stations = newOrder;
+        localStorage.setItem('my_stations', JSON.stringify(stations));
     }
 
-    // 2. Sender zeichnen
     function render() {
         grid.innerHTML = '';
         stations.forEach(s => {
@@ -79,6 +66,7 @@
             card.dataset.id = s;
             
             card.innerHTML = `
+                <div class="delete-btn" onclick="removeStation('${s}')">×</div>
                 ${!isFav ? `<div class="star" onclick="saveStation('${s}')">★</div>` : ''}
                 <div class="status-badge">AKTIV - Läuft gerade</div>
                 <img id="img-${s}" src="https://api.laut.fm/favicon.ico" style="width:100px; height:100px; object-fit:cover; border-radius:8px; margin-top:5px;">
@@ -93,7 +81,15 @@
         });
     }
 
-    // 3. Sender speichern (Stern anklicken)
+    // Sender löschen
+    function removeStation(s) {
+        stations = stations.filter(st => st !== s);
+        savedFavs = savedFavs.filter(st => st !== s);
+        localStorage.setItem('my_stations', JSON.stringify(stations));
+        localStorage.setItem('my_saved_favs', JSON.stringify(savedFavs));
+        render();
+    }
+
     function saveStation(s) {
         if (!savedFavs.includes(s)) {
             savedFavs.push(s);
@@ -102,7 +98,6 @@
         }
     }
 
-    // 4. Daten & 640x640 Bild von API laden
     async function updateData(s) {
         fetch(`https://api.laut.fm/station/${s}`).then(r => r.json()).then(d => {
             if (d.images && d.images.station) {
@@ -114,7 +109,6 @@
         });
     }
 
-    // 5. Play / Pause Funktion
     function toggle(s) {
         if (!player.paused && player.src.includes(s)) {
             player.pause();
@@ -125,7 +119,6 @@
         render();
     }
 
-    // 6. Neuen Sender hinzufügen
     function addStation() {
         const val = document.getElementById('searchInput').value.toLowerCase().trim();
         if(val && !stations.includes(val)) {
@@ -135,38 +128,23 @@
         }
     }
 
-    // 7. Status-Überprüfung mit 5-Sekunden-Timeout
+    window.onload = () => { render(); checkStatus(); };
     async function checkStatus() {
         const dot = document.getElementById('status-dot');
         const text = document.getElementById('status-text');
-        
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 5000);
-
         try {
             await fetch('https://radioadmin.laut.fm', { mode: 'no-cors', signal: controller.signal });
             clearTimeout(timeoutId);
-            dot.style.backgroundColor = '#22c55e'; // Grün
+            dot.style.backgroundColor = '#22c55e';
             text.innerText = 'System Online';
         } catch (e) {
             clearTimeout(timeoutId);
-            dot.style.backgroundColor = '#ef4444'; // Rot
+            dot.style.backgroundColor = '#ef4444';
             text.innerText = 'System Offline';
         }
     }
-
-    // Beim Starten der Seite alles laden
-    window.onload = () => {
-        render();
-        checkStatus();
-    };
-    
-    // Status und Titel alle 30 Sekunden aktualisieren
-    setInterval(() => {
-        stations.forEach(updateData);
-        checkStatus();
-    }, 30000);
-
 </script>
 </body>
 </html>
