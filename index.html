@@ -14,7 +14,7 @@
         .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; padding: 30px; }
         .card { background: var(--card-bg); padding: 15px; border-radius: 8px; border: 3px solid transparent; cursor: grab; display: flex; flex-direction: column; align-items: center; text-align: center; position: relative; }
         .active-card { border: 3px solid #ef4444 !important; }
-        .btn-play { background: #00a67c; color: white; border: none; padding: 10px; border-radius: 4px; cursor: pointer; width: 100%; margin-top: 10px; font-weight: bold; }
+        .btn-play { background: #00a67c; color: white; border: none; padding: 10px; border-radius: 4px; cursor: pointer; width: 100%; margin-top: 15px; font-weight: bold; }
         .star { position: absolute; top: 10px; right: 10px; font-size: 1.5rem; cursor: pointer; color: #facc15; }
         .delete-btn { position: absolute; top: 10px; left: 10px; font-size: 1.2rem; cursor: pointer; color: #ef4444; background: rgba(0,0,0,0.1); border-radius: 50%; width: 25px; height: 25px; display: flex; align-items: center; justify-content: center; }
         .status-badge { color: #ef4444; font-weight: bold; font-size: 0.8rem; margin-bottom: 5px; display: none; }
@@ -70,8 +70,14 @@
                 <div class="status-badge">AKTIV - Läuft gerade</div>
                 <img id="img-${s}" src="https://api.laut.fm/favicon.ico" style="width:100px; height:100px; object-fit:cover; border-radius:8px; margin-top:5px;">
                 <div style="text-transform:uppercase; font-weight:bold; margin-top:10px;">${s}</div>
-                <div id="list-${s}" style="font-size:0.8rem; color:#888;">0 Hörer</div>
-                <div id="art-${s}" style="font-size:0.9rem; margin-top:5px; font-weight:bold;">Lade...</div>
+                <div id="list-${s}" style="font-size:0.8rem; color:#888; margin-top:3px;">0 Hörer</div>
+                
+                <!-- Interpret & Songtitel in der Mitte -->
+                <div style="margin-top: 10px; line-height: 1.4; width: 100%;">
+                    <div id="art-${s}" style="font-size: 0.95rem; font-weight: 600; color: inherit;">Lade Interpret...</div>
+                    <div id="tit-${s}" style="font-size: 0.85rem; color: #777;">Lade Titel...</div>
+                </div>
+
                 <button class="btn-play" onclick="toggle('${s}')">
                     ${isPlaying ? '⏹ Sender stoppen' : '▶ Sender starten'}
                 </button>
@@ -90,9 +96,10 @@
         fetch(`https://api.laut.fm/station/${s}/listeners`).then(r => r.text()).then(t => {
             document.getElementById(`list-${s}`).innerText = t + " Hörer";
         });
-        // Song
+        // Song (Interpret oben normal fett, Titel unten grau)
         fetch(`https://api.laut.fm/station/${s}/current_song`).then(r => r.json()).then(d => {
             document.getElementById(`art-${s}`).innerText = d.artist?.name || "-";
+            document.getElementById(`tit-${s}`).innerText = d.title || "-";
         });
     }
 
@@ -151,7 +158,6 @@
         }
     }
     
-    // Auto-Update alle 30s
     setInterval(() => { stations.forEach(updateData); checkStatus(); }, 30000);
 </script>
 </body>
