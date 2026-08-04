@@ -147,7 +147,7 @@
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 5000);
         try {
-            await fetch('https://radioadmin.laut.fm', { mode: 'no-cors', signal: controller.signal });
+            await fetch('https://client.radioadmin.laut.fm', { mode: 'no-cors', signal: controller.signal });
             clearTimeout(timeoutId);
             dot.style.backgroundColor = '#22c55e';
             text.innerText = 'System Online';
