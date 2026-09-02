@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>RadioHub · laut.fm · V14</title>
+<title>RadioHub · laut.fm · V16</title>
 <style>
 :root{
   --bg:#080b12;--panel:#111722;--panel2:#0c121b;--line:#293446;
@@ -96,6 +96,8 @@ h1{font-size:30px;line-height:1.05;margin:0 0 5px}
 .now-main{min-width:0}.now-main strong{display:block;font-size:19px;font-weight:850;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .now-main span{display:block;color:var(--muted);font-size:15px;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .now-time{margin-left:auto;color:var(--muted);font-size:12px;white-space:nowrap}
+.now-art{width:64px;height:64px;border-radius:14px;object-fit:cover;background:#202938;border:1px solid var(--line);flex:0 0 64px}
+.now-art.is-placeholder{object-fit:contain;padding:10px}
 
 /* Stats */
 .stats{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}
@@ -145,10 +147,11 @@ footer{text-align:center;color:var(--muted);font-size:12px;margin-top:25px}
   .desc{font-size:14px}
   .play{width:50px;height:50px;flex-basis:50px}
   .player-title{font-size:16px}
-  .now-track{gap:11px;padding:12px}
+  .now-track{gap:10px;padding:12px}
   .now-icon{width:44px;height:44px;flex-basis:44px}
   .now-main strong{font-size:16px}
-  .now-time{display:none}
+  .now-time{display:block;font-size:11px;flex:0 0 auto}
+  .now-art{width:52px;height:52px;flex-basis:52px}
   .stats{grid-template-columns:1fr 1fr}
   .search{max-width:none}
   .search button{padding-inline:14px}
@@ -236,7 +239,7 @@ footer{text-align:center;color:var(--muted);font-size:12px;margin-top:25px}
     <section class="now-card">
       <div class="section-title"><span>Jetzt läuft</span><span class="live">● LIVE</span></div>
       <div class="now-track">
-        <div class="now-icon">♫</div>
+        <img id="currentArt" class="now-art is-placeholder" alt="Albumcover" referrerpolicy="no-referrer" decoding="async">
         <div class="now-main">
           <strong id="currentArtist">Niklas-FM</strong>
           <span id="currentSong">Lade aktuellen Song …</span>
@@ -315,12 +318,12 @@ footer{text-align:center;color:var(--muted);font-size:12px;margin-top:25px}
     <div id="results" class="empty">
       Suche nach einem laut.fm-Sender. Der aktuell aktive Sender bleibt dabei unverändert.
     </div>
-    <div class="search-help">Erst der ▶-Knopf eines Ergebnisses wechselt den aktiven Sender.</div>
+    <div class="search-help">Die Suche zeigt ausschließlich deine in der Seite hinterlegten eigenen Sender. Erst der ▶-Knopf wechselt den aktiven Sender.</div>
   </section>
 </aside>
 </div>
 
-<footer>RadioHub · laut.fm-Sender suchen, auswählen und direkt hören · responsive für Computer, Tablet und Smartphone.</footer>
+<footer>RadioHub · eigene laut.fm-Sender suchen, auswählen und direkt hören · responsive für Computer, Tablet und Smartphone.</footer>
 </div>
 
 <script>
@@ -336,7 +339,11 @@ const fallback={
   page_url:'https://laut.fm/niklas-fm'
 };
 
-const state={active:{...fallback},refreshing:false,searchToken:0};
+// Nur diese Sender werden in der Suche berücksichtigt.
+// Weitere eigene laut.fm-Sender hier mit ihrem Slug ergänzen.
+const MY_STATIONS=[fallback];
+
+const state={active:{...fallback},refreshing:false,searchToken:0,listenerValue:null,artCache:new Map(),artToken:0};
 
 const $=id=>document.getElementById(id);
 
@@ -353,27 +360,24 @@ function normalizeImageUrl(u){
   if(u.startsWith('http://'))return 'https://'+u.slice(7);
   return u;
 }
-function collectImageUrls(obj,out=[],depth=0){
-  if(!obj||typeof obj!=='object'||depth>4)return out;
-  for(const [key,value] of Object.entries(obj)){
-    if(typeof value==='string'){
-      const isImageKey=/^(image|logo|icon|avatar|art|picture|cover)/i.test(key);
-      const isUrl=/^(https?:)?\/\//i.test(value);
-      if(isImageKey&&isUrl)out.push(value);
-    }else if(value&&typeof value==='object'){
-      collectImageUrls(value,out,depth+1);
-    }
+function collectDirectImageUrls(obj){
+  if(!obj||typeof obj!=='object')return [];
+  const keys=['image','logo','logo_url','image_url','station_image','station_logo','icon','icon_url','avatar','avatar_url'];
+  const out=[];
+  for(const key of keys){
+    const value=obj[key];
+    if(typeof value==='string' && /^(https?:)?\/\//i.test(value))out.push(value);
   }
   return out;
 }
 function collectLautAssetUrls(obj,out=[],depth=0){
-  if(!obj||typeof obj!=='object'||depth>5)return out;
-  for(const value of Object.values(obj)){
-    if(typeof value==='string' && /https?:\/\/assets\.laut\.fm\//i.test(value)){
-      out.push(value);
-    }else if(value&&typeof value==='object'){
-      collectLautAssetUrls(value,out,depth+1);
-    }
+  if(!obj||typeof obj!=='object'||depth>2)return out;
+  for(const [key,value] of Object.entries(obj)){
+    // Nur echte Stationsfelder durchsuchen; current_song/artist dürfen niemals
+    // das Senderlogo überschreiben.
+    if(key==='current_song'||key==='last_songs')continue;
+    if(typeof value==='string' && /https?:\/\/assets\.laut\.fm\//i.test(value))out.push(value);
+    else if(value&&typeof value==='object')collectLautAssetUrls(value,out,depth+1);
   }
   return out;
 }
@@ -382,34 +386,45 @@ function expandLautAssetUrl(u){
   if(!u)return [];
   if(!/assets\.laut\.fm\//i.test(u))return [u];
   const base=u.replace(/\?[^#]*$/,'');
-  return [
-    u,
-    `${base}?t=640x640`,
-    `${base}?t=120x120`,
-    `${base}?t=90x90`,
-    base
-  ];
+  return [u,`${base}?t=640x640`,`${base}?t=120x120`,`${base}?t=90x90`,base];
 }
-function imageCandidates(s){
-  const apiImages=collectImageUrls(s);
-  const lautAssets=collectLautAssetUrls(s);
-  const direct=[
-    s.image,s.logo,s.logo_url,s.image_url,s.station_image,s.station_logo,
-    s.icon,s.icon_url,s.avatar,s.avatar_url
-  ].filter(Boolean);
-  const exact=[...apiImages,...direct,...lautAssets].flatMap(expandLautAssetUrl).map(normalizeImageUrl);
-
-  // Fallback für ältere laut.fm-Stationen, falls die API kein Bildfeld liefert.
+function stationImageCandidates(s){
+  // Wichtig: nur Stationsdaten verwenden, niemals current_song.artist.image.
+  const direct=collectDirectImageUrls(s).flatMap(expandLautAssetUrl);
+  const assets=collectLautAssetUrls(s).flatMap(expandLautAssetUrl);
   const slug=slugOf(s);
   const legacy=slug?[
     `https://assets.laut.fm/user/${encodeURIComponent(slug)}/user_640x640.jpg`,
     `https://assets.laut.fm/user/${encodeURIComponent(slug)}/user.jpg`,
     `https://assets.laut.fm/user/${encodeURIComponent(slug)}/user_640x640.png`
   ]:[];
-
-  return [...new Set([...exact,...legacy].filter(Boolean))];
+  return [...new Set([...direct,...assets,...legacy].map(normalizeImageUrl).filter(Boolean))];
 }
-function imageOf(s){return imageCandidates(s)[0]||''}
+function imageOf(s){return stationImageCandidates(s)[0]||''}
+
+function songImageCandidates(song){
+  if(!song)return [];
+  const out=[];
+  for(const key of ['image','image_url','cover','cover_url','art','artwork','artwork_url','thumbnail','thumb']){
+    const value=song[key];
+    if(typeof value==='string' && /^(https?:)?\/\//i.test(value))out.push(value);
+  }
+  return [...new Set(out.map(normalizeImageUrl).filter(Boolean))];
+}
+function setImg(img,station){
+  const candidates=stationImageCandidates(station);
+  let i=0;
+  img.referrerPolicy='no-referrer';
+  img.decoding='async';
+  img.loading='eager';
+  img.onerror=()=>{
+    i++;
+    if(i<candidates.length)img.src=candidates[i];
+    else{img.onerror=null;img.src=placeholder;}
+  };
+  img.src=candidates[0]||placeholder;
+}
+
 function songText(x){
   if(!x)return null;
   const title=x.title||x.song||x.name||'';
@@ -447,7 +462,15 @@ async function loadStation(slug){
   if(last.status==='fulfilled')out.last_songs=normalizeList(last.value);
   if(listeners.status==='fulfilled'){
     const v=listeners.value;
-    out.listeners=typeof v==='number'?v:(v?.listeners??v?.count??v?.value);
+    const n=typeof v==='number'?v:Number(v?.listeners??v?.count??v?.value);
+    // Der direkte Stations-Endpunkt /listeners ist die primäre Quelle.
+    // Einen bereits gültigen Wert behalten wir, falls eine einzelne Abfrage
+    // einmal leer/fehlerhaft zurückkommt.
+    if(Number.isFinite(n)&&n>=0)out.listeners=Math.round(n);
+  }
+  if(!Number.isFinite(Number(out.listeners)) && station.status==='fulfilled'){
+    const n=Number(station.value?.listeners);
+    if(Number.isFinite(n)&&n>=0)out.listeners=Math.round(n);
   }
   return out;
 }
@@ -456,7 +479,7 @@ const placeholder='data:image/svg+xml;charset=UTF-8,'+encodeURIComponent(
   '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120"><rect width="120" height="120" rx="20" fill="#202938"/><text x="60" y="68" text-anchor="middle" font-size="42">📻</text></svg>'
 );
 function setImg(img,station){
-  const candidates=imageCandidates(station);
+  const candidates=stationImageCandidates(station);
   let i=0;
   img.referrerPolicy='no-referrer';
   img.decoding='async';
@@ -586,6 +609,51 @@ async function loadTraffic(){
   }
 }
 
+async function loadAlbumArt(song){
+  const img=$('currentArt');
+  const token=++state.artToken;
+  img.classList.add('is-placeholder');
+  img.src=placeholder;
+  img.alt='Albumcover';
+  if(!song)return;
+
+  const direct=songImageCandidates(song);
+  if(direct.length){
+    img.onload=()=>img.classList.remove('is-placeholder');
+    img.src=direct[0];
+    return;
+  }
+
+  const artist=song.artist&&typeof song.artist==='object'?(song.artist.name||''):String(song.artist||'');
+  const title=String(song.title||'').trim();
+  if(!artist && !title)return;
+  const key=(artist+'|'+title).toLowerCase();
+  if(state.artCache.has(key)){
+    const cached=state.artCache.get(key);
+    if(cached&&token===state.artToken){img.onload=()=>img.classList.remove('is-placeholder');img.src=cached;}
+    return;
+  }
+
+  try{
+    const term=encodeURIComponent(`${artist} ${title}`.trim());
+    const data=await getJSON(`https://itunes.apple.com/search?term=${term}&entity=song&limit=5`);
+    if(token!==state.artToken)return;
+    const results=Array.isArray(data?.results)?data.results:[];
+    const normalized=(v)=>String(v||'').toLowerCase().replace(/[^a-z0-9äöüß]+/gi,' ').trim();
+    const a=normalized(artist),t=normalized(title);
+    const exact=results.find(r=>normalized(r.artistName)===a&&normalized(r.trackName)===t)||results[0];
+    const art=exact?.artworkUrl100||exact?.artworkUrl60||'';
+    if(art){
+      const large=art.replace(/\d+x\d+bb\./i,'600x600bb.');
+      state.artCache.set(key,large);
+      img.onload=()=>img.classList.remove('is-placeholder');
+      img.src=large;
+    }
+  }catch(e){
+    // Albumcover ist Zusatzinformation. Bei Nichterreichbarkeit bleibt die Musiknote.
+  }
+}
+
 function renderActive(s){
   $('activeName').textContent=s.name||state.active.name;
   $('activeClaim').textContent=s.claim||s.tagline||s.slogan||'';
@@ -616,9 +684,15 @@ function renderActive(s){
   $('currentSong').textContent=song?.title||'Aktueller Song nicht verfügbar';
   $('currentArtist').textContent=song?.artist||s.name||'';
   $('currentTime').textContent=fmtTime(s.current_song?.started_at||s.current_song?.start);
+  loadAlbumArt(s.current_song);
 
   const n=Number(s.listeners);
-  $('listeners').textContent=Number.isFinite(n)?n:0;
+  if(Number.isFinite(n)&&n>=0){
+    state.listenerValue=Math.round(n);
+    $('listeners').textContent=state.listenerValue;
+  }else if(Number.isFinite(state.listenerValue)){
+    $('listeners').textContent=state.listenerValue;
+  }
 }
 
 function renderHistory(list,currentSong){
@@ -717,7 +791,7 @@ function renderResults(items){
     const song=songText(s.current_song);
     const payload=encodeURIComponent(JSON.stringify(s));
     const logo=imageOf(s)||placeholder;
-    const candidates=imageCandidates(s);
+    const candidates=stationImageCandidates(s);
     const logoFallback=esc(candidates.slice(1).join('|'));
     return `<div class="result">
       <img class="rlogo" src="${esc(logo)}" data-logo-candidates="${logoFallback}" referrerpolicy="no-referrer" loading="eager" decoding="async" alt="">
@@ -745,42 +819,30 @@ function renderResults(items){
   });
 }
 
-async function searchStations(q){
+function stationMatches(s,q){
+  const hay=[s.slug,s.name,s.city,s.country,s.claim,s.description,...(Array.isArray(s.genres)?s.genres.map(g=>typeof g==='object'?g.name:g):[])].filter(Boolean).join(' ').toLowerCase();
+  return hay.includes(q.toLowerCase());
+}
+function searchStations(q){
   q=q.trim();
   const token=++state.searchToken;
-
   if(!q){
     $('results').className='empty';
-    $('results').textContent='Suche nach einem laut.fm-Sender. Der aktuell aktive Sender bleibt dabei unverändert.';
+    $('results').textContent='Suche nach einem deiner laut.fm-Sender. Der aktuell aktive Sender bleibt dabei unverändert.';
     $('resultCount').textContent='';
     return;
   }
-
   $('results').className='empty';
-  $('results').textContent='Suche …';
+  $('results').textContent='Suche in deinen Sendern …';
   $('resultCount').textContent='';
 
-  try{
-    const data=await getJSON(`${API}/search/stations?query=${encodeURIComponent(q)}&limit=30`);
-    if(token!==state.searchToken)return;
-
-    const all=(Array.isArray(data?.results)?data.results:[])
-      .flatMap(g=>Array.isArray(g.items)?g.items:[]);
-
-    const seen=new Set(),items=[];
-    for(const item of all){
-      const s=item.station||item;
-      const slug=slugOf(s);
-      if(slug&&!seen.has(slug)){
-        seen.add(slug);
-        items.push({...s,slug});
-      }
-    }
-    renderResults(items);
-  }catch(e){
-    $('results').className='empty';
-    $('results').textContent='Die Sendersuche ist momentan nicht erreichbar. Bitte später erneut versuchen.';
+  const items=[];
+  for(const configured of MY_STATIONS){
+    if(token!==state.searchToken) return;
+    const slug=slugOf(configured);
+    if(slug && stationMatches(configured,q)) items.push({...configured,slug});
   }
+  renderResults(items);
 }
 
 $('searchForm').addEventListener('submit',e=>{
