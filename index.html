@@ -156,6 +156,24 @@ footer{text-align:center;color:var(--muted);font-size:12px;margin-top:25px}
 .traffic-note{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-top:10px;color:var(--muted);font-size:12px}
 .traffic-link{color:#cfe1ff;text-decoration:none}
 .traffic-link:hover{text-decoration:underline}
+
+/* Traffic list */
+.traffic-table-wrap{overflow:auto;border:1px solid var(--line);border-radius:16px;background:#0d131d}
+.traffic-table{width:100%;border-collapse:collapse;min-width:680px}
+.traffic-table th,.traffic-table td{padding:12px 13px;text-align:left;border-bottom:1px solid var(--line);vertical-align:top}
+.traffic-table th{font-size:11px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);background:#0b1119}
+.traffic-table td{font-size:13px}
+.traffic-table tr:last-child td{border-bottom:0}
+.traffic-road{font-weight:800;white-space:nowrap}
+.traffic-type{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:700;padding:4px 8px;border-radius:999px;background:rgba(255,255,255,.06)}
+.traffic-type.warn{color:#ffd38a;background:rgba(255,170,60,.10)}
+.traffic-type.block{color:#ff9c9c;background:rgba(255,70,70,.10)}
+.traffic-type.info{color:#b9d7ff;background:rgba(80,140,255,.10)}
+.traffic-empty{padding:16px;color:var(--muted);font-size:13px}
+.traffic-source{display:flex;justify-content:space-between;gap:12px;align-items:center;margin-top:10px;color:var(--muted);font-size:12px}
+@media(max-width:560px){
+  .traffic-source{align-items:flex-start;flex-direction:column}
+}
 </style>
 </head>
 <body>
@@ -237,14 +255,24 @@ footer{text-align:center;color:var(--muted);font-size:12px;margin-top:25px}
         <h2>🚗 Verkehr aktuell</h2>
         <span class="traffic-live">● LIVE-DATEN</span>
       </div>
-      <div class="traffic-map">
-        <iframe title="Aktuelle Verkehrslage auf deutschen Autobahnen"
-          src="https://verkehr.vz-deutschland.de/?layer=raststellen,baustellen,stau,verkehrsmeldungen&zoom=9"
-          loading="lazy" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+      <div class="traffic-table-wrap">
+        <table class="traffic-table">
+          <thead>
+            <tr>
+              <th>Autobahn</th>
+              <th>Richtung</th>
+              <th>Ort / Abschnitt</th>
+              <th>Meldung</th>
+            </tr>
+          </thead>
+          <tbody id="trafficRows">
+            <tr><td colspan="4" class="traffic-empty">Verkehrsdaten werden geladen …</td></tr>
+          </tbody>
+        </table>
       </div>
-      <div class="traffic-note">
-        <span>Stau, Baustellen und Verkehrsmeldungen aus der offiziellen Autobahn-Verkehrskarte.</span>
-        <a class="traffic-link" href="https://www.autobahn.de/betrieb-verkehr/verkehrsmeldungen" target="_blank" rel="noopener">Meldungen öffnen ↗</a>
+      <div class="traffic-source">
+        <span id="trafficUpdated">Aktuelle Daten werden automatisch aktualisiert.</span>
+        <a class="traffic-link" href="https://www.autobahn.de/betrieb-verkehr/verkehrsmeldungen" target="_blank" rel="noopener">Offizielle Verkehrsmeldungen ↗</a>
       </div>
     </section>
 
@@ -295,14 +323,21 @@ function slugOf(s){
   const m=u.match(/laut\.fm\/([^/?#]+)/i);
   return m?m[1]:(s.name||'').toLowerCase().trim().replace(/[^a-z0-9äöüß]+/gi,'-').replace(/^-|-$/g,'');
 }
+function normalizeImageUrl(u){
+  if(!u)return '';
+  u=String(u).trim();
+  if(u.startsWith('//'))return 'https:'+u;
+  if(u.startsWith('http://'))return 'https://'+u.slice(7);
+  return u;
+}
 function imageCandidates(s){
   const slug=slugOf(s);
   const values=[
-    s.image,s.logo,s.logo_url,s.image_url,s.station_image,s.station_logo,
-    s.icon,s.icon_url,s.avatar,s.avatar_url,
     slug?`https://assets.laut.fm/user/${encodeURIComponent(slug)}/user_640x640.jpg`:'',
-    slug?`https://assets.laut.fm/user/${encodeURIComponent(slug)}/user.jpg`:''
-  ];
+    slug?`https://assets.laut.fm/user/${encodeURIComponent(slug)}/user.jpg`:'',
+    s.image,s.logo,s.logo_url,s.image_url,s.station_image,s.station_logo,
+    s.icon,s.icon_url,s.avatar,s.avatar_url
+  ].map(normalizeImageUrl);
   return [...new Set(values.filter(Boolean))];
 }
 function imageOf(s){return imageCandidates(s)[0]||''}
@@ -377,6 +412,91 @@ function sameSong(a,b){
       && x.artist.trim().toLowerCase()===y.artist.trim().toLowerCase();
 }
 
+
+const TRAFFIC_ROADS=['A2','A40','A42','A43','A448','A44','A45','A46','A52','A57','A59'];
+const TRAFFIC_API='https://verkehr.autobahn.de/o/autobahn';
+
+function trafficArray(v){
+  if(Array.isArray(v)) return v;
+  if(Array.isArray(v?.warning)) return v.warning;
+  if(Array.isArray(v?.warnings)) return v.warnings;
+  if(Array.isArray(v?.items)) return v.items;
+  if(Array.isArray(v?.results)) return v.results;
+  return [];
+}
+function trafficText(v){
+  if(Array.isArray(v)) return v.filter(Boolean).map(String).join(' ');
+  return String(v||'').trim();
+}
+function trafficDirection(w){
+  return w.direction || w.directionText || w.travelDirection ||
+    w.roadDirection || w.subtitle || '';
+}
+function trafficLocation(w){
+  return w.location || w.locationName || w.place || w.city ||
+    w.title || w.routeRecommendation || '';
+}
+function trafficDescription(w){
+  return trafficText(w.description || w.descriptionText || w.text ||
+    w.warningText || w.shortDescription || w.subtitle || w.title || 'Verkehrsmeldung');
+}
+function trafficType(w){
+  const s=(trafficDescription(w)+' '+trafficText(w.type)+' '+trafficText(w.warningType)).toLowerCase();
+  if(s.includes('sperr') || s.includes('vollsperr') || s.includes('gesperrt')) return ['block','⛔ Sperrung'];
+  if(s.includes('stau') || s.includes('unfall') || s.includes('behinderung') || s.includes('fahrzeug')) return ['warn','⚠ Störung'];
+  if(s.includes('baustell') || s.includes('arbeiten') || s.includes('fahrbahnerneuer')) return ['info','🚧 Baustelle'];
+  return ['info','ℹ Verkehr'];
+}
+async function loadTraffic(){
+  const rows=$('trafficRows');
+  try{
+    const results=await Promise.allSettled(
+      TRAFFIC_ROADS.map(async road=>{
+        const r=await fetch(`${TRAFFIC_API}/${road}/services/warning`,{cache:'no-store'});
+        if(!r.ok) throw Error(`${road}: ${r.status}`);
+        return {road,data:await r.json()};
+      })
+    );
+
+    const entries=[];
+    for(const result of results){
+      if(result.status!=='fulfilled') continue;
+      for(const w of trafficArray(result.value.data)){
+        entries.push({...w,__road:result.value.road});
+      }
+    }
+
+    // Doppelte Meldungen vermeiden.
+    const seen=new Set();
+    const unique=entries.filter(w=>{
+      const key=String(w.identifier||w.id||(
+        w.__road+'|'+trafficDirection(w)+'|'+trafficLocation(w)+'|'+trafficDescription(w)
+      ));
+      if(seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    }).slice(0,30);
+
+    if(!unique.length){
+      rows.innerHTML='<tr><td colspan="4" class="traffic-empty">🟢 Keine aktuellen Verkehrsmeldungen für die wichtigen Ruhrgebiets-Autobahnen.</td></tr>';
+    }else{
+      rows.innerHTML=unique.map(w=>{
+        const [cls,label]=trafficType(w);
+        return `<tr>
+          <td class="traffic-road">${esc(w.__road)}</td>
+          <td>${esc(trafficDirection(w)||'—')}</td>
+          <td>${esc(trafficLocation(w)||'—')}</td>
+          <td><span class="traffic-type ${cls}">${esc(label)}</span><br><span>${esc(trafficDescription(w))}</span></td>
+        </tr>`;
+      }).join('');
+    }
+    $('trafficUpdated').textContent='Verkehrsdaten aktualisiert: '+new Date().toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  }catch(e){
+    rows.innerHTML='<tr><td colspan="4" class="traffic-empty">Die aktuellen Verkehrsdaten konnten gerade nicht geladen werden. Es werden keine Beispielmeldungen angezeigt.</td></tr>';
+    $('trafficUpdated').textContent='Verkehrsdaten momentan nicht erreichbar – neuer Versuch folgt automatisch.';
+  }
+}
+
 function renderActive(s){
   $('activeName').textContent=s.name||state.active.name;
   $('activeClaim').textContent=s.claim||s.tagline||s.slogan||'';
@@ -392,7 +512,11 @@ function renderActive(s){
     `<span class="badge">${esc(typeof g==='object'?(g.name||''):g)}</span>`).join('');
 
   const stream=s.stream_url||`https://stream.laut.fm/${encodeURIComponent(s.slug)}`;
-  $('audio').src=stream;
+  const audio=$('audio');
+  if(audio.dataset.streamUrl!==stream){
+    audio.dataset.streamUrl=stream;
+    audio.src=stream;
+  }
   $('streamLink').href=stream;
   $('lautLink').href=s.page_url||`https://laut.fm/${encodeURIComponent(s.slug)}`;
 
@@ -473,15 +597,24 @@ async function activateStation(station){
   audio.pause();
   audio.currentTime=0;
 
+  // Sofort nach dem Benutzerklick starten, damit Browser die Benutzeraktion
+  // nicht durch die nachfolgende API-Abfrage verlieren.
+  let playStarted=false;
+  try{
+    await audio.play();
+    playStarted=true;
+    $('playBtn').textContent='❚❚';
+  }catch(e){}
+
   try{
     const data=await loadStation(slug);
     state.active={...state.active,...data,slug};
     renderActive(state.active);
     renderHistory(normalizeList(state.active.last_songs),state.active.current_song);
 
-    // Der Klick auf ▶ ist eine echte Benutzeraktion: Wiedergabe darf versucht werden.
-    await audio.play();
-    $('playBtn').textContent='❚❚';
+    if(!playStarted){
+      try{await audio.play();$('playBtn').textContent='❚❚';}catch(e){}
+    }
   }catch(e){
     $('playBtn').textContent='▶';
   }
@@ -589,9 +722,11 @@ $('audio').addEventListener('error',()=>{$('playBtn').textContent='▶'});
 
 renderActive(fallback);
 refreshActive();
+loadTraffic();
 
 // Automatische Hintergrund-Aktualisierung.
 setInterval(refreshActive,15000);
+setInterval(loadTraffic,60000);
 </script>
 </body>
 </html>
