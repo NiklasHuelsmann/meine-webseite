@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>RadioHub · laut.fm · V17</title>
+<title>RadioHub · laut.fm · V18</title>
 <style>
 :root{
   --bg:#080b12;--panel:#111722;--panel2:#0c121b;--line:#293446;
@@ -124,9 +124,6 @@ h1{font-size:30px;line-height:1.05;margin:0 0 5px}
 .search-help{font-size:11px;color:var(--muted);margin-top:9px}
 
 footer{text-align:center;color:var(--muted);font-size:12px;margin-top:25px}
-@media(min-width:851px){
-  aside .traffic-card{position:sticky;top:18px}
-}
 @media(max-width:850px){
   .wrap{padding:20px 14px 40px}
   header{align-items:stretch;flex-direction:column}
@@ -179,7 +176,7 @@ footer{text-align:center;color:var(--muted);font-size:12px;margin-top:25px}
 .traffic-link:hover{text-decoration:underline}
 
 /* Traffic list */
-.traffic-table-wrap{max-height:500px;overflow-y:auto;overflow-x:hidden;border:1px solid var(--line);border-radius:16px;background:#0d131d;scrollbar-width:thin}
+.traffic-table-wrap{height:390px;max-height:390px;overflow-y:auto;overflow-x:hidden;border:1px solid var(--line);border-radius:16px;background:#0d131d;scrollbar-width:thin}
 .traffic-table{width:100%;border-collapse:collapse;table-layout:fixed;min-width:0}
 .traffic-table th,.traffic-table td{padding:11px 10px;text-align:left;border-bottom:1px solid var(--line);vertical-align:top;overflow-wrap:anywhere;word-break:normal}
 .traffic-table th{position:sticky;top:0;z-index:2;font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);background:#0b1119;box-shadow:0 1px 0 var(--line)}
@@ -199,7 +196,7 @@ footer{text-align:center;color:var(--muted);font-size:12px;margin-top:25px}
 .traffic-type.jam{background:rgba(245,158,11,.12);color:#f59e0b}
 .traffic-source{display:flex;justify-content:space-between;gap:12px;align-items:center;margin-top:10px;color:var(--muted);font-size:12px}
 @media(max-width:560px){
-  .traffic-table-wrap{max-height:420px}
+  .traffic-table-wrap{height:320px;max-height:320px}
   .traffic-source{align-items:flex-start;flex-direction:column}
   .traffic-table th,.traffic-table td{padding:9px 7px;font-size:11px}
   .traffic-table th{font-size:9px}
