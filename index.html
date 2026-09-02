@@ -169,11 +169,17 @@ footer{text-align:center;color:var(--muted);font-size:12px;margin-top:25px}
 .traffic-type.warn{color:#ffd38a;background:rgba(255,170,60,.10)}
 .traffic-type.block{color:#ff9c9c;background:rgba(255,70,70,.10)}
 .traffic-type.info{color:#b9d7ff;background:rgba(80,140,255,.10)}
+.traffic-ok{display:inline-block;padding:4px 8px;border-radius:999px;background:rgba(80,200,120,.12);color:#8df0ad;border:1px solid rgba(80,200,120,.22)}
 .traffic-empty{padding:16px;color:var(--muted);font-size:13px}
 .traffic-source{display:flex;justify-content:space-between;gap:12px;align-items:center;margin-top:10px;color:var(--muted);font-size:12px}
 @media(max-width:560px){
   .traffic-source{align-items:flex-start;flex-direction:column}
 }
+.traffic-head-actions{display:flex;align-items:center;gap:12px}
+.read-btn{border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.06);color:#fff;border-radius:999px;padding:7px 12px;font:inherit;font-size:12px;cursor:pointer;transition:.2s}
+.read-btn:hover{background:rgba(255,255,255,.11)}
+.read-btn.active{background:rgba(80,200,120,.16);border-color:rgba(80,200,120,.35);color:#9af5b5}
+@media(max-width:700px){.traffic-head-actions{gap:7px}.read-btn{padding:6px 9px;font-size:11px}}
 </style>
 </head>
 <body>
@@ -253,7 +259,10 @@ footer{text-align:center;color:var(--muted);font-size:12px;margin-top:25px}
   <section class="card traffic-card">
       <div class="traffic-head">
         <h2>🚗 Verkehr aktuell</h2>
-        <span class="traffic-live">● LIVE-DATEN</span>
+        <div class="traffic-head-actions">
+          <button class="read-btn" id="trafficReadBtn" type="button" aria-pressed="false">🔊 Vorlesen</button>
+          <span class="traffic-live">● LIVE-DATEN</span>
+        </div>
       </div>
       <div class="traffic-table-wrap">
         <table class="traffic-table">
@@ -477,19 +486,27 @@ async function loadTraffic(){
       return true;
     }).slice(0,30);
 
-    if(!unique.length){
-      rows.innerHTML='<tr><td colspan="4" class="traffic-empty">🟢 Keine aktuellen Verkehrsmeldungen für die wichtigen Ruhrgebiets-Autobahnen.</td></tr>';
-    }else{
-      rows.innerHTML=unique.map(w=>{
-        const [cls,label]=trafficType(w);
-        return `<tr>
-          <td class="traffic-road">${esc(w.__road)}</td>
-          <td>${esc(trafficDirection(w)||'—')}</td>
-          <td>${esc(trafficLocation(w)||'—')}</td>
-          <td><span class="traffic-type ${cls}">${esc(label)}</span><br><span>${esc(trafficDescription(w))}</span></td>
-        </tr>`;
-      }).join('');
-    }
+    // Auch Autobahnen ohne aktuelle Warnung anzeigen, damit die komplette
+    // ausgewählte Ruhrgebiet-Liste sichtbar bleibt (z. B. A448).
+    const roadsWithWarnings=new Set(unique.map(w=>w.__road));
+    const noWarningRows=TRAFFIC_ROADS
+      .filter(road=>!roadsWithWarnings.has(road))
+      .map(road=>`<tr class="traffic-clear-row">
+        <td class="traffic-road">${esc(road)}</td>
+        <td>—</td>
+        <td>—</td>
+        <td><span class="traffic-type traffic-ok">🟢 Keine aktuelle Meldung</span></td>
+      </tr>`);
+
+    rows.innerHTML=unique.map(w=>{
+      const [cls,label]=trafficType(w);
+      return `<tr>
+        <td class="traffic-road">${esc(w.__road)}</td>
+        <td>${esc(trafficDirection(w)||'—')}</td>
+        <td>${esc(trafficLocation(w)||'—')}</td>
+        <td><span class="traffic-type ${cls}">${esc(label)}</span><br><span>${esc(trafficDescription(w))}</span></td>
+      </tr>`;
+    }).join('') + noWarningRows.join('');
     $('trafficUpdated').textContent='Verkehrsdaten aktualisiert: '+new Date().toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
   }catch(e){
     rows.innerHTML='<tr><td colspan="4" class="traffic-empty">Die aktuellen Verkehrsdaten konnten gerade nicht geladen werden. Es werden keine Beispielmeldungen angezeigt.</td></tr>';
@@ -727,6 +744,6 @@ loadTraffic();
 // Automatische Hintergrund-Aktualisierung.
 setInterval(refreshActive,15000);
 setInterval(loadTraffic,60000);
-</script>
+\n// Browserbasierte Vorlesefunktion für aktuelle Verkehrsmeldungen.\n(function(){\n  const btn=document.getElementById('trafficReadBtn');\n  if(!btn) return;\n  if(!('speechSynthesis' in window) || !('SpeechSynthesisUtterance' in window)){\n    btn.addEventListener('click',()=>alert('Vorlesen wird von diesem Browser leider nicht unterstützt.'));\n    return;\n  }\n  function getTrafficText(){\n    const rows=document.querySelectorAll('#trafficRows tr');\n    const parts=[];\n    rows.forEach(row=>{\n      const cells=row.querySelectorAll('td');\n      if(cells.length<4) return;\n      const road=cells[0].innerText.trim();\n      const direction=cells[1].innerText.trim();\n      const location=cells[2].innerText.trim();\n      const message=cells[3].innerText.trim();\n      if(road) parts.push(`${road}. Richtung ${direction}. ${location}. ${message}.`);\n    });\n    return parts.length ? `Verkehr aktuell. ${parts.join(' ')}` : 'Verkehr aktuell. Es liegen momentan keine Verkehrsmeldungen vor.';\n  }\n  function stopReading(){\n    window.speechSynthesis.cancel();\n    btn.classList.remove('active');\n    btn.setAttribute('aria-pressed','false');\n    btn.textContent='🔊 Vorlesen';\n  }\n  btn.addEventListener('click',()=>{\n    if(window.speechSynthesis.speaking || window.speechSynthesis.pending){ stopReading(); return; }\n    const u=new SpeechSynthesisUtterance(getTrafficText());\n    u.lang='de-DE'; u.rate=.95; u.pitch=1; u.volume=1;\n    u.onstart=()=>{btn.classList.add('active');btn.setAttribute('aria-pressed','true');btn.textContent='⏹ Stoppen';};\n    u.onend=stopReading; u.onerror=stopReading;\n    window.speechSynthesis.cancel(); window.speechSynthesis.speak(u);\n  });\n})();\n</script>
 </body>
 </html>
