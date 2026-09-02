@@ -475,7 +475,6 @@ async function loadTraffic(){
       }
     }
 
-    // Doppelte Meldungen vermeiden.
     const seen=new Set();
     const unique=entries.filter(w=>{
       const key=String(w.identifier||w.id||(
@@ -486,8 +485,6 @@ async function loadTraffic(){
       return true;
     }).slice(0,30);
 
-    // Auch Autobahnen ohne aktuelle Warnung anzeigen, damit die komplette
-    // ausgewählte Ruhrgebiet-Liste sichtbar bleibt (z. B. A448).
     const roadsWithWarnings=new Set(unique.map(w=>w.__road));
     const noWarningRows=TRAFFIC_ROADS
       .filter(road=>!roadsWithWarnings.has(road))
@@ -557,8 +554,6 @@ function renderActive(s){
 }
 
 function renderHistory(list,currentSong){
-  // Der aktuelle Titel darf nicht direkt noch einmal als "zuletzt gelaufen" erscheinen.
-  // Wenn derselbe Titel früher erneut gespielt wurde, darf er weiter im Verlauf stehen.
   const previous=[];
   let removedCurrent=false;
   for(const x of list){
@@ -594,7 +589,6 @@ async function refreshActive(){
     renderHistory(normalizeList(state.active.last_songs),state.active.current_song);
     $('updated').textContent='Live-Daten: '+new Date().toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
   }catch(e){
-    // Hörer bleiben absichtlich bei 0, wenn die Abfrage gerade nichts liefert.
     $('updated').textContent='Live-Daten werden automatisch erneut abgefragt.';
   }finally{
     state.refreshing=false;
@@ -606,7 +600,6 @@ async function activateStation(station){
   const slug=slugOf(station);
   if(!slug)return;
 
-  // Suchergebnisse werden erst hier – und nur hier – zum aktiven Sender.
   state.active={...station,slug};
   renderActive(state.active);
 
@@ -614,8 +607,6 @@ async function activateStation(station){
   audio.pause();
   audio.currentTime=0;
 
-  // Sofort nach dem Benutzerklick starten, damit Browser die Benutzeraktion
-  // nicht durch die nachfolgende API-Abfrage verlieren.
   let playStarted=false;
   try{
     await audio.play();
@@ -741,9 +732,36 @@ renderActive(fallback);
 refreshActive();
 loadTraffic();
 
-// Automatische Hintergrund-Aktualisierung.
 setInterval(refreshActive,15000);
 setInterval(loadTraffic,60000);
-\n// Browserbasierte Vorlesefunktion für aktuelle Verkehrsmeldungen.\n(function(){\n  const btn=document.getElementById('trafficReadBtn');\n  if(!btn) return;\n  if(!('speechSynthesis' in window) || !('SpeechSynthesisUtterance' in window)){\n    btn.addEventListener('click',()=>alert('Vorlesen wird von diesem Browser leider nicht unterstützt.'));\n    return;\n  }\n  function getTrafficText(){\n    const rows=document.querySelectorAll('#trafficRows tr');\n    const parts=[];\n    rows.forEach(row=>{\n      const cells=row.querySelectorAll('td');\n      if(cells.length<4) return;\n      const road=cells[0].innerText.trim();\n      const direction=cells[1].innerText.trim();\n      const location=cells[2].innerText.trim();\n      const message=cells[3].innerText.trim();\n      if(road) parts.push(`${road}. Richtung ${direction}. ${location}. ${message}.`);\n    });\n    return parts.length ? `Verkehr aktuell. ${parts.join(' ')}` : 'Verkehr aktuell. Es liegen momentan keine Verkehrsmeldungen vor.';\n  }\n  function stopReading(){\n    window.speechSynthesis.cancel();\n    btn.classList.remove('active');\n    btn.setAttribute('aria-pressed','false');\n    btn.textContent='🔊 Vorlesen';\n  }\n  btn.addEventListener('click',()=>{\n    if(window.speechSynthesis.speaking || window.speechSynthesis.pending){ stopReading(); return; }\n    const u=new SpeechSynthesisUtterance(getTrafficText());\n    u.lang='de-DE'; u.rate=.95; u.pitch=1; u.volume=1;\n    u.onstart=()=>{btn.classList.add('active');btn.setAttribute('aria-pressed','true');btn.textContent='⏹ Stoppen';};\n    u.onend=stopReading; u.onerror=stopReading;\n    window.speechSynthesis.cancel(); window.speechSynthesis.speak(u);\n  });\n})();\n</script>
+
+(function(){
+  const btn=document.getElementById('trafficReadBtn');
+  if(!btn) return;
+  if(!('speechSynthesis' in window) || !('SpeechSynthesisUtterance' in window)){
+    btn.addEventListener('click',()=>alert('Vorlesen wird von diesem Browser leider nicht unterstützt.'));
+    return;
+  }
+  function getTrafficText(){
+    const rows=document.querySelectorAll('#trafficRows tr');
+    const parts=[];
+    rows.forEach(row=>{
+      const cells=row.querySelectorAll('td');
+      if(cells.length<4) return;
+      const road=cells[0].innerText.trim();
+      const direction=cells[1].innerText.trim();
+      const location=cells[2].innerText.trim();
+      const message=cells[3].innerText.trim();
+      if(road) parts.push(`${road}. Richtung ${direction}. ${location}. ${message}.`);
+    });
+    return parts.length ? `Verkehr aktuell. ${parts.join(' ')}` : 'Verkehr aktuell. Es liegen momentan keine Verkehrsmeldungen vor.';
+  }
+  function stopReading(){
+    window.speechSynthesis.cancel();
+    btn.classList.remove('active');
+    btn.setAttribute('aria-pressed','false');
+    btn.textContent='🔊 Vorlesen';
+  }
+  btn.addEventListener('click',()=>{\n    if(window.speechSynthesis.speaking || window.speechSynthesis.pending){ stopReading(); return; }\n    const u=new SpeechSynthesisUtterance(getTrafficText());\n    u.lang='de-DE'; u.rate=.95; u.pitch=1; u.volume=1;\n    u.onstart=()=>{btn.classList.add('active');btn.setAttribute('aria-pressed','true');btn.textContent='⏹ Stoppen';};\n    u.onend=stopReading; u.onerror=stopReading;\n    window.speechSynthesis.cancel(); window.speechSynthesis.speak(u);\n  });\n})();\n</script>
 </body>
 </html>
