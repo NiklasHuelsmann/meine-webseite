@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>RadioHub · laut.fm · V19</title>
+<title>RadioHub · laut.fm · V20</title>
 <style>
 :root{
   --bg:#080b12;--panel:#111722;--panel2:#0c121b;--line:#293446;
@@ -198,6 +198,8 @@ footer{text-align:center;color:var(--muted);font-size:12px;margin-top:25px}
 .traffic-type.info{color:#b9d7ff;background:rgba(80,140,255,.10)}
 .traffic-ok{display:inline-block;padding:4px 8px;border-radius:999px;background:rgba(80,200,120,.12);color:#8df0ad;border:1px solid rgba(80,200,120,.22)}
 .traffic-empty{padding:16px;color:var(--muted);font-size:13px}
+.traffic-status-row td{opacity:.78}
+.traffic-status-row .traffic-road{opacity:1}
 .traffic-type.jam{background:rgba(245,158,11,.12);color:#f59e0b}
 .traffic-source{display:flex;justify-content:space-between;gap:12px;align-items:center;margin-top:10px;color:var(--muted);font-size:12px}
 @media(max-width:560px){
@@ -515,6 +517,7 @@ function sameSong(a,b){
 
 
 const TRAFFIC_ROADS=[
+  // Wichtige NRW-Autobahnen. A448 steht bewusst sichtbar in der Liste.
   'A1','A2','A3','A4','A30','A31','A33','A40','A42','A43','A44','A45','A46',
   'A52','A57','A59','A61','A445','A448','A516','A524','A535','A540','A542',
   'A544','A553','A555','A559','A560','A562','A565'
@@ -573,18 +576,25 @@ function trafficDateDetails(w){
   return raw;
 }
 function trafficMatchesFilter(w){
+  if(w.__service==='status') return trafficFilter==='all';
   return trafficFilter==='all' || trafficType(w,w.__service)[0]===trafficFilter;
 }
 function renderTraffic(){
   const rows=$('trafficRows');
   const visible=trafficData.filter(trafficMatchesFilter);
-  $('trafficCount').textContent=`${visible.length} Meldung${visible.length===1?'':'en'}`;
+  const actualCount=trafficData.filter(w=>w.__service!=='status').length;
+  $('trafficCount').textContent=`${actualCount} Meldung${actualCount===1?'':'en'} · ${TRAFFIC_ROADS.length} Autobahnen`; 
   if(!visible.length){
     rows.innerHTML='<tr><td colspan="4" class="traffic-empty">Für diesen Filter liegt aktuell keine Meldung vor.</td></tr>';
     return;
   }
   rows.innerHTML=visible.map(w=>{
     const [cls,label]=trafficType(w,w.__service);
+    if(w.__service==='status') return `<tr data-traffic-kind="status" class="traffic-status-row">
+      <td class="traffic-road">${esc(w.__road)}</td>
+      <td>—</td><td>NRW</td>
+      <td><span class="traffic-type info">🟢 Keine aktuelle Meldung</span></td>
+    </tr>`;
     return `<tr data-traffic-kind="${esc(cls)}">
       <td class="traffic-road">${esc(w.__road)}</td>
       <td>${esc(trafficDirection(w)||'—')}</td>
@@ -622,17 +632,25 @@ async function loadTraffic(){
     if(successfulServices===0) throw Error('Keine Verkehrsdienste erreichbar');
 
     const seen=new Set();
-    trafficData=entries.filter(w=>{
+    const actual=entries.filter(w=>{
       const key=String(w.identifier||w.id||(
         w.__service+'|'+w.__road+'|'+trafficDirection(w)+'|'+trafficLocation(w)+'|'+trafficDescription(w)
       ));
       if(seen.has(key)) return false;
       seen.add(key);
       return true;
-    }).sort((a,b)=>{
+    });
+
+    // Jede hinterlegte NRW-Autobahn bleibt im Filter "Alle" sichtbar, auch wenn
+    // aktuell keine Meldung vorliegt. So ist z.B. A448 nie "verschwunden".
+    const activeRoads=new Set(actual.map(w=>w.__road));
+    const statusRows=TRAFFIC_ROADS.filter(road=>!activeRoads.has(road))
+      .map(road=>({__road:road,__service:'status'}));
+
+    trafficData=actual.sort((a,b)=>{
       const rank={block:0,jam:1,warn:2,roadwork:3,info:4};
       return (rank[trafficType(a,a.__service)[0]]??9)-(rank[trafficType(b,b.__service)[0]]??9);
-    }).slice(0,120);
+    }).slice(0,120).concat(statusRows);
 
     renderTraffic();
     $('trafficUpdated').textContent='Verkehrsdaten aktualisiert: '+new Date().toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
@@ -930,6 +948,7 @@ setInterval(loadTraffic,60000);
     rows.forEach(row=>{
       const cells=row.querySelectorAll('td');
       if(cells.length<4) return;
+      if(row.dataset.trafficKind==='status') return;
       const road=cells[0].innerText.trim();
       const direction=cells[1].innerText.trim();
       const location=cells[2].innerText.trim();
