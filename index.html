@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>RadioHub · laut.fm</title>
+<title>RadioHub · laut.fm · V14</title>
 <style>
 :root{
   --bg:#080b12;--panel:#111722;--panel2:#0c121b;--line:#293446;
@@ -30,7 +30,7 @@ button{
 button.secondary{background:#202938;border:1px solid var(--line)}
 button:disabled{opacity:.55;cursor:wait}
 
-.grid{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(380px,.9fr);gap:18px;align-items:start}
+.grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.08fr);gap:18px;align-items:start}
 .card{
   background:linear-gradient(180deg,rgba(23,30,43,.97),rgba(14,19,28,.97));
   border:1px solid var(--line);border-radius:22px;padding:20px
@@ -70,7 +70,12 @@ h1{font-size:30px;line-height:1.05;margin:0 0 5px}
 .player-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
 .player-actions a{
   display:inline-flex;align-items:center;padding:8px 11px;border-radius:10px;
-  background:#202938;border:1px solid var(--line);font-size:12px
+  background:#202938;border:1px solid var(--line);font-size:12px;
+  color:#d8cfff;font-weight:750;text-decoration:none
+}
+.player-actions a:hover{
+  color:#fff;background:#2a3447;border-color:#7c5cff;
+  text-decoration:none
 }
 .player-note{font-size:11px;color:var(--muted);margin-top:9px}
 
@@ -91,13 +96,6 @@ h1{font-size:30px;line-height:1.05;margin:0 0 5px}
 .now-main{min-width:0}.now-main strong{display:block;font-size:19px;font-weight:850;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .now-main span{display:block;color:var(--muted);font-size:15px;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .now-time{margin-left:auto;color:var(--muted);font-size:12px;white-space:nowrap}
-
-/* Next / Gleich */
-.next-box{
-  padding:14px 15px;border-radius:16px;background:#0d131d;border:1px solid var(--line)
-}
-.next-box strong{display:block;font-size:15px;line-height:1.4}
-.next-box span{display:block;color:var(--muted);font-size:12px;margin-top:4px}
 
 /* Stats */
 .stats{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}
@@ -157,7 +155,10 @@ footer{text-align:center;color:var(--muted);font-size:12px;margin-top:25px}
 }
 /* Live traffic */
 .traffic-card{margin-top:14px}
-.traffic-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px}
+.traffic-card{min-width:0}
+.traffic-card .traffic-head h2{white-space:nowrap}
+
+.traffic-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:12px}
 .traffic-head-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:flex-end}
 .read-btn{appearance:none;border:1px solid rgba(80,200,120,.30);background:rgba(80,200,120,.10);color:#9af2b7;border-radius:10px;padding:8px 11px;font:700 12px/1.1 inherit;cursor:pointer;white-space:nowrap}
 .read-btn:hover{background:rgba(80,200,120,.16);border-color:rgba(80,200,120,.45)}
@@ -176,10 +177,14 @@ footer{text-align:center;color:var(--muted);font-size:12px;margin-top:25px}
 
 /* Traffic list */
 .traffic-table-wrap{overflow:auto;border:1px solid var(--line);border-radius:16px;background:#0d131d}
-.traffic-table{width:100%;border-collapse:collapse;min-width:680px}
-.traffic-table th,.traffic-table td{padding:12px 13px;text-align:left;border-bottom:1px solid var(--line);vertical-align:top}
-.traffic-table th{font-size:11px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);background:#0b1119}
-.traffic-table td{font-size:13px}
+.traffic-table{width:100%;border-collapse:collapse;table-layout:fixed}
+.traffic-table th,.traffic-table td{padding:11px 10px;text-align:left;border-bottom:1px solid var(--line);vertical-align:top;overflow-wrap:anywhere;word-break:normal}
+.traffic-table th{font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);background:#0b1119}
+.traffic-table td{font-size:12px}
+.traffic-table th:nth-child(1),.traffic-table td:nth-child(1){width:12%}
+.traffic-table th:nth-child(2),.traffic-table td:nth-child(2){width:19%}
+.traffic-table th:nth-child(3),.traffic-table td:nth-child(3){width:27%}
+.traffic-table th:nth-child(4),.traffic-table td:nth-child(4){width:42%}
 .traffic-table tr:last-child td{border-bottom:0}
 .traffic-road{font-weight:800;white-space:nowrap}
 .traffic-type{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:700;padding:4px 8px;border-radius:999px;background:rgba(255,255,255,.06)}
@@ -192,6 +197,9 @@ footer{text-align:center;color:var(--muted);font-size:12px;margin-top:25px}
 .traffic-source{display:flex;justify-content:space-between;gap:12px;align-items:center;margin-top:10px;color:var(--muted);font-size:12px}
 @media(max-width:560px){
   .traffic-source{align-items:flex-start;flex-direction:column}
+  .traffic-table th,.traffic-table td{padding:9px 7px;font-size:11px}
+  .traffic-table th{font-size:9px}
+  .traffic-type,.traffic-ok{font-size:10px;padding:3px 6px}
 }
 </style>
 </head>
@@ -253,14 +261,6 @@ footer{text-align:center;color:var(--muted);font-size:12px;margin-top:25px}
       <div class="player-note">Der Browser-Audioplayer bleibt unsichtbar – du steuerst den Sender über den runden ▶-Knopf.</div>
       <audio id="audio" preload="none"></audio>
     </div>
-
-    <section class="now-card next-card">
-      <div class="section-title"><span>Gleich</span></div>
-      <div class="next-box">
-        <strong id="nextArtists">Weitere Titel werden geladen …</strong>
-        <span>Die nächsten Künstler bzw. Programminfos des Senders.</span>
-      </div>
-    </section>
 
     <div class="stats">
       <div class="stat"><b id="listeners">0</b><span>Hörer</span></div>
@@ -436,12 +436,11 @@ async function getJSON(url){
 }
 async function loadStation(slug){
   const out={slug};
-  const [station,current,last,listeners,next]=await Promise.allSettled([
+  const [station,current,last,listeners]=await Promise.allSettled([
     getJSON(`${API}/station/${encodeURIComponent(slug)}`),
     getJSON(`${API}/station/${encodeURIComponent(slug)}/current_song`),
     getJSON(`${API}/station/${encodeURIComponent(slug)}/last_songs`),
-    getJSON(`${API}/station/${encodeURIComponent(slug)}/listeners`),
-    getJSON(`${API}/station/${encodeURIComponent(slug)}/next_artists`)
+    getJSON(`${API}/station/${encodeURIComponent(slug)}/listeners`)
   ]);
   if(station.status==='fulfilled'&&station.value)Object.assign(out,station.value);
   if(current.status==='fulfilled')out.current_song=current.value?.current_song||current.value;
@@ -449,10 +448,6 @@ async function loadStation(slug){
   if(listeners.status==='fulfilled'){
     const v=listeners.value;
     out.listeners=typeof v==='number'?v:(v?.listeners??v?.count??v?.value);
-  }
-  if(next.status==='fulfilled'){
-    const v=next.value;
-    out.next_artists=v?.next_artists??v?.artists??v;
   }
   return out;
 }
@@ -621,13 +616,6 @@ function renderActive(s){
   $('currentSong').textContent=song?.title||'Aktueller Song nicht verfügbar';
   $('currentArtist').textContent=song?.artist||s.name||'';
   $('currentTime').textContent=fmtTime(s.current_song?.started_at||s.current_song?.start);
-
-  const next = s.next_artists;
-  let nextText = '';
-  if(Array.isArray(next)) nextText = next.map(x => typeof x === 'object' ? (x.name || x.title || '') : x).filter(Boolean).join(', ');
-  else if(next && typeof next === 'object') nextText = next.name || next.title || next.artists || '';
-  else nextText = String(next || '');
-  $('nextArtists').textContent = nextText || 'Weitere Programminfos werden von diesem Sender derzeit nicht bereitgestellt.';
 
   const n=Number(s.listeners);
   $('listeners').textContent=Number.isFinite(n)?n:0;
