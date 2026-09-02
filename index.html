@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>RadioHub · laut.fm · V16</title>
+<title>RadioHub · laut.fm · V17</title>
 <style>
 :root{
   --bg:#080b12;--panel:#111722;--panel2:#0c121b;--line:#293446;
@@ -179,10 +179,10 @@ footer{text-align:center;color:var(--muted);font-size:12px;margin-top:25px}
 .traffic-link:hover{text-decoration:underline}
 
 /* Traffic list */
-.traffic-table-wrap{overflow:auto;border:1px solid var(--line);border-radius:16px;background:#0d131d}
-.traffic-table{width:100%;border-collapse:collapse;table-layout:fixed}
+.traffic-table-wrap{max-height:500px;overflow-y:auto;overflow-x:hidden;border:1px solid var(--line);border-radius:16px;background:#0d131d;scrollbar-width:thin}
+.traffic-table{width:100%;border-collapse:collapse;table-layout:fixed;min-width:0}
 .traffic-table th,.traffic-table td{padding:11px 10px;text-align:left;border-bottom:1px solid var(--line);vertical-align:top;overflow-wrap:anywhere;word-break:normal}
-.traffic-table th{font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);background:#0b1119}
+.traffic-table th{position:sticky;top:0;z-index:2;font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);background:#0b1119;box-shadow:0 1px 0 var(--line)}
 .traffic-table td{font-size:12px}
 .traffic-table th:nth-child(1),.traffic-table td:nth-child(1){width:12%}
 .traffic-table th:nth-child(2),.traffic-table td:nth-child(2){width:19%}
@@ -199,6 +199,7 @@ footer{text-align:center;color:var(--muted);font-size:12px;margin-top:25px}
 .traffic-type.jam{background:rgba(245,158,11,.12);color:#f59e0b}
 .traffic-source{display:flex;justify-content:space-between;gap:12px;align-items:center;margin-top:10px;color:var(--muted);font-size:12px}
 @media(max-width:560px){
+  .traffic-table-wrap{max-height:420px}
   .traffic-source{align-items:flex-start;flex-direction:column}
   .traffic-table th,.traffic-table td{padding:9px 7px;font-size:11px}
   .traffic-table th{font-size:9px}
