@@ -506,8 +506,8 @@ async function loadTraffic(){
     }).join('') + noWarningRows.join('');
     $('trafficUpdated').textContent='Verkehrsdaten aktualisiert: '+new Date().toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
   }catch(e){
-    rows.innerHTML='<tr><td colspan="4" class="traffic-empty">Die aktuellen Verkehrsdaten konnten gerade nicht geladen werden. Es werden keine Beispielmeldungen angezeigt.</td></tr>';
-    $('trafficUpdated').textContent='Verkehrsdaten momentan nicht erreichbar – neuer Versuch folgt automatisch.';
+    rows.innerHTML='<tr><td colspan="4" class="traffic-empty">Verkehrsdaten konnten aufgrund von Netzwerksicherheitsregeln (CORS) nicht direkt geladen werden.</td></tr>';
+    $('trafficUpdated').textContent='Verkehrsdaten offline.';
   }
 }
 
@@ -762,6 +762,15 @@ setInterval(loadTraffic,60000);
     btn.setAttribute('aria-pressed','false');
     btn.textContent='🔊 Vorlesen';
   }
-  btn.addEventListener('click',()=>{\n    if(window.speechSynthesis.speaking || window.speechSynthesis.pending){ stopReading(); return; }\n    const u=new SpeechSynthesisUtterance(getTrafficText());\n    u.lang='de-DE'; u.rate=.95; u.pitch=1; u.volume=1;\n    u.onstart=()=>{btn.classList.add('active');btn.setAttribute('aria-pressed','true');btn.textContent='⏹ Stoppen';};\n    u.onend=stopReading; u.onerror=stopReading;\n    window.speechSynthesis.cancel(); window.speechSynthesis.speak(u);\n  });\n})();\n</script>
+  btn.addEventListener('click',()=>{
+    if(window.speechSynthesis.speaking || window.speechSynthesis.pending){ stopReading(); return; }
+    const u=new SpeechSynthesisUtterance(getTrafficText());
+    u.lang='de-DE'; u.rate=.95; u.pitch=1; u.volume=1;
+    u.onstart=()=>{btn.classList.add('active');btn.setAttribute('aria-pressed','true');btn.textContent='⏹ Stoppen';};
+    u.onend=stopReading; u.onerror=stopReading;
+    window.speechSynthesis.cancel(); window.speechSynthesis.speak(u);
+  });
+})();
+</script>
 </body>
 </html>
