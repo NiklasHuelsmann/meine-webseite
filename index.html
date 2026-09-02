@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>RadioHub · laut.fm · V18</title>
+<title>RadioHub · laut.fm · V19</title>
 <style>
 :root{
   --bg:#080b12;--panel:#111722;--panel2:#0c121b;--line:#293446;
@@ -160,6 +160,11 @@ footer{text-align:center;color:var(--muted);font-size:12px;margin-top:25px}
 
 .traffic-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:12px}
 .traffic-head-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+.traffic-filters{display:flex;gap:7px;flex-wrap:wrap;margin:0 0 10px}
+.traffic-filter{border:1px solid var(--line);background:#111925;color:var(--muted);border-radius:999px;padding:6px 10px;font:inherit;font-size:11px;font-weight:700;cursor:pointer}
+.traffic-filter:hover{color:#fff;border-color:#5c6b7e}
+.traffic-filter.active{color:#fff;background:rgba(80,140,255,.13);border-color:rgba(120,170,255,.38)}
+.traffic-count{font-size:11px;color:var(--muted);margin-left:auto}
 .read-btn{appearance:none;border:1px solid rgba(80,200,120,.30);background:rgba(80,200,120,.10);color:#9af2b7;border-radius:10px;padding:8px 11px;font:700 12px/1.1 inherit;cursor:pointer;white-space:nowrap}
 .read-btn:hover{background:rgba(80,200,120,.16);border-color:rgba(80,200,120,.45)}
 .read-btn.active{background:rgba(255,90,90,.12);border-color:rgba(255,100,100,.35);color:#ffb0b0}
@@ -286,8 +291,16 @@ footer{text-align:center;color:var(--muted);font-size:12px;margin-top:25px}
         <h2>🚗 Verkehr aktuell</h2>
         <div class="traffic-head-actions">
           <button class="read-btn" id="trafficReadBtn" type="button" aria-pressed="false">🔊 Vorlesen</button>
-          <span class="traffic-live">● LIVE-DATEN · STAU · SPERRUNGEN</span>
+          <span class="traffic-live">● LIVE-DATEN · NRW · STAU · WARNUNGEN · SPERRUNGEN · BAUSTELLEN</span>
         </div>
+      </div>
+      <div class="traffic-filters" id="trafficFilters" aria-label="Verkehrsfilter">
+        <button class="traffic-filter active" type="button" data-traffic-filter="all">Alle</button>
+        <button class="traffic-filter" type="button" data-traffic-filter="jam">🚗 Stau</button>
+        <button class="traffic-filter" type="button" data-traffic-filter="warn">⚠ Warnungen</button>
+        <button class="traffic-filter" type="button" data-traffic-filter="block">⛔ Sperrungen</button>
+        <button class="traffic-filter" type="button" data-traffic-filter="roadwork">🚧 Baustellen</button>
+        <span class="traffic-count" id="trafficCount">—</span>
       </div>
       <div class="traffic-table-wrap">
         <table class="traffic-table">
@@ -305,7 +318,7 @@ footer{text-align:center;color:var(--muted);font-size:12px;margin-top:25px}
         </table>
       </div>
       <div class="traffic-source">
-        <span id="trafficUpdated">Aktuelle Daten werden automatisch aktualisiert.</span>
+        <span id="trafficUpdated">Aktuelle NRW-Verkehrsdaten werden automatisch aktualisiert.</span>
         <a class="traffic-link" href="https://www.autobahn.de/betrieb-verkehr/verkehrsmeldungen" target="_blank" rel="noopener">Offizielle Verkehrsmeldungen ↗</a>
       </div>
     </section>
@@ -501,36 +514,45 @@ function sameSong(a,b){
 }
 
 
-const TRAFFIC_ROADS=['A2','A40','A42','A43','A448','A44','A45','A46','A52','A57','A59'];
+const TRAFFIC_ROADS=[
+  'A1','A2','A3','A4','A30','A31','A33','A40','A42','A43','A44','A45','A46',
+  'A52','A57','A59','A61','A445','A448','A516','A524','A535','A540','A542',
+  'A544','A553','A555','A559','A560','A562','A565'
+];
 const TRAFFIC_API='https://verkehr.autobahn.de/o/autobahn';
+let trafficFilter='all';
+let trafficData=[];
 
 function trafficArray(v){
   if(Array.isArray(v)) return v;
   if(Array.isArray(v?.warning)) return v.warning;
   if(Array.isArray(v?.warnings)) return v.warnings;
+  if(Array.isArray(v?.closure)) return v.closure;
+  if(Array.isArray(v?.closures)) return v.closures;
+  if(Array.isArray(v?.roadworks)) return v.roadworks;
   if(Array.isArray(v?.items)) return v.items;
   if(Array.isArray(v?.results)) return v.results;
   return [];
 }
 function trafficText(v){
-  if(Array.isArray(v)) return v.filter(Boolean).map(String).join(' ');
+  if(Array.isArray(v)) return v.filter(Boolean).map(String).join(' · ');
   return String(v||'').trim();
 }
 function trafficDirection(w){
-  return w.direction || w.directionText || w.travelDirection ||
-    w.roadDirection || w.subtitle || '';
+  return w.direction || w.directionText || w.travelDirection || w.roadDirection ||
+    w.subtitle || '';
 }
 function trafficLocation(w){
-  return w.location || w.locationName || w.place || w.city ||
-    w.title || w.routeRecommendation || '';
+  return w.location || w.locationName || w.place || w.city || w.title ||
+    w.routeRecommendation || '';
 }
 function trafficDescription(w){
   return trafficText(w.description || w.descriptionText || w.text ||
     w.warningText || w.shortDescription || w.subtitle || w.title || 'Verkehrsmeldung');
 }
-function trafficType(w){
-  // Nicht nur die Kurzbeschreibung prüfen: je nach API-Meldung können
-  // wichtige Begriffe auch in anderen Feldern stehen.
+function trafficType(w,service){
+  if(service==='closure') return ['block','⛔ Sperrung'];
+  if(service==='roadworks') return ['roadwork','🚧 Baustelle'];
   const s=JSON.stringify(w).toLowerCase();
   if(s.includes('vollsperr') || s.includes('sperrung') || s.includes('gesperrt') || s.includes('fahrbahn gesperrt')){
     return ['block','⛔ Sperrung'];
@@ -539,73 +561,96 @@ function trafficType(w){
     return ['jam','🚗 Stau'];
   }
   if(s.includes('unfall') || s.includes('behinderung') || s.includes('fahrzeug') || s.includes('panne')){
-    return ['warn','⚠ Störung'];
+    return ['warn','⚠ Warnung'];
   }
   if(s.includes('baustell') || s.includes('arbeiten') || s.includes('fahrbahnerneuer')){
-    return ['info','🚧 Baustelle'];
+    return ['roadwork','🚧 Baustelle'];
   }
   return ['info','ℹ Verkehr'];
 }
-async function loadTraffic(){
+function trafficDateDetails(w){
+  const raw=trafficDescription(w);
+  return raw;
+}
+function trafficMatchesFilter(w){
+  return trafficFilter==='all' || trafficType(w,w.__service)[0]===trafficFilter;
+}
+function renderTraffic(){
   const rows=$('trafficRows');
+  const visible=trafficData.filter(trafficMatchesFilter);
+  $('trafficCount').textContent=`${visible.length} Meldung${visible.length===1?'':'en'}`;
+  if(!visible.length){
+    rows.innerHTML='<tr><td colspan="4" class="traffic-empty">Für diesen Filter liegt aktuell keine Meldung vor.</td></tr>';
+    return;
+  }
+  rows.innerHTML=visible.map(w=>{
+    const [cls,label]=trafficType(w,w.__service);
+    return `<tr data-traffic-kind="${esc(cls)}">
+      <td class="traffic-road">${esc(w.__road)}</td>
+      <td>${esc(trafficDirection(w)||'—')}</td>
+      <td>${esc(trafficLocation(w)||'—')}</td>
+      <td><span class="traffic-type ${cls}">${esc(label)}</span><br><span>${esc(trafficDateDetails(w))}</span></td>
+    </tr>`;
+  }).join('');
+}
+async function fetchTrafficService(road,service){
+  const r=await fetch(`${TRAFFIC_API}/${road}/services/${service}`,{cache:'no-store'});
+  if(r.status===204) return [];
+  if(!r.ok) throw Error(`${road}/${service}: ${r.status}`);
+  const text=await r.text();
+  if(!text.trim()) return [];
+  return trafficArray(JSON.parse(text));
+}
+async function loadTraffic(){
   try{
-    const results=await Promise.allSettled(
-      TRAFFIC_ROADS.map(async road=>{
-        const r=await fetch(`${TRAFFIC_API}/${road}/services/warning`,{cache:'no-store'});
-        if(!r.ok) throw Error(`${road}: ${r.status}`);
-        return {road,data:await r.json()};
-      })
-    );
-
-    const entries=[];
-    for(const result of results){
-      if(result.status!=='fulfilled') continue;
-      for(const w of trafficArray(result.value.data)){
-        entries.push({...w,__road:result.value.road});
+    const jobs=[];
+    for(const road of TRAFFIC_ROADS){
+      for(const service of ['warning','closure','roadworks']){
+        jobs.push(fetchTrafficService(road,service).then(items=>({road,service,items})));
       }
     }
+    const results=await Promise.allSettled(jobs);
+    const entries=[];
+    let successfulServices=0;
+    for(const result of results){
+      if(result.status!=='fulfilled') continue;
+      successfulServices++;
+      for(const w of result.value.items){
+        entries.push({...w,__road:result.value.road,__service:result.value.service});
+      }
+    }
+    if(successfulServices===0) throw Error('Keine Verkehrsdienste erreichbar');
 
-    // Doppelte Meldungen vermeiden.
     const seen=new Set();
-    const unique=entries.filter(w=>{
+    trafficData=entries.filter(w=>{
       const key=String(w.identifier||w.id||(
-        w.__road+'|'+trafficDirection(w)+'|'+trafficLocation(w)+'|'+trafficDescription(w)
+        w.__service+'|'+w.__road+'|'+trafficDirection(w)+'|'+trafficLocation(w)+'|'+trafficDescription(w)
       ));
       if(seen.has(key)) return false;
       seen.add(key);
       return true;
     }).sort((a,b)=>{
-      const rank={block:0,jam:1,warn:2,info:3};
-      return (rank[trafficType(a)[0]]??9)-(rank[trafficType(b)[0]]??9);
-    }).slice(0,30);
+      const rank={block:0,jam:1,warn:2,roadwork:3,info:4};
+      return (rank[trafficType(a,a.__service)[0]]??9)-(rank[trafficType(b,b.__service)[0]]??9);
+    }).slice(0,120);
 
-    // Auch Autobahnen ohne aktuelle Warnung anzeigen, damit die komplette
-    // ausgewählte Ruhrgebiet-Liste sichtbar bleibt (z. B. A448).
-    const roadsWithWarnings=new Set(unique.map(w=>w.__road));
-    const noWarningRows=TRAFFIC_ROADS
-      .filter(road=>!roadsWithWarnings.has(road))
-      .map(road=>`<tr class="traffic-clear-row">
-        <td class="traffic-road">${esc(road)}</td>
-        <td>—</td>
-        <td>—</td>
-        <td><span class="traffic-type traffic-ok">🟢 Keine aktuelle Meldung</span></td>
-      </tr>`);
-
-    rows.innerHTML=unique.map(w=>{
-      const [cls,label]=trafficType(w);
-      return `<tr>
-        <td class="traffic-road">${esc(w.__road)}</td>
-        <td>${esc(trafficDirection(w)||'—')}</td>
-        <td>${esc(trafficLocation(w)||'—')}</td>
-        <td><span class="traffic-type ${cls}">${esc(label)}</span><br><span>${esc(trafficDescription(w))}</span></td>
-      </tr>`;
-    }).join('') + noWarningRows.join('');
+    renderTraffic();
     $('trafficUpdated').textContent='Verkehrsdaten aktualisiert: '+new Date().toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
   }catch(e){
-    rows.innerHTML='<tr><td colspan="4" class="traffic-empty">Die aktuellen Verkehrsdaten konnten gerade nicht geladen werden. Es werden keine Beispielmeldungen angezeigt.</td></tr>';
+    trafficData=[];
+    $('trafficRows').innerHTML='<tr><td colspan="4" class="traffic-empty">Die aktuellen Verkehrsdaten konnten gerade nicht geladen werden. Es werden keine Beispielmeldungen angezeigt.</td></tr>';
+    $('trafficCount').textContent='—';
     $('trafficUpdated').textContent='Verkehrsdaten momentan nicht erreichbar – neuer Versuch folgt automatisch.';
   }
 }
+
+document.addEventListener('click',e=>{
+  const btn=e.target.closest('[data-traffic-filter]');
+  if(!btn)return;
+  trafficFilter=btn.dataset.trafficFilter||'all';
+  document.querySelectorAll('[data-traffic-filter]').forEach(b=>b.classList.toggle('active',b===btn));
+  renderTraffic();
+});
 
 async function loadAlbumArt(song){
   const img=$('currentArt');
