@@ -5,110 +5,167 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>RadioHub · laut.fm</title>
 <style>
-:root{--bg:#080b12;--panel:#111722;--line:#263142;--text:#f4f7fb;--muted:#98a4b5;--accent:#7c5cff;--good:#37d67a}
-*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at top,#18213a,#080b12 48%);color:var(--text);font:15px/1.5 system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}a{color:inherit}.wrap{max-width:1180px;margin:auto;padding:28px 18px 50px}
-header{display:flex;align-items:center;justify-content:space-between;gap:18px;margin-bottom:22px}.brand{font-size:26px;font-weight:800}.brand span{color:var(--accent)}
-.search{display:flex;gap:10px;max-width:610px;width:100%}.search input{flex:1;background:#0d131d;border:1px solid var(--line);border-radius:14px;padding:13px 15px;color:var(--text);outline:none}.search input:focus{border-color:var(--accent)}
-button{border:0;border-radius:13px;padding:12px 17px;font-weight:750;cursor:pointer;background:var(--accent);color:#fff}button.secondary{background:#202938;border:1px solid var(--line)}button:disabled{opacity:.55;cursor:wait}
-.grid{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(300px,.8fr);gap:18px}.card{background:linear-gradient(180deg,#171e2bf5,#0e131cf5);border:1px solid var(--line);border-radius:22px;padding:20px}
-.hero{display:flex;gap:20px;align-items:center}.logo{width:112px;height:112px;border-radius:20px;object-fit:cover;background:#202938;border:1px solid var(--line)}h1{font-size:30px;line-height:1.05;margin:0 0 5px}.claim{font-size:18px;font-weight:700}.muted{color:var(--muted)}.desc{margin:14px 0 0;color:#cbd3df}.badges{display:flex;flex-wrap:wrap;gap:7px;margin-top:10px}.badge{font-size:12px;padding:5px 9px;border-radius:999px;background:#202938;color:#cbd3df}.live{color:var(--good);font-weight:800}
-.player{margin-top:20px;padding:15px;border-radius:17px;background:#0c121b;border:1px solid var(--line)}.playerrow{display:flex;align-items:center;gap:12px}.play{width:48px;height:48px;border-radius:50%;padding:0;font-size:19px}.song{min-width:0}.song strong{display:block;font-size:17px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.song small{color:var(--muted)}audio{width:100%;margin-top:12px;height:34px}
-.stats{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}.stat{background:#0d131d;border:1px solid var(--line);border-radius:15px;padding:13px}.stat b{font-size:23px}.stat span{display:block;color:var(--muted);font-size:12px}.updated,.notice{font-size:11px;color:var(--muted);margin-top:8px}
-.section-title{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 0 12px;font-size:18px}.results{margin-top:0}.result{display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid #222b38}.result:last-child{border-bottom:0}.rlogo{width:54px;height:54px;border-radius:12px;object-fit:cover;background:#202938}.rmain{min-width:0;flex:1}.rmain strong{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.rmain small{display:block;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.rplay{padding:9px 12px;border-radius:10px;font-size:13px}
-.history{margin-top:18px}.track{display:flex;gap:12px;padding:11px 0;border-bottom:1px solid #222b38}.track:last-child{border-bottom:0}.tracktime{width:48px;color:var(--muted);font-size:12px}.trackmain{min-width:0}.trackmain strong{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.trackmain span{color:var(--muted);font-size:13px}.empty{padding:18px;color:var(--muted);text-align:center;border:1px dashed var(--line);border-radius:14px}
-footer{text-align:center;color:var(--muted);font-size:12px;margin-top:25px}@media(max-width:850px){header{align-items:stretch;flex-direction:column}.grid{grid-template-columns:1fr}.logo{width:88px;height:88px}h1{font-size:25px}}
+:root{--bg:#080b12;--panel:#121925;--panel2:#0d141e;--line:#273244;--text:#f5f7fb;--muted:#98a5b8;--accent:#7c5cff;--good:#37d67a}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at top,#1b2642 0,#080b12 48%);color:var(--text);font:15px/1.5 system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
+.wrap{max-width:1180px;margin:auto;padding:28px 18px 50px}.top{display:flex;align-items:center;justify-content:space-between;gap:18px;margin-bottom:22px}.brand{font-size:26px;font-weight:850}.brand span{color:var(--accent)}
+.search{display:flex;gap:9px;max-width:650px;width:100%}.search input{flex:1;background:#0c121c;border:1px solid var(--line);border-radius:14px;padding:13px 15px;color:var(--text);outline:0}.search input:focus{border-color:var(--accent)}
+button{border:0;border-radius:13px;padding:12px 17px;font-weight:750;cursor:pointer;background:var(--accent);color:#fff}button.secondary{background:#202a39;border:1px solid var(--line)}button:disabled{opacity:.55;cursor:wait}
+.grid{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(300px,.8fr);gap:18px}.card{background:linear-gradient(180deg,#171f2cf5,#0f151ff5);border:1px solid var(--line);border-radius:22px;padding:20px;box-shadow:0 18px 50px #0006}
+.hero{display:flex;gap:20px;align-items:center}.logo{width:112px;height:112px;border-radius:20px;object-fit:cover;background:#202a39;border:1px solid var(--line)}h1{font-size:30px;line-height:1.05;margin:0 0 5px}.claim{font-size:18px;font-weight:750}.muted{color:var(--muted)}.desc{margin:14px 0 0;color:#cbd3df}.badges{display:flex;flex-wrap:wrap;gap:7px;margin-top:10px}.badge{font-size:12px;padding:5px 9px;border-radius:999px;background:#202a39;color:#cbd3df}.live{color:var(--good);font-weight:850}
+.player{margin-top:20px;padding:15px;border-radius:17px;background:#0b111a;border:1px solid var(--line)}.playerrow{display:flex;align-items:center;gap:12px}.play{width:50px;height:50px;border-radius:50%;padding:0;font-size:18px}.song{min-width:0}.song strong{display:block;font-size:17px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.song small{display:block;color:var(--muted)}audio{width:100%;margin-top:12px;height:35px}
+.direct{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}.direct a{display:inline-block;padding:8px 11px;border:1px solid var(--line);border-radius:10px;background:#151d29;color:#dce3ee;font-size:12px}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}.stat{background:#0c131d;border:1px solid var(--line);border-radius:15px;padding:13px}.stat b{font-size:23px}.stat span{display:block;color:var(--muted);font-size:12px}.updated{font-size:11px;color:var(--muted);margin-top:8px}
+.section-title{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 0 12px;font-size:18px}.result{display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid #222c3a}.result:last-child{border-bottom:0}.rlogo{width:54px;height:54px;border-radius:12px;object-fit:cover;background:#202a39}.rmain{min-width:0;flex:1}.rmain strong{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.rmain small{display:block;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.rplay{padding:9px 12px;border-radius:10px;font-size:13px}
+.history{margin-top:18px}.track{display:flex;gap:12px;padding:11px 0;border-bottom:1px solid #222c3a}.track:last-child{border-bottom:0}.tracktime{width:48px;color:var(--muted);font-size:12px}.trackmain{min-width:0}.trackmain strong{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.trackmain span{color:var(--muted);font-size:13px}.empty{padding:18px;color:var(--muted);text-align:center;border:1px dashed var(--line);border-radius:14px}.hint{font-size:12px;color:var(--muted);margin-top:10px}
+footer{text-align:center;color:var(--muted);font-size:12px;margin-top:25px}
+@media(max-width:850px){.top{align-items:stretch;flex-direction:column}.grid{grid-template-columns:1fr}.logo{width:88px;height:88px}h1{font-size:25px}}
 </style>
+<script src="https://api.laut.fm/js_tools/lautfm_js_tools.0.9.1.js"></script>
 </head>
 <body>
 <div class="wrap">
-<header>
-<div class="brand">Radio<span>Hub</span> <small style="font-size:12px;color:#98a4b5">· laut.fm</small></div>
-<form class="search" id="searchForm"><input id="searchInput" placeholder="Sender suchen …" autocomplete="off"><button>Suchen</button></form>
-</header>
+<div class="top">
+  <div class="brand">Radio<span>Hub</span> <small style="font-size:12px;color:#98a5b8">· laut.fm</small></div>
+  <form class="search" id="searchForm">
+    <input id="searchInput" placeholder="laut.fm-Sender suchen …" autocomplete="off">
+    <button id="searchBtn">Suchen</button>
+  </form>
+</div>
+
 <div class="grid">
 <main>
 <section class="card">
-<div class="hero"><img id="activeLogo" class="logo" alt="Senderlogo"><div style="min-width:0;flex:1"><div class="live">● LIVE</div><h1 id="activeName">Niklas-FM</h1><div id="activeClaim" class="claim">Deine Musik,Dein Moment.</div><div id="activeLocation" class="muted">Bochum-Dahlhausen</div><div id="activeBadges" class="badges"></div></div></div>
-<p id="activeDesc" class="desc">Wir spielen die Songs, die du wirklich hören willst. Keine langen Unterbrechungen, einfach guter Sound für deinen Tag – egal ob im Auto, im Büro oder zu Hause. Dein täglicher Begleiter, direkt aus dem Herzen des Ruhrgebiets.</p>
-<div class="player"><div class="playerrow"><button class="play" id="playBtn">▶</button><div class="song"><strong id="currentSong">Lade aktuellen Song …</strong><small id="currentArtist">Niklas-FM</small></div></div><audio id="audio" controls preload="none"></audio></div>
-<div class="stats"><div class="stat"><b id="listeners">0</b><span>Hörer</span></div><div class="stat"><b id="stationStatus">online</b><span>Status</span></div></div>
-<div class="updated" id="updated">Noch nicht aktualisiert</div>
+  <div class="hero">
+    <img id="activeLogo" class="logo" alt="Senderlogo">
+    <div style="min-width:0;flex:1">
+      <div class="live">● LIVE</div>
+      <h1 id="activeName">Niklas-FM</h1>
+      <div id="activeClaim" class="claim">Deine Musik,Dein Moment.</div>
+      <div id="activeLocation" class="muted">Bochum-Dahlhausen</div>
+      <div id="activeBadges" class="badges"></div>
+    </div>
+  </div>
+  <p id="activeDesc" class="desc">Wir spielen die Songs, die du wirklich hören willst. Keine langen Unterbrechungen, einfach guter Sound für deinen Tag – egal ob im Auto, im Büro oder zu Hause. Dein täglicher Begleiter, direkt aus dem Herzen des Ruhrgebiets.</p>
+
+  <div class="player">
+    <div class="playerrow">
+      <button class="play" id="playBtn">▶</button>
+      <div class="song">
+        <strong id="currentSong">Sender wird geladen …</strong>
+        <small id="currentArtist">Niklas-FM</small>
+      </div>
+    </div>
+    <audio id="audio" controls preload="none"></audio>
+    <div class="direct">
+      <a id="lautLink" target="_blank" rel="noopener">laut.fm öffnen</a>
+      <a id="streamLink" target="_blank" rel="noopener">Stream direkt öffnen</a>
+    </div>
+  </div>
+
+  <div class="stats">
+    <div class="stat"><b id="listeners">0</b><span>Hörer</span></div>
+    <div class="stat"><b id="status">online</b><span>Status</span></div>
+  </div>
+  <div class="updated" id="updated">Live-Daten werden geladen …</div>
 </section>
-<section class="card history"><div class="section-title"><span>Zuletzt gelaufen</span><button class="secondary" id="refreshBtn">↻ Aktualisieren</button></div><div id="historyList" class="empty">Lade Verlauf …</div><div class="notice">Automatische Aktualisierung im Hintergrund.</div></section>
+
+<section class="card history">
+  <div class="section-title"><span>Zuletzt gelaufen</span><button class="secondary" id="refreshBtn">↻ Aktualisieren</button></div>
+  <div id="historyList" class="empty">Lade Verlauf …</div>
+  <div class="hint">Aktueller Song, Hörerzahl und Verlauf werden automatisch von laut.fm nachgeladen.</div>
+</section>
 </main>
-<aside><section class="card"><div class="section-title"><span>Suchergebnisse</span><span id="resultCount" class="muted"></span></div><div id="results" class="empty">Suche nach einem laut.fm-Sender. Die Suche ändert den aktuell laufenden Sender nicht.</div></section></aside>
+
+<aside>
+<section class="card">
+  <div class="section-title"><span>Suchergebnisse</span><span id="resultCount" class="muted"></span></div>
+  <div id="results" class="empty">Suche nach einem Sender. Die Suche verändert den aktiven Sender nicht.</div>
+</section>
+</aside>
 </div>
-<footer>Nur der ▶-Button eines Suchergebnisses wechselt den aktiven Sender.</footer>
+<footer>Der aktive Sender wechselt ausschließlich über ▶ bei einem Suchergebnis.</footer>
 </div>
+
 <script>
-const API='https://api.laut.fm';
-const fallback={slug:'niklas-fm',name:'Niklas-FM',claim:'Deine Musik,Dein Moment.',city:'Bochum-Dahlhausen',description:'Wir spielen die Songs, die du wirklich hören willst. Keine langen Unterbrechungen, einfach guter Sound für deinen Tag – egal ob im Auto, im Büro oder zu Hause. Dein täglicher Begleiter, direkt aus dem Herzen des Ruhrgebiets.',stream_url:'https://stream.laut.fm/niklas-fm'};
-const state={active:{...fallback},refreshing:false,searchToken:0};
+const fallback={slug:'niklas-fm',name:'Niklas-FM',claim:'Deine Musik,Dein Moment.',city:'Bochum-Dahlhausen',description:'Wir spielen die Songs, die du wirklich hören willst. Keine langen Unterbrechungen, einfach guter Sound für deinen Tag – egal ob im Auto, im Büro oder zu Hause. Dein täglicher Begleiter, direkt aus dem Herzen des Ruhrgebiets.',stream_url:'https://stream.laut.fm/niklas-fm',page_url:'https://laut.fm/niklas-fm'};
+const state={active:{...fallback},watch:null,listenerTimer:null,searchToken:0};
 const $=id=>document.getElementById(id);
-function slugOf(s){if(s.slug)return s.slug;const u=s.page_url||s.url||'';const m=u.match(/laut\\.fm\\/([^/?#]+)/i);return m?m[1]:(s.name||'').toLowerCase().trim().replace(/[^a-z0-9äöüß]+/gi,'-').replace(/^-|-$/g,'')}
-function imageOf(s){return s.image||s.logo||s.logo_url||s.image_url||''}
-function songText(x){if(!x)return null;const title=x.title||x.song||x.name||'';let artist=x.artist;if(artist&&typeof artist==='object')artist=artist.name||artist.title||'';return title?{title:String(title),artist:String(artist||'')}:null}
-function fmtTime(v){if(!v)return '';const d=new Date(v);return Number.isNaN(d.getTime())?'':d.toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'})}
-function normalizeList(x){if(Array.isArray(x))return x;if(Array.isArray(x?.songs))return x.songs;if(Array.isArray(x?.last_songs))return x.last_songs;if(Array.isArray(x?.items))return x.items;return []}
-async function getJSON(url){const r=await fetch(url,{cache:'no-store'});if(!r.ok)throw Error(r.status);return r.json()}
-async function loadStation(slug){
- const out={slug};
- const [station,current,last,listeners]=await Promise.allSettled([
-  getJSON(`${API}/station/${encodeURIComponent(slug)}`),
-  getJSON(`${API}/station/${encodeURIComponent(slug)}/current_song`),
-  getJSON(`${API}/station/${encodeURIComponent(slug)}/last_songs`),
-  getJSON(`${API}/station/${encodeURIComponent(slug)}/listeners`)
- ]);
- if(station.status==='fulfilled'&&station.value)Object.assign(out,station.value);
- if(current.status==='fulfilled')out.current_song=current.value?.current_song||current.value;
- if(last.status==='fulfilled')out.last_songs=normalizeList(last.value);
- if(listeners.status==='fulfilled'){const v=listeners.value;out.listeners=typeof v==='number'?v:(v?.listeners??v?.count??v?.value)}
- return out;
+function esc(v){return String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]))}
+function slugOf(s){if(s.slug)return s.slug;const u=s.page_url||s.url||'';const m=u.match(/laut\.fm\/([^/?#]+)/i);return m?m[1]:(s.name||'').toLowerCase().trim().replace(/[^a-z0-9äöüß]+/gi,'-').replace(/^-|-$/g,'')}
+function imgOf(s){return s.image||s.logo||s.logo_url||s.image_url||''}
+function setLogo(url){
+ const fallbackSvg='data:image/svg+xml;charset=UTF-8,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120"><rect width="120" height="120" rx="20" fill="#202a39"/><text x="60" y="70" text-anchor="middle" font-size="42">📻</text></svg>');
+ $('activeLogo').src=url||fallbackSvg;$('activeLogo').onerror=()=>{$('activeLogo').onerror=null;$('activeLogo').src=fallbackSvg};
 }
-function setImg(img,url){img.src=url||'data:image/svg+xml;charset=UTF-8,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120"><rect width="120" height="120" rx="20" fill="#202938"/><text x="60" y="68" text-anchor="middle" font-size="42">📻</text></svg>');img.onerror=()=>{img.onerror=null;img.src='data:image/svg+xml;charset=UTF-8,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120"><rect width="120" height="120" rx="20" fill="#202938"/><text x="60" y="68" text-anchor="middle" font-size="42">📻</text></svg>')}}
-function esc(v){return String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m])}
-function renderActive(s){
+function songParts(song){
+ if(!song)return null;let artist=song.artist;if(artist&&typeof artist==='object')artist=artist.name||'';return {title:song.title||'Unbekannter Titel',artist:artist||''};
+}
+function renderStation(s){
  $('activeName').textContent=s.name||state.active.name;
- $('activeClaim').textContent=s.claim||s.tagline||s.slogan||'';$('activeClaim').style.display=$('activeClaim').textContent?'block':'none';
+ const claim=s.claim||s.tagline||s.slogan||s.format||'';$('activeClaim').textContent=claim;$('activeClaim').style.display=claim?'block':'none';
  $('activeLocation').textContent=s.city||s.location||s.country||'';
  $('activeDesc').textContent=s.description||s.desc||'';$('activeDesc').style.display=$('activeDesc').textContent?'block':'none';
- setImg($('activeLogo'),imageOf(s));$('audio').src=s.stream_url||`https://stream.laut.fm/${encodeURIComponent(s.slug)}`;
- const song=songText(s.current_song);$('currentSong').textContent=song?.title||'Aktueller Song nicht verfügbar';$('currentArtist').textContent=song?.artist||s.name||'';
- $('listeners').textContent=Number.isFinite(Number(s.listeners))?Number(s.listeners):0;
  const genres=Array.isArray(s.genres)?s.genres:(s.genre?[s.genre]:[]);$('activeBadges').innerHTML=genres.slice(0,6).map(g=>`<span class="badge">${esc(typeof g==='object'?(g.name||''):g)}</span>`).join('');
+ setLogo(imgOf(s));
+ const stream=s.stream_url||`https://stream.laut.fm/${encodeURIComponent(s.slug)}`;
+ $('audio').src=stream;$('streamLink').href=stream;$('lautLink').href=s.page_url||`https://laut.fm/${encodeURIComponent(s.slug)}`;
+ const song=songParts(s.current_song);$('currentSong').textContent=song?.title||'Aktueller Song wird geladen …';$('currentArtist').textContent=song?.artist||s.name||'';
+ $('listeners').textContent=Number.isFinite(Number(s.listeners))?Number(s.listeners):0;
+}
+function renderSong(song){
+ const s=songParts(song);$('currentSong').textContent=s?.title||'Gerade kein Song verfügbar';$('currentArtist').textContent=s?.artist||state.active.name;
 }
 function renderHistory(list){
- const rows=list.slice(0,10).map(x=>{const song=songText(x)||{title:'Unbekannter Titel',artist:''};return `<div class="track"><div class="tracktime">${esc(fmtTime(x.started_at||x.start||x.created_at||x.timestamp||x.played_at))}</div><div class="trackmain"><strong>${esc(song.title)}</strong><span>${esc(song.artist)}</span></div></div>`}).join('');
+ const rows=(Array.isArray(list)?list:[]).slice(0,10).map(x=>{const s=songParts(x)||{title:'Unbekannter Titel',artist:''};const t=x.started_at&&x.started_at.humanTimeShort?x.started_at.humanTimeShort():'';return `<div class="track"><div class="tracktime">${esc(t)}</div><div class="trackmain"><strong>${esc(s.title)}</strong><span>${esc(s.artist)}</span></div></div>`}).join('');
  $('historyList').className=rows?'':'empty';$('historyList').innerHTML=rows||'Für diesen Sender ist gerade kein Verlauf verfügbar.';
 }
-async function refreshActive(){
- if(state.refreshing)return;state.refreshing=true;$('refreshBtn').disabled=true;
- try{const data=await loadStation(state.active.slug);state.active={...state.active,...data};renderActive(state.active);renderHistory(normalizeList(state.active.last_songs));$('updated').textContent='Zuletzt aktualisiert: '+new Date().toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit',second:'2-digit'})}
- catch(e){$('updated').textContent='Nächster automatischer Aktualisierungsversuch läuft.'}
- finally{state.refreshing=false;$('refreshBtn').disabled=false}
+function stopWatch(){
+ if(state.watch&&typeof state.watch.unwatch==='function')state.watch.unwatch();
+ state.watch=null;if(state.listenerTimer){clearInterval(state.listenerTimer);state.listenerTimer=null}
 }
-async function activateStation(station){
- const slug=slugOf(station);if(!slug)return;
- $('activeName').textContent=station.name||slug;$('currentSong').textContent='Lade Sender …';
- try{const data=await loadStation(slug);state.active={...station,...data,slug}}catch(e){state.active={...station,slug}}
- renderActive(state.active);renderHistory(normalizeList(state.active.last_songs));$('audio').play().catch(()=>{});refreshActive();
+function bindLive(slug){
+ stopWatch();
+ if(!window.laut||!laut.fm||!laut.fm.station){$('updated').textContent='laut.fm-Livedaten konnten nicht geladen werden.';return}
+ const station=laut.fm.station(slug);state.watch=station;
+ station.info(data=>{if(state.active.slug!==slug)return;state.active={...state.active,...data};renderStation(state.active);},true);
+ station.current_song(song=>{if(state.active.slug!==slug)return;state.active.current_song=song;renderSong(song);touchUpdated();},true);
+ station.last_songs(songs=>{if(state.active.slug!==slug)return;renderHistory(songs);touchUpdated();},true);
+ const updateListeners=()=>station.listeners(n=>{if(state.active.slug!==slug)return;const value=Number(n);$('listeners').textContent=Number.isFinite(value)?value:0;touchUpdated();});
+ updateListeners();state.listenerTimer=setInterval(updateListeners,15000);
+}
+function touchUpdated(){$('updated').textContent='Live-Daten: '+new Date().toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit',second:'2-digit'})}
+function activateStation(s){
+ const slug=slugOf(s);if(!slug)return;
+ state.active={...s,slug};renderStation(state.active);renderHistory([]);$('currentSong').textContent='Sender wird geladen …';$('listeners').textContent='0';
+ bindLive(slug);
+ $('audio').play().catch(()=>{});
 }
 function renderResults(items){
  if(!items.length){$('results').className='empty';$('results').textContent='Keine Sender gefunden.';$('resultCount').textContent='';return}
  $('results').className='';$('resultCount').textContent=items.length+' Treffer';
- $('results').innerHTML=items.map(s=>{const song=songText(s.current_song),payload=encodeURIComponent(JSON.stringify(s));return `<div class="result"><img class="rlogo" src="${esc(imageOf(s))}" alt=""><div class="rmain"><strong>${esc(s.name||s.slug)}</strong><small>${esc(s.city||s.country||s.format||'laut.fm')}${song?' · '+esc(song.artist?song.artist+' – '+song.title:song.title):''}</small></div><button class="rplay" data-station="${payload}">▶</button></div>`}).join('');
- $('results').querySelectorAll('.rplay').forEach(b=>b.addEventListener('click',()=>activateStation(JSON.parse(decodeURIComponent(b.dataset.station)))));
+ $('results').innerHTML=items.map((s,i)=>{const slug=slugOf(s),song=s.current_song,sp=songParts(song);return `<div class="result"><img class="rlogo" src="${esc(imgOf(s))}" alt="" onerror="this.style.opacity='.25'"><div class="rmain"><strong>${esc(s.name||slug)}</strong><small>${esc(s.city||s.country||s.format||'laut.fm')}${sp?' · '+esc(sp.artist?(sp.artist+' – '+sp.title):sp.title):''}</small></div><button class="rplay" data-i="${i}">▶</button></div>`}).join('');
+ const buttons=$('results').querySelectorAll('.rplay');buttons.forEach((b,i)=>b.addEventListener('click',()=>activateStation(items[i])));
 }
-async function searchStations(q){
- q=q.trim();const token=++state.searchToken;if(!q){$('results').className='empty';$('results').textContent='Suche nach einem laut.fm-Sender. Die Suche ändert den aktuell laufenden Sender nicht.';$('resultCount').textContent='';return}
+function searchStations(q){
+ q=q.trim();const token=++state.searchToken;
+ if(!q){$('results').className='empty';$('results').textContent='Suche nach einem Sender. Die Suche verändert den aktiven Sender nicht.';$('resultCount').textContent='';return}
  $('results').className='empty';$('results').textContent='Suche …';$('resultCount').textContent='';
- try{const data=await getJSON(`${API}/search/stations?query=${encodeURIComponent(q)}&limit=30`);if(token!==state.searchToken)return;const all=(Array.isArray(data?.results)?data.results:[]).flatMap(g=>Array.isArray(g.items)?g.items:[]),seen=new Set(),items=[];for(const item of all){const s=item.station||item,slug=slugOf(s);if(slug&&!seen.has(slug)){seen.add(slug);items.push({...s,slug})}}renderResults(items)}
- catch(e){$('results').className='empty';$('results').textContent='Suche momentan nicht erreichbar.'}
+ if(window.laut&&laut.fm&&laut.fm.search&&laut.fm.search.stations){
+   laut.fm.search.stations(q,data=>{
+     if(token!==state.searchToken)return;
+     const groups=Array.isArray(data?.results)?data.results:[],all=groups.flatMap(g=>Array.isArray(g.items)?g.items:[]),seen=new Set(),items=[];
+     all.forEach(item=>{const s=item.station||item,slug=slugOf(s);if(slug&&!seen.has(slug)){seen.add(slug);items.push({...s,current_song:item.current_song||s.current_song,slug})}});
+     renderResults(items);
+   },{limit:30});
+ }else{$('results').className='empty';$('results').textContent='Die laut.fm-Suche konnte nicht geladen werden.'}
 }
 $('searchForm').addEventListener('submit',e=>{e.preventDefault();searchStations($('searchInput').value)});
-$('refreshBtn').addEventListener('click',refreshActive);
+$('refreshBtn').addEventListener('click',()=>{const slug=state.active.slug;activateStation({...state.active,slug})});
 $('playBtn').addEventListener('click',()=>{const a=$('audio');a.paused?a.play().catch(()=>{}):a.pause()});
 $('audio').addEventListener('play',()=>{$('playBtn').textContent='❚❚'});$('audio').addEventListener('pause',()=>{$('playBtn').textContent='▶'});
-renderActive(fallback);refreshActive();setInterval(refreshActive,15000);
+
+renderStation(fallback);
+bindLive(fallback.slug);
 </script>
-</body></html>
+</body>
+</html>
