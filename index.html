@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>RadioHub · laut.fm · V20</title>
+<title>RadioHub · laut.fm · V21</title>
 <style>
 :root{
   --bg:#080b12;--panel:#111722;--panel2:#0c121b;--line:#293446;
@@ -554,16 +554,26 @@ function trafficDescription(w){
     w.warningText || w.shortDescription || w.subtitle || w.title || 'Verkehrsmeldung');
 }
 function trafficType(w,service){
+  // Die API liefert die Kategorien bereits getrennt. Deshalb dürfen
+  // Baustellen/Sperrungen nicht nur anhand eines Suchworts erkannt werden.
   if(service==='closure') return ['block','⛔ Sperrung'];
   if(service==='roadworks') return ['roadwork','🚧 Baustelle'];
+
+  const display=String(w.display_type||w.displayType||'').toUpperCase();
+  if(display==='CLOSURE' || display==='CLOSURE_ENTRY_EXIT') return ['block','⛔ Sperrung'];
+  if(display==='ROADWORKS' || display==='SHORT_TERM_ROADWORKS') return ['roadwork','🚧 Baustelle'];
+
   const s=JSON.stringify(w).toLowerCase();
-  if(s.includes('vollsperr') || s.includes('sperrung') || s.includes('gesperrt') || s.includes('fahrbahn gesperrt')){
-    return ['block','⛔ Sperrung'];
-  }
   if(s.includes('stau') || s.includes('stauerscheinung') || s.includes('stockender verkehr')){
     return ['jam','🚗 Stau'];
   }
-  if(s.includes('unfall') || s.includes('behinderung') || s.includes('fahrzeug') || s.includes('panne')){
+  if(s.includes('vollsperr') || s.includes('sperrung') || s.includes('gesperrt') || s.includes('fahrbahn gesperrt')){
+    return ['block','⛔ Sperrung'];
+  }
+  // Alles, was über den warning-Endpunkt kommt und kein Stau ist, ist
+  // grundsätzlich eine Warnung – z.B. Gegenstand, Gefahr oder Unfall.
+  if(service==='warning') return ['warn','⚠ Warnung'];
+  if(s.includes('unfall') || s.includes('behinderung') || s.includes('fahrzeug') || s.includes('panne') || s.includes('gefahr')){
     return ['warn','⚠ Warnung'];
   }
   if(s.includes('baustell') || s.includes('arbeiten') || s.includes('fahrbahnerneuer')){
@@ -582,8 +592,11 @@ function trafficMatchesFilter(w){
 function renderTraffic(){
   const rows=$('trafficRows');
   const visible=trafficData.filter(trafficMatchesFilter);
-  const actualCount=trafficData.filter(w=>w.__service!=='status').length;
-  $('trafficCount').textContent=`${actualCount} Meldung${actualCount===1?'':'en'} · ${TRAFFIC_ROADS.length} Autobahnen`; 
+  const actual=trafficData.filter(w=>w.__service!=='status');
+  const counts={jam:0,warn:0,block:0,roadwork:0};
+  actual.forEach(w=>{ const k=trafficType(w,w.__service)[0]; if(k in counts) counts[k]++; });
+  const actualCount=actual.length;
+  $('trafficCount').textContent=`${actualCount} Meldungen · ${TRAFFIC_ROADS.length} Autobahnen · 🚗 ${counts.jam} · ⚠ ${counts.warn} · ⛔ ${counts.block} · 🚧 ${counts.roadwork}`; 
   if(!visible.length){
     rows.innerHTML='<tr><td colspan="4" class="traffic-empty">Für diesen Filter liegt aktuell keine Meldung vor.</td></tr>';
     return;
@@ -633,9 +646,8 @@ async function loadTraffic(){
 
     const seen=new Set();
     const actual=entries.filter(w=>{
-      const key=String(w.identifier||w.id||(
-        w.__service+'|'+w.__road+'|'+trafficDirection(w)+'|'+trafficLocation(w)+'|'+trafficDescription(w)
-      ));
+      const id=String(w.identifier||w.id||'');
+      const key=(w.__service||'')+'|'+(id || (w.__road+'|'+trafficDirection(w)+'|'+trafficLocation(w)+'|'+trafficDescription(w)));
       if(seen.has(key)) return false;
       seen.add(key);
       return true;
@@ -650,7 +662,7 @@ async function loadTraffic(){
     trafficData=actual.sort((a,b)=>{
       const rank={block:0,jam:1,warn:2,roadwork:3,info:4};
       return (rank[trafficType(a,a.__service)[0]]??9)-(rank[trafficType(b,b.__service)[0]]??9);
-    }).slice(0,120).concat(statusRows);
+    }).slice(0,500).concat(statusRows);
 
     renderTraffic();
     $('trafficUpdated').textContent='Verkehrsdaten aktualisiert: '+new Date().toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
