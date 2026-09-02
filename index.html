@@ -54,9 +54,15 @@ h1{font-size:30px;line-height:1.05;margin:0 0 5px}
 }
 .player-main{display:flex;align-items:center;gap:14px}
 .play{
-  flex:0 0 54px;width:54px;height:54px;border-radius:50%;padding:0;
-  font-size:20px;display:grid;place-items:center
+  flex:0 0 58px;width:58px;height:58px;min-width:58px;border-radius:50%;padding:0;
+  font-size:21px;display:grid;place-items:center;
+  background:var(--good);color:#07120b;border:0;
+  box-shadow:0 0 0 3px rgba(55,214,122,.12),0 8px 24px rgba(0,0,0,.28);
+  position:relative;z-index:2
 }
+.play:hover{filter:brightness(1.08);transform:scale(1.03)}
+.play:active{transform:scale(.98)}
+.play:focus-visible{outline:3px solid rgba(255,255,255,.9);outline-offset:3px}
 .player-info{min-width:0;flex:1}
 .player-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em}
 .player-title{font-size:18px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -149,6 +155,14 @@ footer{text-align:center;color:var(--muted);font-size:12px;margin-top:25px}
 /* Live traffic */
 .traffic-card{margin-top:14px}
 .traffic-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px}
+.traffic-head-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+.read-btn{appearance:none;border:1px solid rgba(80,200,120,.30);background:rgba(80,200,120,.10);color:#9af2b7;border-radius:10px;padding:8px 11px;font:700 12px/1.1 inherit;cursor:pointer;white-space:nowrap}
+.read-btn:hover{background:rgba(80,200,120,.16);border-color:rgba(80,200,120,.45)}
+.read-btn.active{background:rgba(255,90,90,.12);border-color:rgba(255,100,100,.35);color:#ffb0b0}
+@media(max-width:560px){
+  .traffic-head{align-items:flex-start;flex-direction:column}
+  .traffic-head-actions{width:100%;justify-content:flex-start}
+}
 .traffic-head h2{margin:0;font-size:18px}
 .traffic-live{font-size:11px;color:#8de6ad;background:rgba(54,201,112,.10);border:1px solid rgba(54,201,112,.22);padding:6px 9px;border-radius:999px;white-space:nowrap}
 .traffic-map{overflow:hidden;border:1px solid var(--line);border-radius:16px;background:#0d131d}
@@ -171,15 +185,11 @@ footer{text-align:center;color:var(--muted);font-size:12px;margin-top:25px}
 .traffic-type.info{color:#b9d7ff;background:rgba(80,140,255,.10)}
 .traffic-ok{display:inline-block;padding:4px 8px;border-radius:999px;background:rgba(80,200,120,.12);color:#8df0ad;border:1px solid rgba(80,200,120,.22)}
 .traffic-empty{padding:16px;color:var(--muted);font-size:13px}
+.traffic-type.jam{background:rgba(245,158,11,.12);color:#f59e0b}
 .traffic-source{display:flex;justify-content:space-between;gap:12px;align-items:center;margin-top:10px;color:var(--muted);font-size:12px}
 @media(max-width:560px){
   .traffic-source{align-items:flex-start;flex-direction:column}
 }
-.traffic-head-actions{display:flex;align-items:center;gap:12px}
-.read-btn{border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.06);color:#fff;border-radius:999px;padding:7px 12px;font:inherit;font-size:12px;cursor:pointer;transition:.2s}
-.read-btn:hover{background:rgba(255,255,255,.11)}
-.read-btn.active{background:rgba(80,200,120,.16);border-color:rgba(80,200,120,.35);color:#9af5b5}
-@media(max-width:700px){.traffic-head-actions{gap:7px}.read-btn{padding:6px 9px;font-size:11px}}
 </style>
 </head>
 <body>
@@ -196,7 +206,7 @@ footer{text-align:center;color:var(--muted);font-size:12px;margin-top:25px}
 <main>
   <section class="card">
     <div class="hero">
-      <img id="activeLogo" class="logo" alt="Senderlogo">
+      <img id="activeLogo" class="logo" alt="Senderlogo" referrerpolicy="no-referrer" decoding="async" loading="eager">
       <div style="min-width:0;flex:1">
         <div class="live">● LIVE</div>
         <h1 id="activeName">Niklas-FM</h1>
@@ -261,7 +271,7 @@ footer{text-align:center;color:var(--muted);font-size:12px;margin-top:25px}
         <h2>🚗 Verkehr aktuell</h2>
         <div class="traffic-head-actions">
           <button class="read-btn" id="trafficReadBtn" type="button" aria-pressed="false">🔊 Vorlesen</button>
-          <span class="traffic-live">● LIVE-DATEN</span>
+          <span class="traffic-live">● LIVE-DATEN · STAU · SPERRUNGEN</span>
         </div>
       </div>
       <div class="traffic-table-wrap">
@@ -339,15 +349,61 @@ function normalizeImageUrl(u){
   if(u.startsWith('http://'))return 'https://'+u.slice(7);
   return u;
 }
+function collectImageUrls(obj,out=[],depth=0){
+  if(!obj||typeof obj!=='object'||depth>4)return out;
+  for(const [key,value] of Object.entries(obj)){
+    if(typeof value==='string'){
+      const isImageKey=/^(image|logo|icon|avatar|art|picture|cover)/i.test(key);
+      const isUrl=/^(https?:)?\/\//i.test(value);
+      if(isImageKey&&isUrl)out.push(value);
+    }else if(value&&typeof value==='object'){
+      collectImageUrls(value,out,depth+1);
+    }
+  }
+  return out;
+}
+function collectLautAssetUrls(obj,out=[],depth=0){
+  if(!obj||typeof obj!=='object'||depth>5)return out;
+  for(const value of Object.values(obj)){
+    if(typeof value==='string' && /https?:\/\/assets\.laut\.fm\//i.test(value)){
+      out.push(value);
+    }else if(value&&typeof value==='object'){
+      collectLautAssetUrls(value,out,depth+1);
+    }
+  }
+  return out;
+}
+function expandLautAssetUrl(u){
+  u=normalizeImageUrl(u);
+  if(!u)return [];
+  if(!/assets\.laut\.fm\//i.test(u))return [u];
+  const base=u.replace(/\?[^#]*$/,'');
+  return [
+    u,
+    `${base}?t=640x640`,
+    `${base}?t=120x120`,
+    `${base}?t=90x90`,
+    base
+  ];
+}
 function imageCandidates(s){
-  const slug=slugOf(s);
-  const values=[
-    slug?`https://assets.laut.fm/user/${encodeURIComponent(slug)}/user_640x640.jpg`:'',
-    slug?`https://assets.laut.fm/user/${encodeURIComponent(slug)}/user.jpg`:'',
+  const apiImages=collectImageUrls(s);
+  const lautAssets=collectLautAssetUrls(s);
+  const direct=[
     s.image,s.logo,s.logo_url,s.image_url,s.station_image,s.station_logo,
     s.icon,s.icon_url,s.avatar,s.avatar_url
-  ].map(normalizeImageUrl);
-  return [...new Set(values.filter(Boolean))];
+  ].filter(Boolean);
+  const exact=[...apiImages,...direct,...lautAssets].flatMap(expandLautAssetUrl).map(normalizeImageUrl);
+
+  // Fallback für ältere laut.fm-Stationen, falls die API kein Bildfeld liefert.
+  const slug=slugOf(s);
+  const legacy=slug?[
+    `https://assets.laut.fm/user/${encodeURIComponent(slug)}/user_640x640.jpg`,
+    `https://assets.laut.fm/user/${encodeURIComponent(slug)}/user.jpg`,
+    `https://assets.laut.fm/user/${encodeURIComponent(slug)}/user_640x640.png`
+  ]:[];
+
+  return [...new Set([...exact,...legacy].filter(Boolean))];
 }
 function imageOf(s){return imageCandidates(s)[0]||''}
 function songText(x){
@@ -403,6 +459,9 @@ const placeholder='data:image/svg+xml;charset=UTF-8,'+encodeURIComponent(
 function setImg(img,station){
   const candidates=imageCandidates(station);
   let i=0;
+  img.referrerPolicy='no-referrer';
+  img.decoding='async';
+  img.loading='eager';
   img.onerror=()=>{
     i++;
     if(i<candidates.length){img.src=candidates[i]}
@@ -450,10 +509,21 @@ function trafficDescription(w){
     w.warningText || w.shortDescription || w.subtitle || w.title || 'Verkehrsmeldung');
 }
 function trafficType(w){
-  const s=(trafficDescription(w)+' '+trafficText(w.type)+' '+trafficText(w.warningType)).toLowerCase();
-  if(s.includes('sperr') || s.includes('vollsperr') || s.includes('gesperrt')) return ['block','⛔ Sperrung'];
-  if(s.includes('stau') || s.includes('unfall') || s.includes('behinderung') || s.includes('fahrzeug')) return ['warn','⚠ Störung'];
-  if(s.includes('baustell') || s.includes('arbeiten') || s.includes('fahrbahnerneuer')) return ['info','🚧 Baustelle'];
+  // Nicht nur die Kurzbeschreibung prüfen: je nach API-Meldung können
+  // wichtige Begriffe auch in anderen Feldern stehen.
+  const s=JSON.stringify(w).toLowerCase();
+  if(s.includes('vollsperr') || s.includes('sperrung') || s.includes('gesperrt') || s.includes('fahrbahn gesperrt')){
+    return ['block','⛔ Sperrung'];
+  }
+  if(s.includes('stau') || s.includes('stauerscheinung') || s.includes('stockender verkehr')){
+    return ['jam','🚗 Stau'];
+  }
+  if(s.includes('unfall') || s.includes('behinderung') || s.includes('fahrzeug') || s.includes('panne')){
+    return ['warn','⚠ Störung'];
+  }
+  if(s.includes('baustell') || s.includes('arbeiten') || s.includes('fahrbahnerneuer')){
+    return ['info','🚧 Baustelle'];
+  }
   return ['info','ℹ Verkehr'];
 }
 async function loadTraffic(){
@@ -475,6 +545,7 @@ async function loadTraffic(){
       }
     }
 
+    // Doppelte Meldungen vermeiden.
     const seen=new Set();
     const unique=entries.filter(w=>{
       const key=String(w.identifier||w.id||(
@@ -483,8 +554,13 @@ async function loadTraffic(){
       if(seen.has(key)) return false;
       seen.add(key);
       return true;
+    }).sort((a,b)=>{
+      const rank={block:0,jam:1,warn:2,info:3};
+      return (rank[trafficType(a)[0]]??9)-(rank[trafficType(b)[0]]??9);
     }).slice(0,30);
 
+    // Auch Autobahnen ohne aktuelle Warnung anzeigen, damit die komplette
+    // ausgewählte Ruhrgebiet-Liste sichtbar bleibt (z. B. A448).
     const roadsWithWarnings=new Set(unique.map(w=>w.__road));
     const noWarningRows=TRAFFIC_ROADS
       .filter(road=>!roadsWithWarnings.has(road))
@@ -506,8 +582,8 @@ async function loadTraffic(){
     }).join('') + noWarningRows.join('');
     $('trafficUpdated').textContent='Verkehrsdaten aktualisiert: '+new Date().toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
   }catch(e){
-    rows.innerHTML='<tr><td colspan="4" class="traffic-empty">Verkehrsdaten konnten aufgrund von Netzwerksicherheitsregeln (CORS) nicht direkt geladen werden.</td></tr>';
-    $('trafficUpdated').textContent='Verkehrsdaten offline.';
+    rows.innerHTML='<tr><td colspan="4" class="traffic-empty">Die aktuellen Verkehrsdaten konnten gerade nicht geladen werden. Es werden keine Beispielmeldungen angezeigt.</td></tr>';
+    $('trafficUpdated').textContent='Verkehrsdaten momentan nicht erreichbar – neuer Versuch folgt automatisch.';
   }
 }
 
@@ -554,6 +630,8 @@ function renderActive(s){
 }
 
 function renderHistory(list,currentSong){
+  // Der aktuelle Titel darf nicht direkt noch einmal als "zuletzt gelaufen" erscheinen.
+  // Wenn derselbe Titel früher erneut gespielt wurde, darf er weiter im Verlauf stehen.
   const previous=[];
   let removedCurrent=false;
   for(const x of list){
@@ -589,6 +667,7 @@ async function refreshActive(){
     renderHistory(normalizeList(state.active.last_songs),state.active.current_song);
     $('updated').textContent='Live-Daten: '+new Date().toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
   }catch(e){
+    // Hörer bleiben absichtlich bei 0, wenn die Abfrage gerade nichts liefert.
     $('updated').textContent='Live-Daten werden automatisch erneut abgefragt.';
   }finally{
     state.refreshing=false;
@@ -600,6 +679,7 @@ async function activateStation(station){
   const slug=slugOf(station);
   if(!slug)return;
 
+  // Suchergebnisse werden erst hier – und nur hier – zum aktiven Sender.
   state.active={...station,slug};
   renderActive(state.active);
 
@@ -607,6 +687,8 @@ async function activateStation(station){
   audio.pause();
   audio.currentTime=0;
 
+  // Sofort nach dem Benutzerklick starten, damit Browser die Benutzeraktion
+  // nicht durch die nachfolgende API-Abfrage verlieren.
   let playStarted=false;
   try{
     await audio.play();
@@ -646,7 +728,7 @@ function renderResults(items){
     const candidates=imageCandidates(s);
     const logoFallback=esc(candidates.slice(1).join('|'));
     return `<div class="result">
-      <img class="rlogo" src="${esc(logo)}" data-logo-candidates="${logoFallback}" alt="">
+      <img class="rlogo" src="${esc(logo)}" data-logo-candidates="${logoFallback}" referrerpolicy="no-referrer" loading="eager" decoding="async" alt="">
       <div class="rmain">
         <strong>${esc(s.name||s.slug)}</strong>
         <small>${esc(s.city||s.country||s.format||'laut.fm')}${song?' · '+esc(song.artist?song.artist+' – '+song.title:song.title):''}</small>
@@ -656,6 +738,7 @@ function renderResults(items){
   }).join('');
 
   $('results').querySelectorAll('.rlogo').forEach(img=>{
+    img.referrerPolicy='no-referrer';
     img.addEventListener('error',()=>{
       const list=(img.dataset.logoCandidates||'').split('|').filter(Boolean);
       const next=list.shift();
@@ -732,11 +815,13 @@ renderActive(fallback);
 refreshActive();
 loadTraffic();
 
+// Automatische Hintergrund-Aktualisierung.
 setInterval(refreshActive,15000);
 setInterval(loadTraffic,60000);
 
+// Verkehrsmeldungen vorlesen: nutzt immer die aktuell sichtbare Tabelle.
 (function(){
-  const btn=document.getElementById('trafficReadBtn');
+  const btn=$('trafficReadBtn');
   if(!btn) return;
   if(!('speechSynthesis' in window) || !('SpeechSynthesisUtterance' in window)){
     btn.addEventListener('click',()=>alert('Vorlesen wird von diesem Browser leider nicht unterstützt.'));
@@ -763,12 +848,24 @@ setInterval(loadTraffic,60000);
     btn.textContent='🔊 Vorlesen';
   }
   btn.addEventListener('click',()=>{
-    if(window.speechSynthesis.speaking || window.speechSynthesis.pending){ stopReading(); return; }
+    if(window.speechSynthesis.speaking || window.speechSynthesis.pending){
+      stopReading();
+      return;
+    }
     const u=new SpeechSynthesisUtterance(getTrafficText());
-    u.lang='de-DE'; u.rate=.95; u.pitch=1; u.volume=1;
-    u.onstart=()=>{btn.classList.add('active');btn.setAttribute('aria-pressed','true');btn.textContent='⏹ Stoppen';};
-    u.onend=stopReading; u.onerror=stopReading;
-    window.speechSynthesis.cancel(); window.speechSynthesis.speak(u);
+    u.lang='de-DE';
+    u.rate=.95;
+    u.pitch=1;
+    u.volume=1;
+    u.onstart=()=>{
+      btn.classList.add('active');
+      btn.setAttribute('aria-pressed','true');
+      btn.textContent='⏹ Stoppen';
+    };
+    u.onend=stopReading;
+    u.onerror=stopReading;
+    window.speechSynthesis.cancel();
+    window.speechSynthesis.speak(u);
   });
 })();
 </script>
