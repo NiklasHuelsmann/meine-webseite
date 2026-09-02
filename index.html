@@ -30,7 +30,7 @@ button{
 button.secondary{background:#202938;border:1px solid var(--line)}
 button:disabled{opacity:.55;cursor:wait}
 
-.grid{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(300px,.8fr);gap:18px}
+.grid{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(380px,.9fr);gap:18px;align-items:start}
 .card{
   background:linear-gradient(180deg,rgba(23,30,43,.97),rgba(14,19,28,.97));
   border:1px solid var(--line);border-radius:22px;padding:20px
@@ -88,8 +88,8 @@ h1{font-size:30px;line-height:1.05;margin:0 0 5px}
   width:52px;height:52px;border-radius:14px;display:grid;place-items:center;
   background:#202938;font-size:22px;flex:0 0 52px
 }
-.now-main{min-width:0}.now-main strong{display:block;font-size:18px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.now-main span{display:block;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.now-main{min-width:0}.now-main strong{display:block;font-size:19px;font-weight:850;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.now-main span{display:block;color:var(--muted);font-size:15px;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .now-time{margin-left:auto;color:var(--muted);font-size:12px;white-space:nowrap}
 
 /* Next / Gleich */
@@ -124,6 +124,9 @@ h1{font-size:30px;line-height:1.05;margin:0 0 5px}
 .search-help{font-size:11px;color:var(--muted);margin-top:9px}
 
 footer{text-align:center;color:var(--muted);font-size:12px;margin-top:25px}
+@media(min-width:851px){
+  aside .traffic-card{position:sticky;top:18px}
+}
 @media(max-width:850px){
   .wrap{padding:20px 14px 40px}
   header{align-items:stretch;flex-direction:column}
@@ -222,6 +225,18 @@ footer{text-align:center;color:var(--muted);font-size:12px;margin-top:25px}
       Dein täglicher Begleiter, direkt aus dem Herzen des Ruhrgebiets.
     </p>
 
+    <section class="now-card">
+      <div class="section-title"><span>Jetzt läuft</span><span class="live">● LIVE</span></div>
+      <div class="now-track">
+        <div class="now-icon">♫</div>
+        <div class="now-main">
+          <strong id="currentArtist">Niklas-FM</strong>
+          <span id="currentSong">Lade aktuellen Song …</span>
+        </div>
+        <div class="now-time" id="currentTime"></div>
+      </div>
+    </section>
+
     <div class="player">
       <div class="player-main">
         <button class="play" id="playBtn" aria-label="Sender starten">▶</button>
@@ -239,18 +254,6 @@ footer{text-align:center;color:var(--muted);font-size:12px;margin-top:25px}
       <audio id="audio" preload="none"></audio>
     </div>
 
-    <section class="now-card">
-      <div class="section-title"><span>Jetzt läuft</span><span class="live">● LIVE</span></div>
-      <div class="now-track">
-        <div class="now-icon">♫</div>
-        <div class="now-main">
-          <strong id="currentSong">Lade aktuellen Song …</strong>
-          <span id="currentArtist">Niklas-FM</span>
-        </div>
-        <div class="now-time" id="currentTime"></div>
-      </div>
-    </section>
-
     <section class="now-card next-card">
       <div class="section-title"><span>Gleich</span></div>
       <div class="next-box">
@@ -266,6 +269,17 @@ footer{text-align:center;color:var(--muted);font-size:12px;margin-top:25px}
     <div class="updated" id="updated">Noch nicht aktualisiert</div>
   </section>
 
+    <section class="card history">
+    <div class="section-title">
+      <span>Zuletzt gelaufen</span>
+      <button class="secondary" id="refreshBtn" type="button">↻ Aktualisieren</button>
+    </div>
+    <div id="historyList" class="empty">Lade Verlauf …</div>
+    <div class="search-help">„Nachrichten &amp; Wetter“ und andere laut.fm-Infos bleiben ganz normal sichtbar, wenn sie gerade laufen. Nur der aktuell laufende Eintrag wird nicht direkt noch einmal in „Zuletzt gelaufen“ wiederholt.</div>
+  </section>
+</main>
+
+<aside>
   <section class="card traffic-card">
       <div class="traffic-head">
         <h2>🚗 Verkehr aktuell</h2>
@@ -295,18 +309,8 @@ footer{text-align:center;color:var(--muted);font-size:12px;margin-top:25px}
       </div>
     </section>
 
-    <section class="card history">
-    <div class="section-title">
-      <span>Zuletzt gelaufen</span>
-      <button class="secondary" id="refreshBtn" type="button">↻ Aktualisieren</button>
-    </div>
-    <div id="historyList" class="empty">Lade Verlauf …</div>
-    <div class="search-help">„Nachrichten &amp; Wetter“ und andere laut.fm-Infos bleiben ganz normal sichtbar, wenn sie gerade laufen. Nur der aktuell laufende Eintrag wird nicht direkt noch einmal in „Zuletzt gelaufen“ wiederholt.</div>
-  </section>
-</main>
 
-<aside>
-  <section class="card">
+<section class="card">
     <div class="section-title"><span>Suchergebnisse</span><span id="resultCount" class="muted"></span></div>
     <div id="results" class="empty">
       Suche nach einem laut.fm-Sender. Der aktuell aktive Sender bleibt dabei unverändert.
