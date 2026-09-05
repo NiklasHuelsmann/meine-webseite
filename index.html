@@ -354,7 +354,6 @@ footer{text-align:center;color:var(--muted);font-size:12px;margin-top:25px}
       <div class="traffic-filters" id="trafficFilters" aria-label="Verkehrsfilter">
         <button class="traffic-filter active" type="button" data-traffic-filter="all">Alle Meldungen</button>
         <button class="traffic-filter" type="button" data-traffic-filter="jam">🚗 Stau</button>
-        <button class="traffic-filter" type="button" data-traffic-filter="accident">⚠ Unfall</button>
         <button class="traffic-filter" type="button" data-traffic-filter="warn">⚠ Warnungen</button>
         <button class="traffic-filter" type="button" data-traffic-filter="block">⛔ Sperrungen</button>
         <button class="traffic-filter" type="button" data-traffic-filter="roadwork">🚧 Baustellen</button>
@@ -476,88 +475,47 @@ function songImageCandidates(song){
 }
 function setImg(img,station){
   const candidates=stationImageCandidates(station);
-  let i=0;
   img.referrerPolicy='no-referrer';
   img.decoding='async';
   img.loading='eager';
-  img.onerror=()=>{
-    i++;
-    if(i<candidates.length)img.src=candidates[i];
-    else{img.onerror=null;img.src=placeholder;}
-  };
-  img.src=candidates[0]||placeholder;
-}
 
-function songText(x){
-  if(!x)return null;
-  const title=x.title||x.song||x.name||'';
-  let artist=x.artist;
-  if(artist&&typeof artist==='object')artist=artist.name||artist.title||'';
-  return title?{title:String(title),artist:String(artist||'')}:null;
-}
-function fmtTime(v){
-  if(!v)return '';
-  const d=new Date(v);
-  return Number.isNaN(d.getTime())?'':d.toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'});
-}
-function fmtDate(v){
-  if(!v)return '';
-  const d=new Date(v);
-  return Number.isNaN(d.getTime())?'':d.toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit',year:'numeric'});
-}
-function normalizeList(x){
-  if(Array.isArray(x))return x;
-  if(Array.isArray(x?.songs))return x.songs;
-  if(Array.isArray(x?.last_songs))return x.last_songs;
-  if(Array.isArray(x?.items))return x.items;
-  return [];
-}
-async function getJSON(url){
-  const r=await fetch(url,{cache:'no-store'});
-  if(!r.ok)throw Error(r.status);
-  return r.json();
-}
-async function loadStation(slug){
-  const out={slug};
-  const [station,current,last,listeners]=await Promise.allSettled([
-    getJSON(`${API}/station/${encodeURIComponent(slug)}`),
-    getJSON(`${API}/station/${encodeURIComponent(slug)}/current_song`),
-    getJSON(`${API}/station/${encodeURIComponent(slug)}/last_songs`),
-    getJSON(`${API}/station/${encodeURIComponent(slug)}/listeners`)
-  ]);
-  if(station.status==='fulfilled'&&station.value)Object.assign(out,station.value);
-  if(current.status==='fulfilled')out.current_song=current.value?.current_song||current.value;
-  if(last.status==='fulfilled')out.last_songs=normalizeList(last.value);
-  if(listeners.status==='fulfilled'){
-    const v=listeners.value;
-    const n=typeof v==='number'?v:Number(v?.listeners??v?.count??v?.value);
-    // Der direkte Stations-Endpunkt /listeners ist die primäre Quelle.
-    // Einen bereits gültigen Wert behalten wir, falls eine einzelne Abfrage
-    // einmal leer/fehlerhaft zurückkommt.
-    if(Number.isFinite(n)&&n>=0)out.listeners=Math.round(n);
-  }
-  if(!Number.isFinite(Number(out.listeners)) && station.status==='fulfilled'){
-    const n=Number(station.value?.listeners);
-    if(Number.isFinite(n)&&n>=0)out.listeners=Math.round(n);
-  }
-  return out;
-}
+  // Nicht bei jedem Live-Refresh das gleiche Bild erneut setzen:
+  // genau das hat das sichtbare Senderlogo-Flackern verursacht.
+  const current=normalizeImageUrl(img.currentSrc||img.src||'');
+  const wanted=normalizeImageUrl(candidates[0]||placeholder);
+  if(img.dataset.loadedLogo===wanted || current===wanted)return;
 
-const placeholder='data:image/svg+xml;charset=UTF-8,'+encodeURIComponent(
-  '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120"><rect width="120" height="120" rx="20" fill="#202938"/><text x="60" y="68" text-anchor="middle" font-size="42">📻</text></svg>'
-);
-function setImg(img,station){
-  const candidates=stationImageCandidates(station);
   let i=0;
-  img.referrerPolicy='no-referrer';
-  img.decoding='async';
-  img.loading='eager';
-  img.onerror=()=>{
-    i++;
-    if(i<candidates.length){img.src=candidates[i]}
-    else{img.onerror=null;img.src=placeholder}
+  const tryNext=()=>{
+    const url=candidates[i]||placeholder;
+    if(url===placeholder){
+      img.onerror=null;
+      img.src=placeholder;
+      img.dataset.loadedLogo=placeholder;
+      return;
+    }
+
+    // Erst laden, dann austauschen – so bleibt das bisherige Logo sichtbar.
+    const probe=new Image();
+    probe.decoding='async';
+    probe.referrerPolicy='no-referrer';
+    probe.onload=()=>{
+      img.onerror=null;
+      img.src=url;
+      img.dataset.loadedLogo=url;
+    };
+    probe.onerror=()=>{
+      i++;
+      if(i<candidates.length)tryNext();
+      else{
+        img.onerror=null;
+        img.src=placeholder;
+        img.dataset.loadedLogo=placeholder;
+      }
+    };
+    probe.src=url;
   };
-  img.src=candidates[0]||placeholder;
+  tryNext();
 }
 function esc(v){
   return String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));
@@ -685,12 +643,6 @@ function trafficType(w,service){
 
   const text=trafficClassificationText(w);
 
-  // Ein Unfall darf NUR angezeigt werden, wenn die eigentliche
-  // Verkehrsmeldung ihn ausdrücklich nennt.
-  if(/\b(unfall|verkehrsunfall|auffahrunfall|zusammenstoß|kollision)\b/.test(text)){
-    return ['accident','⚠ Unfall'];
-  }
-
   // Gleiches Prinzip beim Stau: nur bei einer expliziten Stauangabe.
   if(/\b(stau|stauende|stauerscheinung|stockender verkehr|stau im verkehr)\b/.test(text)){
     return ['jam','🚗 Stau'];
@@ -707,7 +659,6 @@ function trafficMatchesFilter(w){
 }
 function trafficStatusText(w){
   const d=trafficClassificationText(w);
-  if(/\b(unfall|verkehrsunfall|auffahrunfall|zusammenstoß|kollision)\b/.test(d)) return 'Unfall / Behinderung';
   if(/\b(stau|stauende|stauerscheinung|stockender verkehr|stau im verkehr)\b/.test(d)) return 'Stau / stockender Verkehr';
   if(/\bpanne\b|liegengebliebenes fahrzeug/.test(d)) return 'Panne / liegengebliebenes Fahrzeug';
   if(/gegenstand|fahrzeugteil|ladung/.test(d)) return 'Gefahr auf der Fahrbahn';
@@ -983,28 +934,124 @@ setInterval(loadTraffic,60000);
 })();
 
 
+function isNewsSong(song){
+  const type=String(song?.type||song?.category||'').toLowerCase();
+  const text=[
+    song?.title,
+    song?.artist?.name,
+    song?.genre,
+    song?.album
+  ].filter(Boolean).join(' ').toLowerCase();
+
+  return /news|nachricht|weather|wetter|verkehr|traffic/.test(type) ||
+         /nachrichten|nachricht|wetter|verkehrsmeldung|verkehrsnews/.test(text);
+}
+
+function newsPlaceholderSvg(){
+  return 'data:image/svg+xml;charset=UTF-8,'+encodeURIComponent(`
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640">
+      <defs>
+        <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stop-color="#1b2433"/>
+          <stop offset="1" stop-color="#0c121b"/>
+        </linearGradient>
+      </defs>
+      <rect width="640" height="640" rx="72" fill="url(#g)"/>
+      <rect x="154" y="116" width="332" height="408" rx="22" fill="#f4f7fb"/>
+      <rect x="188" y="158" width="264" height="28" rx="10" fill="#293446"/>
+      <rect x="188" y="214" width="112" height="104" rx="10" fill="#d9dee7"/>
+      <rect x="320" y="214" width="132" height="18" rx="8" fill="#293446"/>
+      <rect x="320" y="250" width="132" height="18" rx="8" fill="#9aa6b8"/>
+      <rect x="320" y="286" width="96" height="18" rx="8" fill="#9aa6b8"/>
+      <rect x="188" y="348" width="264" height="18" rx="8" fill="#293446"/>
+      <rect x="188" y="384" width="236" height="18" rx="8" fill="#9aa6b8"/>
+      <rect x="188" y="420" width="202" height="18" rx="8" fill="#9aa6b8"/>
+      <circle cx="500" cy="492" r="58" fill="#37d67a"/>
+      <path d="M469 500h62M480 478h40M480 522h40" stroke="#fff" stroke-width="12" stroke-linecap="round"/>
+    </svg>`);
+}
+
+function setNewsArt(img){
+  const url=newsPlaceholderSvg();
+  if(img.dataset.coverUrl===url)return;
+  img.src=url;
+  img.dataset.coverUrl=url;
+  img.dataset.songKey='__news__';
+  img.dataset.coverLoading='';
+  img.classList.add('is-placeholder');
+  img.alt='Nachrichten';
+}
+
 async function loadAlbumArt(song){
   const img=$('currentArt');
-  const token=++state.artToken;
-  img.classList.add('is-placeholder');
-  img.src=placeholder;
-  img.alt='Albumcover';
-  if(!song)return;
 
-  const direct=songImageCandidates(song);
-  if(direct.length){
-    img.onload=()=>img.classList.remove('is-placeholder');
-    img.src=direct[0];
+  // Bei Nachrichten/Wetter/Verkehr niemals ein Musik-Albumcover anzeigen.
+  // Stattdessen wird ein neutrales Zeitungs-/Nachrichtenmotiv verwendet.
+  if(isNewsSong(song)){
+    state.artToken++;
+    setNewsArt(img);
     return;
   }
 
-  const artist=song.artist&&typeof song.artist==='object'?(song.artist.name||''):String(song.artist||'');
-  const title=String(song.title||'').trim();
-  if(!artist && !title)return;
-  const key=(artist+'|'+title).toLowerCase();
+  const songInfo=songText(song);
+  const artist=song?.artist&&typeof song.artist==='object'
+    ?(song.artist.name||''):String(song?.artist||'');
+  const title=String(song?.title||'').trim();
+  const songKey=(artist+'|'+title).toLowerCase();
+
+  // Bei demselben Song nichts neu laden und vor allem nicht kurz auf
+  // das Radio-Placeholder zurückspringen. Das verhindert Cover-Flackern.
+  if(songKey && img.dataset.songKey===songKey &&
+     (img.dataset.coverUrl || img.dataset.coverLoading==='1')) return;
+
+  const token=++state.artToken;
+  img.dataset.songKey=songKey;
+  img.dataset.coverLoading='1';
+
+  if(!song || !songInfo){
+    img.dataset.coverLoading='';
+    img.dataset.coverUrl=placeholder;
+    if(img.currentSrc!==placeholder)img.src=placeholder;
+    img.classList.add('is-placeholder');
+    img.alt='Albumcover';
+    return;
+  }
+
+  img.alt=`Albumcover: ${title}${artist?' – '+artist:''}`;
+
+  const applyCover=(url)=>{
+    if(token!==state.artToken)return;
+    const target=url||placeholder;
+    const probe=new Image();
+    probe.decoding='async';
+    probe.onload=()=>{
+      if(token!==state.artToken)return;
+      img.src=target;
+      img.dataset.coverUrl=target;
+      img.dataset.coverLoading='';
+      img.classList.remove('is-placeholder');
+    };
+    probe.onerror=()=>{
+      if(token!==state.artToken)return;
+      img.dataset.coverLoading='';
+      if(!img.dataset.coverUrl){
+        img.src=placeholder;
+        img.dataset.coverUrl=placeholder;
+        img.classList.add('is-placeholder');
+      }
+    };
+    probe.src=target;
+  };
+
+  const direct=songImageCandidates(song);
+  if(direct.length){
+    applyCover(direct[0]);
+    return;
+  }
+
+  const key=songKey;
   if(state.artCache.has(key)){
-    const cached=state.artCache.get(key);
-    if(cached&&token===state.artToken){img.onload=()=>img.classList.remove('is-placeholder');img.src=cached;}
+    applyCover(state.artCache.get(key));
     return;
   }
 
@@ -1020,11 +1067,21 @@ async function loadAlbumArt(song){
     if(art){
       const large=art.replace(/\d+x\d+bb\./i,'600x600bb.');
       state.artCache.set(key,large);
-      img.onload=()=>img.classList.remove('is-placeholder');
-      img.src=large;
+      applyCover(large);
+    }else{
+      applyCover('');
     }
   }catch(e){
-    // Albumcover ist Zusatzinformation. Bei Nichterreichbarkeit bleibt die Musiknote.
+    if(token===state.artToken){
+      img.dataset.coverLoading='';
+      // Kein sichtbares Zurückspringen zum Placeholder, wenn bereits ein
+      // Cover vorhanden ist.
+      if(!img.dataset.coverUrl){
+        img.src=placeholder;
+        img.dataset.coverUrl=placeholder;
+        img.classList.add('is-placeholder');
+      }
+    }
   }
 }
 
