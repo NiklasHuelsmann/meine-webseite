@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>RadioHub · laut.fm · V33</title>
+<title>RadioHub · laut.fm · V34</title>
 <style>
 :root{
   --bg:#080b12;--panel:#111722;--panel2:#0c121b;--line:#293446;
@@ -1277,6 +1277,60 @@ function renderHistory(list,currentSong){
   </table>`:'Noch keine zuletzt gelaufene Musik verfügbar.';
 }
 
+async function getJSON(url){
+  const r=await fetch(url,{cache:'no-store'});
+  if(!r.ok)throw Error(r.status);
+  return r.json();
+}
+
+async function loadStation(slug){
+  const out={slug};
+
+  // Die vier für RadioHub wichtigen laut.fm-Endpunkte getrennt laden.
+  // Promise.allSettled sorgt dafür, dass z.B. ein Cover-/Listener-Problem
+  // nicht die übrigen Live-Daten blockiert.
+  const [station,current,last,listeners]=await Promise.allSettled([
+    getJSON(`${API}/station/${encodeURIComponent(slug)}`),
+    getJSON(`${API}/station/${encodeURIComponent(slug)}/current_song`),
+    getJSON(`${API}/station/${encodeURIComponent(slug)}/last_songs`),
+    getJSON(`${API}/station/${encodeURIComponent(slug)}/listeners`)
+  ]);
+
+  if(station.status==='fulfilled'&&station.value){
+    Object.assign(out,station.value);
+  }
+
+  if(current.status==='fulfilled'){
+    out.current_song=current.value?.current_song||current.value;
+  }
+
+  if(last.status==='fulfilled'){
+    out.last_songs=normalizeList(last.value);
+  }
+
+  if(listeners.status==='fulfilled'){
+    const v=listeners.value;
+    const n=typeof v==='number'
+      ?v
+      :Number(v?.listeners??v?.count??v?.value);
+
+    if(Number.isFinite(n)&&n>=0){
+      out.listeners=Math.round(n);
+    }
+  }
+
+  // Falls /listeners einmal nichts Brauchbares liefert, den Wert aus
+  // den Stationsdaten verwenden.
+  if(!Number.isFinite(Number(out.listeners)) && station.status==='fulfilled'){
+    const n=Number(station.value?.listeners);
+    if(Number.isFinite(n)&&n>=0){
+      out.listeners=Math.round(n);
+    }
+  }
+
+  return out;
+}
+
 async function refreshActive(){
   if(state.refreshing)return;
   state.refreshing=true;
@@ -1452,6 +1506,8 @@ $('audio').addEventListener('pause',()=>{$('playBtn').textContent='▶'});
 $('audio').addEventListener('error',()=>{$('playBtn').textContent='▶'});
 
 renderActive(fallback);
+
+$('updated').textContent='Live-Daten werden geladen …';
 
 // Direkt beim Laden echte laut.fm-Livedaten holen und danach regelmäßig
 // aktualisieren. Dadurch kommen Senderlogo, aktueller Song, Albumcover,
