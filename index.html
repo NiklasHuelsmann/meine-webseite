@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>RadioHub · laut.fm · V34</title>
+<title>RadioHub · laut.fm · V35</title>
 <style>
 :root{
   --bg:#080b12;--panel:#111722;--panel2:#0c121b;--line:#293446;
@@ -519,6 +519,42 @@ function setImg(img,station){
 }
 function esc(v){
   return String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));
+}
+
+function normalizeList(value){
+  if(Array.isArray(value))return value.filter(v=>v&&typeof v==='object');
+  if(!value)return [];
+
+  if(Array.isArray(value.last_songs))return normalizeList(value.last_songs);
+  if(Array.isArray(value.songs))return normalizeList(value.songs);
+  if(Array.isArray(value.items))return normalizeList(value.items);
+  if(Array.isArray(value.results))return normalizeList(value.results);
+
+  // Einzelnen Song akzeptieren.
+  if(typeof value==='object' && (value.title || value.name || value.artist)){
+    return [value];
+  }
+  return [];
+}
+
+function songText(song){
+  if(!song || typeof song!=='object')return null;
+
+  let artist='';
+  if(song.artist && typeof song.artist==='object'){
+    artist=String(song.artist.name||song.artist.title||'');
+  }else{
+    artist=String(song.artist||song.artist_name||'');
+  }
+
+  const title=String(song.title||song.track||song.song||song.name||'').trim();
+  if(!title && !artist)return null;
+
+  return {
+    title:title||'Unbekannter Titel',
+    artist:artist.trim(),
+    album:String(song.album||'').trim()
+  };
 }
 
 function sameSong(a,b){
@@ -1301,11 +1337,12 @@ async function loadStation(slug){
   }
 
   if(current.status==='fulfilled'){
-    out.current_song=current.value?.current_song||current.value;
+    const cv=current.value;
+    out.current_song=cv?.current_song||cv?.song||cv;
   }
 
   if(last.status==='fulfilled'){
-    out.last_songs=normalizeList(last.value);
+    out.last_songs=normalizeList(last.value?.last_songs||last.value);
   }
 
   if(listeners.status==='fulfilled'){
