@@ -110,15 +110,16 @@ h1{font-size:30px;line-height:1.05;margin:0 0 5px}
 .history-table-wrap{overflow:hidden;border:1px solid var(--line);border-radius:14px;background:#0d131d}
 .history-table{width:100%;border-collapse:collapse;table-layout:fixed}
 .history-table thead th{padding:11px 13px;text-align:left;background:#080c12;color:#cbd3df;font-size:12px;font-weight:800;border-bottom:1px solid var(--line)}
-.history-table thead th:first-child{width:25%}
-.history-table thead th:nth-child(2){width:37.5%}
-.history-table thead th:nth-child(3){width:37.5%}
+.history-table thead th:first-child{width:22%}
+.history-table thead th:nth-child(2){width:43%}
+.history-table thead th:nth-child(3){width:35%}
 .history-table tbody tr{border-bottom:1px solid #222b38}
 .history-table tbody tr:last-child{border-bottom:0}
 .history-table tbody tr:nth-child(even){background:#111824}
 .history-table td{padding:11px 13px;vertical-align:middle}
 .history-date{color:#cbd3df;font-size:12px;line-height:1.25;white-space:nowrap}
 .history-date strong{display:block;color:#eef2f7;font-size:13px;font-weight:750}
+.history-date span{display:block;color:#cbd3df;font-size:12px;font-weight:650;margin-top:2px}
 .history-title,.history-artist{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .history-title{font-weight:750;color:#eef2f7}
 .history-artist{color:#b8c2d0}
@@ -126,9 +127,9 @@ h1{font-size:30px;line-height:1.05;margin:0 0 5px}
 @media(max-width:560px){
   .history-table thead th{padding:9px 9px;font-size:11px}
   .history-table td{padding:10px 9px}
-  .history-table thead th:first-child{width:29%}
-  .history-table thead th:nth-child(2){width:35.5%}
-  .history-table thead th:nth-child(3){width:35.5%}
+  .history-table thead th:first-child{width:26%}
+  .history-table thead th:nth-child(2){width:42%}
+  .history-table thead th:nth-child(3){width:32%}
   .history-date{font-size:11px}
   .history-date strong{font-size:12px}
   .history-title,.history-artist{font-size:12px}
@@ -299,11 +300,10 @@ footer{text-align:center;color:var(--muted);font-size:12px;margin-top:25px}
 
     <section class="card history">
     <div class="section-title">
-      <span>Zuletzt gelaufen</span>
+      <span>Zuletzt gelaufen – Musik</span>
       <button class="secondary" id="refreshBtn" type="button">↻ Aktualisieren</button>
     </div>
     <div id="historyList" class="empty">Lade Verlauf …</div>
-    <div class="search-help">„Nachrichten &amp; Wetter“ und andere laut.fm-Infos bleiben ganz normal sichtbar, wenn sie gerade laufen. Nur der aktuell laufende Eintrag wird nicht direkt noch einmal in „Zuletzt gelaufen“ wiederholt.</div>
   </section>
 </main>
 
@@ -793,37 +793,155 @@ function renderActive(s){
   }
 }
 
-function renderHistory(list,currentSong){
-  // Der aktuelle Titel darf nicht direkt noch einmal als "zuletzt gelaufen" erscheinen.
-  // Wenn derselbe Titel früher erneut gespielt wurde, darf er weiter im Verlauf stehen.
-  const previous=[];
-  let removedCurrent=false;
-  for(const x of list){
-    if(!removedCurrent && sameSong(x,currentSong)){
-      removedCurrent=true;
-      continue;
-    }
-    previous.push(x);
-    if(previous.length>=10)break;
+function isMusicHistoryItem(song){
+  if(!song || typeof song!=='object') return false;
+
+  const type=String(song.type||song.kind||song.category||'').toLowerCase();
+  const blockedTypes=[
+    'news','weather','information','info','jingle','station_jingle',
+    'station-id','station_id','promo','commercial','advertisement',
+    'sweep','program','show','moderation'
+  ];
+  if(blockedTypes.some(t=>type===t || type.includes(t))) return false;
+
+  // Wenn laut.fm einen Info-/Nachrichten-Eintrag nur über den Titel meldet,
+  // soll er ebenfalls nicht in der Musik-Historie landen.
+  const text=`${song.title||''} ${song.artist?.name||song.artist||''}`.toLowerCase();
+  const blockedText=[
+    'nachrichten & wetter',
+    'nachrichten und wetter',
+    'verkehrsnachrichten',
+    'wetterbericht',
+    'verkehr & wetter',
+    'verkehr und wetter'
+  ];
+  if(blockedText.some(t=>text.includes(t))) return false;
+
+  return true;
+}
+
+function historyStamp(song){
+  return song?.started_at||song?.start||song?.created_at||
+         song?.timestamp||song?.played_at||'';
+}
+
+function historyKey(song){
+  const id=song?.id!=null?String(song.id):'';
+  const stamp=historyStamp(song);
+  const s=songText(song);
+  if(id && stamp) return `${id}|${stamp}`;
+  if(id) return `id|${id}`;
+  return `${stamp}|${s?.title||''}|${s?.artist||''}`;
+}
+
+function getStoredHistory(slug){
+  try{
+    const raw=localStorage.getItem(`radiohub-history-${slug}`);
+    return normalizeList(JSON.parse(raw));
+  }catch(e){
+    return [];
+  }
+}
+
+function saveHistory(slug,list){
+  try{
+    localStorage.setItem(
+      `radiohub-history-${slug}`,
+      JSON.stringify(normalizeList(list).slice(0,500))
+    );
+  }catch(e){}
+}
+
+function rememberHistory(slug,list,currentSong){
+  const incoming=[...normalizeList(list)];
+  if(currentSong) incoming.unshift(currentSong);
+
+  const stored=getStoredHistory(slug);
+  const merged=[];
+  const seen=new Set();
+
+  for(const song of [...incoming,...stored]){
+    if(!isMusicHistoryItem(song)) continue;
+    const key=historyKey(song);
+    if(seen.has(key)) continue;
+    seen.add(key);
+    merged.push(song);
+    if(merged.length>=500) break;
   }
 
-  const rows=previous.map(x=>{
-    const song=songText(x)||{title:'Unbekannter Titel',artist:''};
-    const stamp=x.started_at||x.start||x.created_at||x.timestamp||x.played_at;
-    const date=fmtDate(stamp);
-    const time=fmtTime(stamp);
+  saveHistory(slug,merged);
+  return merged;
+}
+
+function historyDateTime(song){
+  const raw=historyStamp(song);
+  if(raw){
+    const d=new Date(raw);
+    if(!Number.isNaN(d.getTime())) return d;
+  }
+  const combined=`${song?.date||''} ${song?.time||''}`.trim();
+  if(combined){
+    const d=new Date(combined);
+    if(!Number.isNaN(d.getTime())) return d;
+  }
+  return null;
+}
+
+function renderHistory(list,currentSong){
+  const currentKey=currentSong ? historyKey(currentSong) : '';
+  const currentStarted=currentSong ? historyStamp(currentSong) : '';
+
+  const history=rememberHistory(
+    state.active?.slug||fallback.slug,
+    list,
+    currentSong
+  );
+
+  const dated=history
+    .filter(isMusicHistoryItem)
+    .filter(song=>{
+      const key=historyKey(song);
+      const stamp=historyStamp(song);
+      return !(currentKey && key===currentKey) &&
+             !(currentStarted && stamp===currentStarted);
+    })
+    .map((song,index)=>({song,index,date:historyDateTime(song)}));
+
+  dated.sort((a,b)=>{
+    if(a.date && b.date) return b.date-a.date;
+    if(a.date && !b.date) return -1;
+    if(!a.date && b.date) return 1;
+    return a.index-b.index;
+  });
+
+  const rows=dated.map(({song,date})=>{
+    const s=songText(song)||{title:'Unbekannter Titel',artist:''};
+    const dateLabel=date
+      ? date.toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit',year:'numeric'})
+      : '—';
+    const timeLabel=date
+      ? date.toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'})
+      : fmtTime(historyStamp(song));
+
     return `<tr>
-      <td class="history-date"><strong>${esc(date||'—')}</strong>${time?esc(time)+' Uhr':''}</td>
-      <td class="history-title" title="${esc(song.title)}">${esc(song.title)}</td>
-      <td class="history-artist" title="${esc(song.artist||'—')}">${esc(song.artist||'—')}</td>
+      <td class="history-date">
+        <strong>${esc(dateLabel)}</strong>
+        <span>${esc(timeLabel||'—')} Uhr</span>
+      </td>
+      <td class="history-title" title="${esc(s.title)}">${esc(s.title)}</td>
+      <td class="history-artist" title="${esc(s.artist||'—')}">${esc(s.artist||'—')}</td>
     </tr>`;
   }).join('');
 
   $('historyList').className=rows?'history-table-wrap':'empty';
-  $('historyList').innerHTML=rows?`<table class="history-table" aria-label="Zuletzt gelaufene Songs">
-    <thead><tr><th>Datum und Uhrzeit</th><th>Titel</th><th>Interpret</th></tr></thead>
+  $('historyList').innerHTML=rows?`<table class="history-table" aria-label="Zuletzt gelaufene Musik">
+    <thead><tr>
+      <th>Datum und<br>Uhrzeit</th>
+      <th>Titel</th>
+      <th>Interpret</th>
+    </tr></thead>
     <tbody>${rows}</tbody>
-  </table>`:'Noch keine vorherigen Titel verfügbar.';
+  </table>`:'Noch keine zuletzt gelaufene Musik verfügbar.';
 }
 
 async function refreshActive(){
