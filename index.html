@@ -105,14 +105,34 @@ h1{font-size:30px;line-height:1.05;margin:0 0 5px}
 .stat b{font-size:23px}.stat span{display:block;color:var(--muted);font-size:12px}
 .updated{font-size:11px;color:var(--muted);margin-top:8px}
 
-/* Previous songs */
+/* Previous songs — tabellarischer WDA-2-Look, aber im RadioHub-Design */
 .history{margin-top:18px}
-.track{display:flex;gap:13px;align-items:flex-start;padding:12px 0;border-bottom:1px solid #222b38}
-.track:last-child{border-bottom:0}
-.tracktime{width:50px;color:var(--muted);font-size:12px;padding-top:2px;flex:0 0 50px}
-.trackmain{min-width:0}.trackmain strong{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.trackmain span{display:block;color:var(--muted);font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.history-table-wrap{overflow:hidden;border:1px solid var(--line);border-radius:14px;background:#0d131d}
+.history-table{width:100%;border-collapse:collapse;table-layout:fixed}
+.history-table thead th{padding:11px 13px;text-align:left;background:#080c12;color:#cbd3df;font-size:12px;font-weight:800;border-bottom:1px solid var(--line)}
+.history-table thead th:first-child{width:25%}
+.history-table thead th:nth-child(2){width:37.5%}
+.history-table thead th:nth-child(3){width:37.5%}
+.history-table tbody tr{border-bottom:1px solid #222b38}
+.history-table tbody tr:last-child{border-bottom:0}
+.history-table tbody tr:nth-child(even){background:#111824}
+.history-table td{padding:11px 13px;vertical-align:middle}
+.history-date{color:#cbd3df;font-size:12px;line-height:1.25;white-space:nowrap}
+.history-date strong{display:block;color:#eef2f7;font-size:13px;font-weight:750}
+.history-title,.history-artist{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.history-title{font-weight:750;color:#eef2f7}
+.history-artist{color:#b8c2d0}
 .empty{padding:18px;color:var(--muted);text-align:center;border:1px dashed var(--line);border-radius:14px}
+@media(max-width:560px){
+  .history-table thead th{padding:9px 9px;font-size:11px}
+  .history-table td{padding:10px 9px}
+  .history-table thead th:first-child{width:29%}
+  .history-table thead th:nth-child(2){width:35.5%}
+  .history-table thead th:nth-child(3){width:35.5%}
+  .history-date{font-size:11px}
+  .history-date strong{font-size:12px}
+  .history-title,.history-artist{font-size:12px}
+}
 
 /* Search */
 .result{display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid #222b38}
@@ -450,6 +470,11 @@ function fmtTime(v){
   const d=new Date(v);
   return Number.isNaN(d.getTime())?'':d.toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'});
 }
+function fmtDate(v){
+  if(!v)return '';
+  const d=new Date(v);
+  return Number.isNaN(d.getTime())?'':d.toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit',year:'numeric'});
+}
 function normalizeList(x){
   if(Array.isArray(x))return x;
   if(Array.isArray(x?.songs))return x.songs;
@@ -784,15 +809,21 @@ function renderHistory(list,currentSong){
 
   const rows=previous.map(x=>{
     const song=songText(x)||{title:'Unbekannter Titel',artist:''};
-    const t=fmtTime(x.started_at||x.start||x.created_at||x.timestamp||x.played_at);
-    return `<div class="track">
-      <div class="tracktime">${esc(t)}</div>
-      <div class="trackmain"><strong>${esc(song.title)}</strong><span>${esc(song.artist)}</span></div>
-    </div>`;
+    const stamp=x.started_at||x.start||x.created_at||x.timestamp||x.played_at;
+    const date=fmtDate(stamp);
+    const time=fmtTime(stamp);
+    return `<tr>
+      <td class="history-date"><strong>${esc(date||'—')}</strong>${time?esc(time)+' Uhr':''}</td>
+      <td class="history-title" title="${esc(song.title)}">${esc(song.title)}</td>
+      <td class="history-artist" title="${esc(song.artist||'—')}">${esc(song.artist||'—')}</td>
+    </tr>`;
   }).join('');
 
-  $('historyList').className=rows?'':'empty';
-  $('historyList').innerHTML=rows||'Noch keine vorherigen Titel verfügbar.';
+  $('historyList').className=rows?'history-table-wrap':'empty';
+  $('historyList').innerHTML=rows?`<table class="history-table" aria-label="Zuletzt gelaufene Songs">
+    <thead><tr><th>Datum und Uhrzeit</th><th>Titel</th><th>Interpret</th></tr></thead>
+    <tbody>${rows}</tbody>
+  </table>`:'Noch keine vorherigen Titel verfügbar.';
 }
 
 async function refreshActive(){
