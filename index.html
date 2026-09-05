@@ -854,11 +854,22 @@ async function activateStation(station){
   renderActive(state.active);
 
   const audio=$('audio');
-  audio.pause();
-  audio.currentTime=0;
+  const stream=state.active.stream_url||`https://stream.laut.fm/${encodeURIComponent(slug)}`;
 
-  // Sofort nach dem Benutzerklick starten, damit Browser die Benutzeraktion
-  // nicht durch die nachfolgende API-Abfrage verlieren.
+  // WICHTIG bei Live-Radio:
+  // Ein pausierter <audio>-Stream kann beim erneuten Play an einer alten
+  // gepufferten Stelle weiterspielen. Deshalb wird die Verbindung hier
+  // bewusst komplett neu aufgebaut und nicht nur "fortgesetzt".
+  audio.pause();
+  audio.removeAttribute('src');
+  audio.load();
+  audio.dataset.streamUrl='';
+  audio.src=stream;
+  audio.dataset.streamUrl=stream;
+  audio.load();
+
+  // Direkt nach dem Benutzerklick starten, damit die Browser-Autoplay-Regel
+  // die Benutzeraktion nicht durch die API-Abfrage verliert.
   let playStarted=false;
   try{
     await audio.play();
@@ -872,6 +883,7 @@ async function activateStation(station){
     renderActive(state.active);
     renderHistory(normalizeList(state.active.last_songs),state.active.current_song);
 
+    // Falls der erste Play-Versuch wegen des Stream-Aufbaus zu früh war:
     if(!playStarted){
       try{await audio.play();$('playBtn').textContent='❚❚';}catch(e){}
     }
@@ -959,7 +971,22 @@ $('refreshBtn').addEventListener('click',refreshActive);
 $('playBtn').addEventListener('click',async()=>{
   const a=$('audio');
   if(a.paused){
-    try{await a.play()}catch(e){}
+    // Nicht den alten Puffer fortsetzen: bei Live-Radio jedes Mal
+    // eine frische Stream-Verbindung aufbauen.
+    const stream=state.active?.stream_url||`https://stream.laut.fm/${encodeURIComponent(slugOf(state.active)||fallback.slug)}`;
+    a.pause();
+    a.removeAttribute('src');
+    a.load();
+    a.dataset.streamUrl='';
+    a.src=stream;
+    a.dataset.streamUrl=stream;
+    a.load();
+    try{
+      await a.play();
+      $('playBtn').textContent='❚❚';
+    }catch(e){
+      $('playBtn').textContent='▶';
+    }
   }else{
     a.pause();
   }
