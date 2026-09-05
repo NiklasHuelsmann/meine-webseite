@@ -451,16 +451,17 @@ function expandLautAssetUrl(u){
   return [u,`${base}?t=640x640`,`${base}?t=120x120`,`${base}?t=90x90`,base];
 }
 function stationImageCandidates(s){
-  // Wichtig: nur Stationsdaten verwenden, niemals current_song.artist.image.
-  const direct=collectDirectImageUrls(s).flatMap(expandLautAssetUrl);
-  const assets=collectLautAssetUrls(s).flatMap(expandLautAssetUrl);
+  // Das Senderlogo kommt immer aus den Stationsdaten bzw. dem
+  // offiziellen laut.fm-Asset-Pfad – niemals aus current_song.artist.image.
   const slug=slugOf(s);
   const legacy=slug?[
     `https://assets.laut.fm/user/${encodeURIComponent(slug)}/user_640x640.jpg`,
     `https://assets.laut.fm/user/${encodeURIComponent(slug)}/user.jpg`,
     `https://assets.laut.fm/user/${encodeURIComponent(slug)}/user_640x640.png`
   ]:[];
-  return [...new Set([...direct,...assets,...legacy].map(normalizeImageUrl).filter(Boolean))];
+  const direct=collectDirectImageUrls(s).flatMap(expandLautAssetUrl);
+  const assets=collectLautAssetUrls(s).flatMap(expandLautAssetUrl);
+  return [...new Set([...legacy,...direct,...assets].map(normalizeImageUrl).filter(Boolean))];
 }
 function imageOf(s){return stationImageCandidates(s)[0]||''}
 
@@ -659,7 +660,22 @@ function trafficInRegion(w,regionKey){
   // Fallback, wenn ein Datensatz keine Koordinaten liefert.
   return region.roads.includes(w.__road);
 }
+function trafficClassificationText(w){
+  // Für die Klassifizierung ausschließlich echte Meldungstexte verwenden.
+  // Nicht das komplette JSON: dort können Metadaten/Empfehlungen Begriffe
+  // enthalten, die mit der eigentlichen Meldung nichts zu tun haben.
+  const parts=[];
+  if(Array.isArray(w.description)) parts.push(...w.description.map(String));
+  else if(w.description) parts.push(String(w.description));
+  if(w.title) parts.push(String(w.title));
+  if(w.subtitle) parts.push(String(w.subtitle));
+  if(Array.isArray(w.footer)) parts.push(...w.footer.map(String));
+  return parts.join(' · ').toLowerCase();
+}
+
 function trafficType(w,service){
+  // Sperrungen und Baustellen werden nur aus den dafür vorgesehenen
+  // Autobahn-API-Endpunkten bzw. display_type übernommen.
   if(service==='closure') return ['block','⛔ Sperrung'];
   if(service==='roadworks') return ['roadwork','🚧 Baustelle'];
 
@@ -667,16 +683,21 @@ function trafficType(w,service){
   if(display==='CLOSURE'||display==='CLOSURE_ENTRY_EXIT') return ['block','⛔ Sperrung'];
   if(display==='ROADWORKS'||display==='SHORT_TERM_ROADWORKS') return ['roadwork','🚧 Baustelle'];
 
-  const s=JSON.stringify(w).toLowerCase();
-  if(/\b(stau|stockender verkehr|stauerscheinung|stauende)\b/.test(s)){
-    return ['jam','🚗 Stau'];
-  }
-  if(/\b(unfall|verkehrsunfall|auffahrunfall|zusammenstoß|kollision)\b/.test(s)){
+  const text=trafficClassificationText(w);
+
+  // Ein Unfall darf NUR angezeigt werden, wenn die eigentliche
+  // Verkehrsmeldung ihn ausdrücklich nennt.
+  if(/\b(unfall|verkehrsunfall|auffahrunfall|zusammenstoß|kollision)\b/.test(text)){
     return ['accident','⚠ Unfall'];
   }
-  if(/\b(sperrung|gesperrt|vollsperr|fahrbahn gesperrt)\b/.test(s)){
-    return ['block','⛔ Sperrung'];
+
+  // Gleiches Prinzip beim Stau: nur bei einer expliziten Stauangabe.
+  if(/\b(stau|stauende|stauerscheinung|stockender verkehr|stau im verkehr)\b/.test(text)){
+    return ['jam','🚗 Stau'];
   }
+
+  // Eine allgemeine Warnung bleibt eine Warnung. Sie wird nicht
+  // automatisch in Unfall oder Stau umgewandelt.
   if(service==='warning') return ['warn','⚠ Warnung'];
   return ['info','ℹ Verkehr'];
 }
@@ -685,14 +706,14 @@ function trafficMatchesFilter(w){
   return trafficType(w,w.__service)[0]===trafficFilter;
 }
 function trafficStatusText(w){
-  const d=trafficDescription(w);
-  if(/unfall/i.test(d)) return 'Unfall / Behinderung';
-  if(/stau|stockend/i.test(d)) return 'Stau / stockender Verkehr';
-  if(/panne/i.test(d)) return 'Panne / liegengebliebenes Fahrzeug';
-  if(/gegenstand|fahrzeugteil|ladung/i.test(d)) return 'Gefahr auf der Fahrbahn';
-  if(/gefahr/i.test(d)) return 'Gefahr / Behinderung';
-  if(/baustell|arbeiten|sanierung|instandsetzung/i.test(d)) return 'Baustelle / Fahrbahnarbeiten';
-  if(/sperr|gesperrt/i.test(d)) return 'Sperrung';
+  const d=trafficClassificationText(w);
+  if(/\b(unfall|verkehrsunfall|auffahrunfall|zusammenstoß|kollision)\b/.test(d)) return 'Unfall / Behinderung';
+  if(/\b(stau|stauende|stauerscheinung|stockender verkehr|stau im verkehr)\b/.test(d)) return 'Stau / stockender Verkehr';
+  if(/\bpanne\b|liegengebliebenes fahrzeug/.test(d)) return 'Panne / liegengebliebenes Fahrzeug';
+  if(/gegenstand|fahrzeugteil|ladung/.test(d)) return 'Gefahr auf der Fahrbahn';
+  if(/gefahr/.test(d)) return 'Gefahr / Behinderung';
+  if(/baustell|arbeiten|sanierung|instandsetzung/.test(d)) return 'Baustelle / Fahrbahnarbeiten';
+  if(/sperr|gesperrt/.test(d)) return 'Sperrung';
   return trafficType(w,w.__service)[1].replace(/^[^A-Za-zÄÖÜäöüß]+/,'').trim();
 }
 function trafficDetailText(w){
@@ -960,6 +981,426 @@ setInterval(loadTraffic,60000);
     synth.onvoiceschanged=()=>{ /* Stimmen werden beim nächsten Klick gewählt. */ };
   }
 })();
+
+
+async function loadAlbumArt(song){
+  const img=$('currentArt');
+  const token=++state.artToken;
+  img.classList.add('is-placeholder');
+  img.src=placeholder;
+  img.alt='Albumcover';
+  if(!song)return;
+
+  const direct=songImageCandidates(song);
+  if(direct.length){
+    img.onload=()=>img.classList.remove('is-placeholder');
+    img.src=direct[0];
+    return;
+  }
+
+  const artist=song.artist&&typeof song.artist==='object'?(song.artist.name||''):String(song.artist||'');
+  const title=String(song.title||'').trim();
+  if(!artist && !title)return;
+  const key=(artist+'|'+title).toLowerCase();
+  if(state.artCache.has(key)){
+    const cached=state.artCache.get(key);
+    if(cached&&token===state.artToken){img.onload=()=>img.classList.remove('is-placeholder');img.src=cached;}
+    return;
+  }
+
+  try{
+    const term=encodeURIComponent(`${artist} ${title}`.trim());
+    const data=await getJSON(`https://itunes.apple.com/search?term=${term}&entity=song&limit=5`);
+    if(token!==state.artToken)return;
+    const results=Array.isArray(data?.results)?data.results:[];
+    const normalized=(v)=>String(v||'').toLowerCase().replace(/[^a-z0-9äöüß]+/gi,' ').trim();
+    const a=normalized(artist),t=normalized(title);
+    const exact=results.find(r=>normalized(r.artistName)===a&&normalized(r.trackName)===t)||results[0];
+    const art=exact?.artworkUrl100||exact?.artworkUrl60||'';
+    if(art){
+      const large=art.replace(/\d+x\d+bb\./i,'600x600bb.');
+      state.artCache.set(key,large);
+      img.onload=()=>img.classList.remove('is-placeholder');
+      img.src=large;
+    }
+  }catch(e){
+    // Albumcover ist Zusatzinformation. Bei Nichterreichbarkeit bleibt die Musiknote.
+  }
+}
+
+function renderActive(s){
+  $('activeName').textContent=s.name||state.active.name;
+  $('activeClaim').textContent=s.claim||s.tagline||s.slogan||'';
+  $('activeClaim').style.display=$('activeClaim').textContent?'block':'none';
+  $('activeLocation').textContent=s.city||s.location||s.country||'';
+  $('activeDesc').textContent=s.description||s.desc||'';
+  $('activeDesc').style.display=$('activeDesc').textContent?'block':'none';
+
+  setImg($('activeLogo'),s);
+
+  const genres=Array.isArray(s.genres)?s.genres:(s.genre?[s.genre]:[]);
+  $('activeBadges').innerHTML=genres.slice(0,6).map(g=>
+    `<span class="badge">${esc(typeof g==='object'?(g.name||''):g)}</span>`).join('');
+
+  const stream=s.stream_url||`https://stream.laut.fm/${encodeURIComponent(s.slug)}`;
+  const audio=$('audio');
+  if(audio.dataset.streamUrl!==stream){
+    audio.dataset.streamUrl=stream;
+    audio.src=stream;
+  }
+  $('streamLink').href=stream;
+  $('lautLink').href=s.page_url||`https://laut.fm/${encodeURIComponent(s.slug)}`;
+
+  $('playerTitle').textContent=s.name||s.slug;
+  $('playerSubtitle').textContent='Klicken, um den Sender zu starten';
+
+  const song=songText(s.current_song);
+  $('currentSong').textContent=song?.title||'Aktueller Song nicht verfügbar';
+  $('currentArtist').textContent=song?.artist||s.name||'';
+  $('currentTime').textContent=fmtTime(s.current_song?.started_at||s.current_song?.start);
+  loadAlbumArt(s.current_song);
+
+  const n=Number(s.listeners);
+  if(Number.isFinite(n)&&n>=0){
+    state.listenerValue=Math.round(n);
+    $('listeners').textContent=state.listenerValue;
+  }else if(Number.isFinite(state.listenerValue)){
+    $('listeners').textContent=state.listenerValue;
+  }
+}
+
+function isMusicHistoryItem(song){
+  if(!song || typeof song!=='object') return false;
+
+  const type=String(song.type||song.kind||song.category||'').toLowerCase();
+  const blockedTypes=[
+    'news','weather','information','info','jingle','station_jingle',
+    'station-id','station_id','promo','commercial','advertisement',
+    'sweep','program','show','moderation'
+  ];
+  if(blockedTypes.some(t=>type===t || type.includes(t))) return false;
+
+  // Wenn laut.fm einen Info-/Nachrichten-Eintrag nur über den Titel meldet,
+  // soll er ebenfalls nicht in der Musik-Historie landen.
+  const text=`${song.title||''} ${song.artist?.name||song.artist||''}`.toLowerCase();
+  const blockedText=[
+    'nachrichten & wetter',
+    'nachrichten und wetter',
+    'verkehrsnachrichten',
+    'wetterbericht',
+    'verkehr & wetter',
+    'verkehr und wetter'
+  ];
+  if(blockedText.some(t=>text.includes(t))) return false;
+
+  return true;
+}
+
+function historyStamp(song){
+  return song?.started_at||song?.start||song?.created_at||
+         song?.timestamp||song?.played_at||'';
+}
+
+function historyKey(song){
+  const id=song?.id!=null?String(song.id):'';
+  const stamp=historyStamp(song);
+  const s=songText(song);
+  if(id && stamp) return `${id}|${stamp}`;
+  if(id) return `id|${id}`;
+  return `${stamp}|${s?.title||''}|${s?.artist||''}`;
+}
+
+function getStoredHistory(slug){
+  try{
+    const raw=localStorage.getItem(`radiohub-history-${slug}`);
+    return normalizeList(JSON.parse(raw));
+  }catch(e){
+    return [];
+  }
+}
+
+function saveHistory(slug,list){
+  try{
+    localStorage.setItem(
+      `radiohub-history-${slug}`,
+      JSON.stringify(normalizeList(list).slice(0,500))
+    );
+  }catch(e){}
+}
+
+function rememberHistory(slug,list,currentSong){
+  const incoming=[...normalizeList(list)];
+  if(currentSong) incoming.unshift(currentSong);
+
+  const stored=getStoredHistory(slug);
+  const merged=[];
+  const seen=new Set();
+
+  for(const song of [...incoming,...stored]){
+    if(!isMusicHistoryItem(song)) continue;
+    const key=historyKey(song);
+    if(seen.has(key)) continue;
+    seen.add(key);
+    merged.push(song);
+    if(merged.length>=500) break;
+  }
+
+  saveHistory(slug,merged);
+  return merged;
+}
+
+function historyDateTime(song){
+  const raw=historyStamp(song);
+  if(raw){
+    const d=new Date(raw);
+    if(!Number.isNaN(d.getTime())) return d;
+  }
+  const combined=`${song?.date||''} ${song?.time||''}`.trim();
+  if(combined){
+    const d=new Date(combined);
+    if(!Number.isNaN(d.getTime())) return d;
+  }
+  return null;
+}
+
+function renderHistory(list,currentSong){
+  const currentKey=currentSong ? historyKey(currentSong) : '';
+  const currentStarted=currentSong ? historyStamp(currentSong) : '';
+
+  const history=rememberHistory(
+    state.active?.slug||fallback.slug,
+    list,
+    currentSong
+  );
+
+  const dated=history
+    .filter(isMusicHistoryItem)
+    .filter(song=>{
+      const key=historyKey(song);
+      const stamp=historyStamp(song);
+      return !(currentKey && key===currentKey) &&
+             !(currentStarted && stamp===currentStarted);
+    })
+    .map((song,index)=>({song,index,date:historyDateTime(song)}));
+
+  dated.sort((a,b)=>{
+    if(a.date && b.date) return b.date-a.date;
+    if(a.date && !b.date) return -1;
+    if(!a.date && b.date) return 1;
+    return a.index-b.index;
+  });
+
+  const rows=dated.map(({song,date})=>{
+    const s=songText(song)||{title:'Unbekannter Titel',artist:''};
+    const dateLabel=date
+      ? date.toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit',year:'numeric'})
+      : '—';
+    const timeLabel=date
+      ? date.toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'})
+      : fmtTime(historyStamp(song));
+
+    return `<tr>
+      <td class="history-date">
+        <strong>${esc(dateLabel)}</strong>
+        <span>${esc(timeLabel||'—')} Uhr</span>
+      </td>
+      <td class="history-title" title="${esc(s.title)}">${esc(s.title)}</td>
+      <td class="history-artist" title="${esc(s.artist||'—')}">${esc(s.artist||'—')}</td>
+    </tr>`;
+  }).join('');
+
+  $('historyList').className=rows?'history-table-wrap':'empty';
+  $('historyList').innerHTML=rows?`<table class="history-table" aria-label="Zuletzt gelaufene Musik">
+    <thead><tr>
+      <th>Datum und<br>Uhrzeit</th>
+      <th>Titel</th>
+      <th>Interpret</th>
+    </tr></thead>
+    <tbody>${rows}</tbody>
+  </table>`:'Noch keine zuletzt gelaufene Musik verfügbar.';
+}
+
+async function refreshActive(){
+  if(state.refreshing)return;
+  state.refreshing=true;
+  $('refreshBtn').disabled=true;
+  try{
+    const data=await loadStation(state.active.slug);
+    state.active={...state.active,...data};
+    renderActive(state.active);
+    renderHistory(normalizeList(state.active.last_songs),state.active.current_song);
+    $('updated').textContent='Live-Daten: '+new Date().toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  }catch(e){
+    // Hörer bleiben absichtlich bei 0, wenn die Abfrage gerade nichts liefert.
+    $('updated').textContent='Live-Daten werden automatisch erneut abgefragt.';
+  }finally{
+    state.refreshing=false;
+    $('refreshBtn').disabled=false;
+  }
+}
+
+async function activateStation(station){
+  const slug=slugOf(station);
+  if(!slug)return;
+
+  // Suchergebnisse werden erst hier – und nur hier – zum aktiven Sender.
+  state.active={...station,slug};
+  renderActive(state.active);
+
+  const audio=$('audio');
+  const stream=state.active.stream_url||`https://stream.laut.fm/${encodeURIComponent(slug)}`;
+
+  // WICHTIG bei Live-Radio:
+  // Ein pausierter <audio>-Stream kann beim erneuten Play an einer alten
+  // gepufferten Stelle weiterspielen. Deshalb wird die Verbindung hier
+  // bewusst komplett neu aufgebaut und nicht nur "fortgesetzt".
+  audio.pause();
+  audio.removeAttribute('src');
+  audio.load();
+  audio.dataset.streamUrl='';
+  audio.src=stream;
+  audio.dataset.streamUrl=stream;
+  audio.load();
+
+  // Direkt nach dem Benutzerklick starten, damit die Browser-Autoplay-Regel
+  // die Benutzeraktion nicht durch die API-Abfrage verliert.
+  let playStarted=false;
+  try{
+    await audio.play();
+    playStarted=true;
+    $('playBtn').textContent='❚❚';
+  }catch(e){}
+
+  try{
+    const data=await loadStation(slug);
+    state.active={...state.active,...data,slug};
+    renderActive(state.active);
+    renderHistory(normalizeList(state.active.last_songs),state.active.current_song);
+
+    // Falls der erste Play-Versuch wegen des Stream-Aufbaus zu früh war:
+    if(!playStarted){
+      try{await audio.play();$('playBtn').textContent='❚❚';}catch(e){}
+    }
+  }catch(e){
+    $('playBtn').textContent='▶';
+  }
+  $('updated').textContent='Sender gewechselt · Live-Daten werden geladen …';
+}
+
+function renderResults(items){
+  if(!items.length){
+    $('results').classList.add('show');
+    $('resultsContent').className='empty';
+    $('resultsContent').textContent='Keine Sender gefunden.';
+    $('resultCount').textContent='';
+    return;
+  }
+  $('results').classList.add('show');
+  $('resultCount').textContent=items.length+' Treffer';
+
+  $('resultsContent').className='';
+  $('resultsContent').innerHTML=items.map(s=>{
+    const song=songText(s.current_song);
+    const payload=encodeURIComponent(JSON.stringify(s));
+    const logo=imageOf(s)||placeholder;
+    const candidates=stationImageCandidates(s);
+    const logoFallback=esc(candidates.slice(1).join('|'));
+    return `<div class="result">
+      <img class="rlogo" src="${esc(logo)}" data-logo-candidates="${logoFallback}" referrerpolicy="no-referrer" loading="eager" decoding="async" alt="">
+      <div class="rmain">
+        <strong>${esc(s.name||s.slug)}</strong>
+        <small>${esc(s.city||s.country||s.format||'laut.fm')}${song?' · '+esc(song.artist?song.artist+' – '+song.title:song.title):''}</small>
+      </div>
+      <button class="rplay" type="button" data-station="${payload}">▶</button>
+    </div>`;
+  }).join('');
+
+  $('resultsContent').querySelectorAll('.rlogo').forEach(img=>{
+    img.referrerPolicy='no-referrer';
+    img.addEventListener('error',()=>{
+      const list=(img.dataset.logoCandidates||'').split('|').filter(Boolean);
+      const next=list.shift();
+      if(next){img.dataset.logoCandidates=list.join('|');img.src=next}
+      else{img.onerror=null;img.src=placeholder}
+    });
+  });
+  $('resultsContent').querySelectorAll('.rplay').forEach(b=>{
+    b.addEventListener('click',()=>{
+      try{activateStation(JSON.parse(decodeURIComponent(b.dataset.station)))}catch(e){}
+    });
+  });
+}
+
+function stationMatches(s,q){
+  const hay=[s.slug,s.name,s.city,s.country,s.claim,s.description,...(Array.isArray(s.genres)?s.genres.map(g=>typeof g==='object'?g.name:g):[])].filter(Boolean).join(' ').toLowerCase();
+  return hay.includes(q.toLowerCase());
+}
+function searchStations(q){
+  q=q.trim();
+  const token=++state.searchToken;
+  if(!q){
+    $('results').classList.remove('show');
+    $('resultsContent').className='empty';
+    $('resultsContent').textContent='Suche nach einem deiner laut.fm-Sender.';
+    $('resultCount').textContent='';
+    return;
+  }
+  $('results').classList.add('show');
+  $('resultsContent').className='empty';
+  $('resultsContent').textContent='Suche in deinen Sendern …';
+  $('resultCount').textContent='';
+
+  const items=[];
+  for(const configured of MY_STATIONS){
+    if(token!==state.searchToken) return;
+    const slug=slugOf(configured);
+    if(slug && stationMatches(configured,q)) items.push({...configured,slug});
+  }
+  renderResults(items);
+}
+
+$('searchForm').addEventListener('submit',e=>{
+  e.preventDefault();
+  searchStations($('searchInput').value);
+});
+
+$('refreshBtn').addEventListener('click',refreshActive);
+
+$('playBtn').addEventListener('click',async()=>{
+  const a=$('audio');
+  if(a.paused){
+    // Nicht den alten Puffer fortsetzen: bei Live-Radio jedes Mal
+    // eine frische Stream-Verbindung aufbauen.
+    const stream=state.active?.stream_url||`https://stream.laut.fm/${encodeURIComponent(slugOf(state.active)||fallback.slug)}`;
+    a.pause();
+    a.removeAttribute('src');
+    a.load();
+    a.dataset.streamUrl='';
+    a.src=stream;
+    a.dataset.streamUrl=stream;
+    a.load();
+    try{
+      await a.play();
+      $('playBtn').textContent='❚❚';
+    }catch(e){
+      $('playBtn').textContent='▶';
+    }
+  }else{
+    a.pause();
+  }
+});
+
+$('audio').addEventListener('play',()=>{$('playBtn').textContent='❚❚'});
+$('audio').addEventListener('pause',()=>{$('playBtn').textContent='▶'});
+$('audio').addEventListener('error',()=>{$('playBtn').textContent='▶'});
+
+renderActive(fallback);
+
+// Direkt beim Laden echte laut.fm-Livedaten holen und danach regelmäßig
+// aktualisieren. Dadurch kommen Senderlogo, aktueller Song, Albumcover,
+// Hörerzahl und "Zuletzt gelaufen" automatisch nach.
+refreshActive();
+setInterval(refreshActive,15000);
 
 </script>
 </body>
