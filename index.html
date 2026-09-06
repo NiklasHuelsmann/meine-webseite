@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>RadioHub · laut.fm · V35</title>
+<title>RadioHub · laut.fm · V37</title>
 <style>
 :root{
   --bg:#080b12;--panel:#111722;--panel2:#0c121b;--line:#293446;
@@ -402,7 +402,109 @@ const fallback={
 
 // Nur diese Sender werden in der Suche berücksichtigt.
 // Weitere eigene laut.fm-Sender hier mit ihrem Slug ergänzen.
-const MY_STATIONS=[fallback];
+const MY_STATIONS=[
+  fallback,
+  {slug:'niklashuelsmann',name:'NiklasHuelsmann',claim:'Dein Mix, dein Sound.',city:'Witten',description:'Von aktuellen Hits bis zu den größten Klassikern: Bei uns gibt es die perfekte Mischung für jeden Moment. Ob entspannt zum Feierabend oder als Power-Mix für den Tag – wir liefern dir den Sound, der immer passt. Einschalten, wohlfühlen und genießen!',stream_url:'https://stream.laut.fm/niklashuelsmann',page_url:'https://laut.fm/niklashuelsmann'},
+  {slug:'niklashuelsmann-radio',name:'niklashuelsmann-radio',stream_url:'https://stream.laut.fm/niklashuelsmann-radio',page_url:'https://laut.fm/niklashuelsmann-radio'},
+  {slug:'niklasheulsmann',name:'niklasheulsmann',stream_url:'https://stream.laut.fm/niklasheulsmann',page_url:'https://laut.fm/niklasheulsmann'},
+  {slug:'simulator4',name:'simulator4',stream_url:'https://stream.laut.fm/simulator4',page_url:'https://laut.fm/simulator4'},
+  {slug:'simulator3',name:'simulator3',stream_url:'https://stream.laut.fm/simulator3',page_url:'https://laut.fm/simulator3'},
+  {slug:'simulatoreins',name:'simulatoreins',stream_url:'https://stream.laut.fm/simulatoreins',page_url:'https://laut.fm/simulatoreins'},
+  {slug:'niklasdj',name:'niklasdj',stream_url:'https://stream.laut.fm/niklasdj',page_url:'https://laut.fm/niklasdj'},
+  {slug:'brian-dj',name:'brian-dj',stream_url:'https://stream.laut.fm/brian-dj',page_url:'https://laut.fm/brian-dj'},
+  {slug:'brian4live',name:'brian4live',stream_url:'https://stream.laut.fm/brian4live',page_url:'https://laut.fm/brian4live'},
+  {slug:'evenja-dj',name:'evenja-dj',stream_url:'https://stream.laut.fm/evenja-dj',page_url:'https://laut.fm/evenja-dj'},
+  {slug:'evenja-radio',name:'evenja-radio',stream_url:'https://stream.laut.fm/evenja-radio',page_url:'https://laut.fm/evenja-radio'},
+  {slug:'jason-dj',name:'jason-dj',stream_url:'https://stream.laut.fm/jason-dj',page_url:'https://laut.fm/jason-dj'},
+  {slug:'celina-dj',name:'celina-dj',stream_url:'https://stream.laut.fm/celina-dj',page_url:'https://laut.fm/celina-dj'},
+  {slug:'andre-dj',name:'andre-dj',stream_url:'https://stream.laut.fm/andre-dj',page_url:'https://laut.fm/andre-dj'},
+  {slug:'nrv-fm',name:'nrv-fm',stream_url:'https://stream.laut.fm/nrv-fm',page_url:'https://laut.fm/nrv-fm'},
+  {slug:'niklasfm-radio',name:'niklasfm-radio',stream_url:'https://stream.laut.fm/niklasfm-radio',page_url:'https://laut.fm/niklasfm-radio'},
+  {slug:'ndw-radio',name:'ndw-radio',stream_url:'https://stream.laut.fm/ndw-radio',page_url:'https://laut.fm/ndw-radio'},
+  {slug:'nrv-radios',name:'nrv-radios',stream_url:'https://stream.laut.fm/nrv-radios',page_url:'https://laut.fm/nrv-radios'},
+  {slug:'ndfm',name:'ndfm',stream_url:'https://stream.laut.fm/ndfm',page_url:'https://laut.fm/ndfm'},
+  {slug:'ndfmradios',name:'ndfmradios',stream_url:'https://stream.laut.fm/ndfmradios',page_url:'https://laut.fm/ndfmradios'},
+  {slug:'niklas-radio1',name:'niklas-radio1',stream_url:'https://stream.laut.fm/niklas-radio1',page_url:'https://laut.fm/niklas-radio1'},
+  {slug:'niklas-radios',name:'niklas-radios',stream_url:'https://stream.laut.fm/niklas-radios',page_url:'https://laut.fm/niklas-radios'},
+  {slug:'jason-radio',name:'jason-radio',stream_url:'https://stream.laut.fm/jason-radio',page_url:'https://laut.fm/jason-radio'},
+  {slug:'radio-linden-bochum',name:'radio-linden-bochum',stream_url:'https://stream.laut.fm/radio-linden-bochum',page_url:'https://laut.fm/radio-linden-bochum'},
+  {slug:'witten-on-air',name:'witten-on-air',stream_url:'https://stream.laut.fm/witten-on-air',page_url:'https://laut.fm/witten-on-air'},
+  {slug:'andrehuelsmann-radio',name:'andrehuelsmann-radio',stream_url:'https://stream.laut.fm/andrehuelsmann-radio',page_url:'https://laut.fm/andrehuelsmann-radio'},
+  {slug:'andre-radio',name:'andre-radio',stream_url:'https://stream.laut.fm/andre-radio',page_url:'https://laut.fm/andre-radio'},
+  {slug:'andrefm',name:'andrefm',stream_url:'https://stream.laut.fm/andrefm',page_url:'https://laut.fm/andrefm'},
+  {slug:'glizzt-fm',name:'glizzt-fm',stream_url:'https://stream.laut.fm/glizzt-fm',page_url:'https://laut.fm/glizzt-fm'},
+  {slug:'glizxt-fm1',name:'glizxt-fm1',stream_url:'https://stream.laut.fm/glizxt-fm1',page_url:'https://laut.fm/glizxt-fm1'},
+  {slug:'radio-mit-niklas',name:'radio-mit-niklas',stream_url:'https://stream.laut.fm/radio-mit-niklas',page_url:'https://laut.fm/radio-mit-niklas'},
+  {slug:'radio-mit-andre',name:'radio-mit-andre',stream_url:'https://stream.laut.fm/radio-mit-andre',page_url:'https://laut.fm/radio-mit-andre'},
+  {slug:'ets2-radio',name:'ets2-radio',stream_url:'https://stream.laut.fm/ets2-radio',page_url:'https://laut.fm/ets2-radio'},
+  {slug:'titanio',name:'titanio',stream_url:'https://stream.laut.fm/titanio',page_url:'https://laut.fm/titanio'},
+  {slug:'bochum-dahlhausen-radio',name:'bochum-dahlhausen-radio',stream_url:'https://stream.laut.fm/bochum-dahlhausen-radio',page_url:'https://laut.fm/bochum-dahlhausen-radio'},
+  {slug:'ruhrgebiet-radio',name:'ruhrgebiet-radio',stream_url:'https://stream.laut.fm/ruhrgebiet-radio',page_url:'https://laut.fm/ruhrgebiet-radio'},
+  {slug:'ruhrgebiet',name:'ruhrgebiet',stream_url:'https://stream.laut.fm/ruhrgebiet',page_url:'https://laut.fm/ruhrgebiet'},
+  {slug:'ruhrgebiet-fm',name:'ruhrgebiet-fm',stream_url:'https://stream.laut.fm/ruhrgebiet-fm',page_url:'https://laut.fm/ruhrgebiet-fm'},
+  {slug:'brian-fm',name:'brian-fm',stream_url:'https://stream.laut.fm/brian-fm',page_url:'https://laut.fm/brian-fm'},
+  {slug:'andregaming',name:'andregaming',stream_url:'https://stream.laut.fm/andregaming',page_url:'https://laut.fm/andregaming'},
+  {slug:'niklashuelsmann1',name:'niklashuelsmann1',stream_url:'https://stream.laut.fm/niklashuelsmann1',page_url:'https://laut.fm/niklashuelsmann1'},
+  {slug:'andre-studio',name:'andre-studio',stream_url:'https://stream.laut.fm/andre-studio',page_url:'https://laut.fm/andre-studio'},
+  {slug:'andre-2',name:'andre-2',stream_url:'https://stream.laut.fm/andre-2',page_url:'https://laut.fm/andre-2'},
+  {slug:'andre1',name:'andre1',stream_url:'https://stream.laut.fm/andre1',page_url:'https://laut.fm/andre1'},
+  {slug:'andre',name:'andre',stream_url:'https://stream.laut.fm/andre',page_url:'https://laut.fm/andre'},
+  {slug:'jason',name:'jason',stream_url:'https://stream.laut.fm/jason',page_url:'https://laut.fm/jason'},
+  {slug:'niklas',name:'niklas',stream_url:'https://stream.laut.fm/niklas',page_url:'https://laut.fm/niklas'},
+  {slug:'radio-brian',name:'radio-brian',stream_url:'https://stream.laut.fm/radio-brian',page_url:'https://laut.fm/radio-brian'},
+  {slug:'brian-radio1',name:'brian-radio1',stream_url:'https://stream.laut.fm/brian-radio1',page_url:'https://laut.fm/brian-radio1'},
+  {slug:'radio-ruhrpott-heimat',name:'radio-ruhrpott-heimat',stream_url:'https://stream.laut.fm/radio-ruhrpott-heimat',page_url:'https://laut.fm/radio-ruhrpott-heimat'},
+  {slug:'ruhrpott1',name:'ruhrpott1',stream_url:'https://stream.laut.fm/ruhrpott1',page_url:'https://laut.fm/ruhrpott1'},
+  {slug:'ruhrpott-fm',name:'ruhrpott-fm',stream_url:'https://stream.laut.fm/ruhrpott-fm',page_url:'https://laut.fm/ruhrpott-fm'},
+  {slug:'rheinland-radio',name:'rheinland-radio',stream_url:'https://stream.laut.fm/rheinland-radio',page_url:'https://laut.fm/rheinland-radio'},
+  {slug:'whitepaneradio',name:'whitepaneradio',stream_url:'https://stream.laut.fm/whitepaneradio',page_url:'https://laut.fm/whitepaneradio'},
+  {slug:'niklasmusikbochum',name:'niklasmusikbochum',stream_url:'https://stream.laut.fm/niklasmusikbochum',page_url:'https://laut.fm/niklasmusikbochum'},
+  {slug:'rotation',name:'rotation',stream_url:'https://stream.laut.fm/rotation',page_url:'https://laut.fm/rotation'},
+  {slug:'huelsmann-fm',name:'huelsmann-fm',stream_url:'https://stream.laut.fm/huelsmann-fm',page_url:'https://laut.fm/huelsmann-fm'},
+  {slug:'huelsmann-channel',name:'huelsmann-channel',stream_url:'https://stream.laut.fm/huelsmann-channel',page_url:'https://laut.fm/huelsmann-channel'},
+  {slug:'non-stop-pop-fm',name:'non-stop-pop-fm',stream_url:'https://stream.laut.fm/non-stop-pop-fm',page_url:'https://laut.fm/non-stop-pop-fm'},
+  {slug:'lieblingssong',name:'lieblingssong',stream_url:'https://stream.laut.fm/lieblingssong',page_url:'https://laut.fm/lieblingssong'},
+  {slug:'meinliegensong',name:'meinliegensong',stream_url:'https://stream.laut.fm/meinliegensong',page_url:'https://laut.fm/meinliegensong'},
+  {slug:'niklashuelsmann-fm',name:'niklashuelsmann-fm',stream_url:'https://stream.laut.fm/niklashuelsmann-fm',page_url:'https://laut.fm/niklashuelsmann-fm'},
+  {slug:'hard-station',name:'hard-station',stream_url:'https://stream.laut.fm/hard-station',page_url:'https://laut.fm/hard-station'},
+  {slug:'hyundai-i30-juli-2012',name:'hyundai-i30-juli-2012',stream_url:'https://stream.laut.fm/hyundai-i30-juli-2012',page_url:'https://laut.fm/hyundai-i30-juli-2012'},
+  {slug:'niklas-fm1',name:'niklas-fm1',stream_url:'https://stream.laut.fm/niklas-fm1',page_url:'https://laut.fm/niklas-fm1'},
+  {slug:'jason-fm',name:'jason-fm',stream_url:'https://stream.laut.fm/jason-fm',page_url:'https://laut.fm/jason-fm'},
+  {slug:'auto1',name:'auto1',stream_url:'https://stream.laut.fm/auto1',page_url:'https://laut.fm/auto1'},
+  {slug:'radio-standard',name:'radio-standard',stream_url:'https://stream.laut.fm/radio-standard',page_url:'https://laut.fm/radio-standard'},
+  {slug:'breath-radio',name:'breath-radio',stream_url:'https://stream.laut.fm/breath-radio',page_url:'https://laut.fm/breath-radio'},
+  {slug:'beat58',name:'beat58',stream_url:'https://stream.laut.fm/beat58',page_url:'https://laut.fm/beat58'},
+  {slug:'beat57',name:'beat57',stream_url:'https://stream.laut.fm/beat57',page_url:'https://laut.fm/beat57'},
+  {slug:'langewelle-fm',name:'langewelle-fm',stream_url:'https://stream.laut.fm/langewelle-fm',page_url:'https://laut.fm/langewelle-fm'},
+  {slug:'rpm-fm',name:'rpm-fm',stream_url:'https://stream.laut.fm/rpm-fm',page_url:'https://laut.fm/rpm-fm'},
+  {slug:'meinvibe-radio',name:'meinvibe-radio',stream_url:'https://stream.laut.fm/meinvibe-radio',page_url:'https://laut.fm/meinvibe-radio'},
+  {slug:'nh-radio',name:'nh-radio',stream_url:'https://stream.laut.fm/nh-radio',page_url:'https://laut.fm/nh-radio'},
+  {slug:'punkworld',name:'punkworld',stream_url:'https://stream.laut.fm/punkworld',page_url:'https://laut.fm/punkworld'},
+  {slug:'einfachfunk',name:'einfachfunk',stream_url:'https://stream.laut.fm/einfachfunk',page_url:'https://laut.fm/einfachfunk'},
+  {slug:'nachtflug-fm',name:'nachtflug-fm',stream_url:'https://stream.laut.fm/nachtflug-fm',page_url:'https://laut.fm/nachtflug-fm'},
+  {slug:'nachtflug-radio',name:'nachtflug-radio',stream_url:'https://stream.laut.fm/nachtflug-radio',page_url:'https://laut.fm/nachtflug-radio'},
+  {slug:'studio',name:'studio',stream_url:'https://stream.laut.fm/studio',page_url:'https://laut.fm/studio'},
+  {slug:'brian-2',name:'brian-2',stream_url:'https://stream.laut.fm/brian-2',page_url:'https://laut.fm/brian-2'},
+  {slug:'niklas-radio-2',name:'niklas-radio-2',stream_url:'https://stream.laut.fm/niklas-radio-2',page_url:'https://laut.fm/niklas-radio-2'},
+  {slug:'germany-fm',name:'germany-fm',stream_url:'https://stream.laut.fm/germany-fm',page_url:'https://laut.fm/germany-fm'},
+  {slug:'null',name:'null',stream_url:'https://stream.laut.fm/null',page_url:'https://laut.fm/null'},
+  {slug:'test-station-fm',name:'test-station-fm',stream_url:'https://stream.laut.fm/test-station-fm',page_url:'https://laut.fm/test-station-fm'},
+  {slug:'origin-fm',name:'origin-fm',stream_url:'https://stream.laut.fm/origin-fm',page_url:'https://laut.fm/origin-fm'},
+  {slug:'ocon-fm',name:'ocon-fm',stream_url:'https://stream.laut.fm/ocon-fm',page_url:'https://laut.fm/ocon-fm'},
+  {slug:'felberabend-fm-1',name:'felberabend-fm-1',stream_url:'https://stream.laut.fm/felberabend-fm-1',page_url:'https://laut.fm/felberabend-fm-1'},
+  {slug:'felberabend-radio',name:'felberabend-radio',stream_url:'https://stream.laut.fm/felberabend-radio',page_url:'https://laut.fm/felberabend-radio'},
+  {slug:'studio-huelsmann',name:'studio-huelsmann',stream_url:'https://stream.laut.fm/studio-huelsmann',page_url:'https://laut.fm/studio-huelsmann'},
+  {slug:'raveforce-fm',name:'raveforce-fm',stream_url:'https://stream.laut.fm/raveforce-fm',page_url:'https://laut.fm/raveforce-fm'},
+  {slug:'live-studio',name:'live-studio',stream_url:'https://stream.laut.fm/live-studio',page_url:'https://laut.fm/live-studio'},
+  {slug:'freeplay-fm',name:'freeplay-fm',stream_url:'https://stream.laut.fm/freeplay-fm',page_url:'https://laut.fm/freeplay-fm'},
+  {slug:'ruhr-beat',name:'ruhr-beat',stream_url:'https://stream.laut.fm/ruhr-beat',page_url:'https://laut.fm/ruhr-beat'},
+  {slug:'witohorfari-wizardry-fm',name:'witohorfari-wizardry-fm',stream_url:'https://stream.laut.fm/witohorfari-wizardry-fm',page_url:'https://laut.fm/witohorfari-wizardry-fm'},
+  {slug:'cyberpunk-radio',name:'cyberpunk-radio',stream_url:'https://stream.laut.fm/cyberpunk-radio',page_url:'https://laut.fm/cyberpunk-radio'},
+  {slug:'cyberpunk-fm',name:'cyberpunk-fm',stream_url:'https://stream.laut.fm/cyberpunk-fm',page_url:'https://laut.fm/cyberpunk-fm'},
+  {slug:'sound-wave-ruhr',name:'sound-wave-ruhr',stream_url:'https://stream.laut.fm/sound-wave-ruhr',page_url:'https://laut.fm/sound-wave-ruhr'},
+  {slug:'obx-radio',name:'obx-radio',stream_url:'https://stream.laut.fm/obx-radio',page_url:'https://laut.fm/obx-radio'},
+  {slug:'kanal-x',name:'kanal-x',stream_url:'https://stream.laut.fm/kanal-x',page_url:'https://laut.fm/kanal-x'}
+];
 
 const state={active:{...fallback},refreshing:false,searchToken:0,listenerValue:null,artCache:new Map(),artToken:0};
 
@@ -714,7 +816,7 @@ function trafficDateText(w){
   return parts.filter(x=>/^(Beginn|Ende):/i.test(x.trim())).join(' · ');
 }
 function trafficSort(a,b){
-  const rank={block:0,accident:1,jam:2,warn:3,roadwork:4,info:5};
+  const rank={block:0,jam:1,warn:2,roadwork:3,info:4};
   return (rank[trafficType(a,a.__service)[0]]??9)-(rank[trafficType(b,b.__service)[0]]??9);
 }
 function renderTraffic(){
@@ -726,13 +828,13 @@ function renderTraffic(){
     .sort(trafficSort);
 
   const allRegion=trafficData.filter(w=>trafficInRegion(w,trafficRegion));
-  const counts={jam:0,accident:0,warn:0,block:0,roadwork:0};
+  const counts={jam:0,warn:0,block:0,roadwork:0};
   allRegion.forEach(w=>{
     const k=trafficType(w,w.__service)[0];
     if(k in counts) counts[k]++;
   });
   $('trafficCount').textContent=
-    `${allRegion.length} Meldungen · ${region.label} · 🚗 ${counts.jam} · ⚠ ${counts.accident+counts.warn} · ⛔ ${counts.block} · 🚧 ${counts.roadwork}`;
+    `${allRegion.length} Meldungen · ${region.label} · 🚗 ${counts.jam} · ⚠ ${counts.warn} · ⛔ ${counts.block} · 🚧 ${counts.roadwork}`;
 
   if(!visible.length){
     const noMessages=allRegion.length===0;
