@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>RadioHub · laut.fm · V47</title>
+<title>RadioHub · laut.fm · V55</title>
 <style>
 :root{
   --bg:#080b12;--panel:#111722;--panel2:#0c121b;--line:#293446;
@@ -270,7 +270,26 @@ footer{text-align:center;color:var(--muted);font-size:12px;margin-top:25px}
   .traffic-region{flex:0 0 auto}
 }
 
+
+/* V48 extras */
+.volume-control{display:flex;align-items:center;gap:8px;font-size:14px;color:var(--muted)}
+.volume-control input{width:110px}
+.icon-btn,.extra-btn{border:1px solid var(--line);background:var(--panel2);color:var(--text);border-radius:12px;padding:9px 12px;cursor:pointer}
+.extras-card{margin-top:18px}
+.extras-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:12px}
+.extra-btn{font-weight:650}
+.extras-status{margin-top:10px;color:var(--muted);font-size:13px}.favorites-list{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}.favorite-chip{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--line);background:var(--panel2);color:var(--text);border-radius:999px;padding:7px 10px;cursor:pointer}.favorite-chip:hover{border-color:#7c5cff}.favorite-chip small{color:var(--muted)}.favorites-empty{color:var(--muted);font-size:13px;margin-top:10px}.auto-mode .player{outline:1px solid rgba(55,214,122,.35);outline-offset:2px}
+@media(max-width:560px){.extras-grid{grid-template-columns:1fr}.volume-control input{width:90px}}
+
+.search-loading{opacity:.98}
+.search-table .search-play{white-space:nowrap}
+@media (max-width:560px){
+  .search-table th:nth-child(3),.search-table td:nth-child(3){display:none}
+  .search-table th:first-child,.search-table td:first-child{width:52px}
+}
+
 </style>
+<!-- RadioHub V54: Gesamtcheck / Live-Refresh stabilisiert -->
 </head>
 <body>
 <div class="wrap">
@@ -278,7 +297,7 @@ footer{text-align:center;color:var(--muted);font-size:12px;margin-top:25px}
   <div class="brand">Radio<span>Hub</span> <small style="font-size:12px;color:#98a4b5">· laut.fm</small></div>
   <div class="search-area">
     <form class="search" id="searchForm">
-      <input id="searchInput" placeholder="Sender suchen …" autocomplete="off" spellcheck="false">
+      <input id="searchInput" autocomplete="off" spellcheck="false" aria-label="Sender suchen" placeholder="Sender suchen …" autocomplete="off" spellcheck="false">
       <button type="submit">Suchen</button>
     </form>
     <div id="results" class="search-results" aria-live="polite">
@@ -330,7 +349,7 @@ footer{text-align:center;color:var(--muted);font-size:12px;margin-top:25px}
           <div class="player-artist" id="playerSubtitle">Klicken, um den Sender zu starten</div>
         </div>
       </div>
-      <div class="player-actions">
+      <div class="player-actions"><label class="volume-control" title="Lautstärke">🔊 <input id="volumeRange" type="range" min="0" max="1" step="0.01" value="0.85" aria-label="Lautstärke"></label><button id="muteBtn" class="icon-btn" type="button" title="Stumm">🔇</button>
         <a id="lautLink" href="https://laut.fm/niklas-fm" target="_blank" rel="noopener">laut.fm öffnen</a>
         <a id="streamLink" href="https://stream.laut.fm/niklas-fm" target="_blank" rel="noopener">Stream direkt öffnen</a>
       </div>
@@ -407,10 +426,24 @@ footer{text-align:center;color:var(--muted);font-size:12px;margin-top:25px}
 </aside>
 </div>
 
+
+<section class="card extras-card" id="extrasCard">
+  <div class="section-title">RadioHub Extras</div>
+  <div class="extras-grid">
+    <button class="extra-btn" id="favoriteBtn" type="button">☆ Favorit</button>
+    <button class="extra-btn" id="sleepBtn" type="button">⏱ Sleep-Timer</button>
+    <button class="extra-btn" id="autoModeBtn" type="button">🚗 Auto-Modus</button>
+  </div>
+  <div class="extras-status" id="extrasStatus">Favoriten und Einstellungen werden nur in diesem Browser gespeichert.</div>
+  <div class="section-title" style="margin-top:18px;font-size:15px">⭐ Deine Favoriten</div>
+  <div id="favoritesList" class="favorites-empty">Noch keine Favoriten gespeichert.</div>
+</section>
+
 <footer>RadioHub · eigene laut.fm-Sender suchen, auswählen und direkt hören · responsive für Computer, Tablet und Smartphone.</footer>
 </div>
 
 <script>
+const PLACEHOLDER_IMAGE='data:image/svg+xml;charset=UTF-8,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22400%22 height=%22400%22 viewBox=%220 0 400 400%22%3E%3Crect width=%22400%22 height=%22400%22 fill=%22%23111722%22/%3E%3Ccircle cx=%22200%22 cy=%22165%22 r=%2270%22 fill=%22%2337d67a%22 opacity=%22.85%22/%3E%3Cpath d=%22M125 260h150v35H125z%22 fill=%22%2337d67a%22 opacity=%22.85%22/%3E%3C/svg%3E';
 const API='https://api.laut.fm';
 
 // Robuster Fallback für alle Bilder. In V39 war diese Konstante versehentlich
@@ -438,6 +471,10 @@ const fallback={
 
 // Nur diese Sender werden in der Suche berücksichtigt.
 // Weitere eigene laut.fm-Sender hier mit ihrem Slug ergänzen.
+const KNOWN_LOGOS={
+  'niklas-fm':'https://assets.laut.fm/8119c5f105483f4566521b4b9c75dc8c?t=_120x120'
+};
+
 const MY_STATIONS=[
   fallback,
   {slug:'niklasdj',name:'niklasdj',stream_url:'https://stream.laut.fm/niklasdj',page_url:'https://laut.fm/niklasdj'},
@@ -482,6 +519,7 @@ const MY_STATIONS=[
   {slug:'jason',name:'jason',stream_url:'https://stream.laut.fm/jason',page_url:'https://laut.fm/jason'},
   {slug:'niklas',name:'niklas',stream_url:'https://stream.laut.fm/niklas',page_url:'https://laut.fm/niklas'},
   {slug:'radio-brian',name:'radio-brian',stream_url:'https://stream.laut.fm/radio-brian',page_url:'https://laut.fm/radio-brian'},
+  {slug:'brian-radio',name:'brian-radio',claim:'Musik, die dich bewegt.',city:'Bochum',description:'Egal ob im Büro, auf dem Weg zur Arbeit oder beim Entspannen – wir sind dein Begleiter mit dem perfekten Musikmix. Wir stehen für gute Laune und die besten Songs ohne lange Umwege. Dein Radio, dein Style, dein BRIAN-RADIO.',stream_url:'https://stream.laut.fm/brian-radio',page_url:'https://laut.fm/brian-radio'},
   {slug:'brian-radio1',name:'brian-radio1',stream_url:'https://stream.laut.fm/brian-radio1',page_url:'https://laut.fm/brian-radio1'},
   {slug:'radio-ruhrpott-heimat',name:'radio-ruhrpott-heimat',stream_url:'https://stream.laut.fm/radio-ruhrpott-heimat',page_url:'https://laut.fm/radio-ruhrpott-heimat'},
   {slug:'ruhrpott-1',name:'ruhrpott-1',stream_url:'https://stream.laut.fm/ruhrpott-1',page_url:'https://laut.fm/ruhrpott-1'},
@@ -540,6 +578,7 @@ const MY_STATIONS=[
 ];
 
 const state={active:{...fallback},refreshing:false,searchToken:0,listenerValue:null,artCache:new Map(),artToken:0};
+window.RadioHubState=state;
 
 const $=id=>document.getElementById(id);
 
@@ -588,6 +627,7 @@ function stationImageCandidates(s){
   // Das Senderlogo kommt immer aus den Stationsdaten bzw. dem
   // offiziellen laut.fm-Asset-Pfad – niemals aus current_song.artist.image.
   const slug=slugOf(s);
+  const known=KNOWN_LOGOS[slug]? [KNOWN_LOGOS[slug]] : [];
   const legacy=slug?[
     `https://assets.laut.fm/user/${encodeURIComponent(slug)}/user_640x640.jpg`,
     `https://assets.laut.fm/user/${encodeURIComponent(slug)}/user.jpg`,
@@ -595,7 +635,7 @@ function stationImageCandidates(s){
   ]:[];
   const direct=collectDirectImageUrls(s).flatMap(expandLautAssetUrl);
   const assets=collectLautAssetUrls(s).flatMap(expandLautAssetUrl);
-  return [...new Set([...legacy,...direct,...assets].map(normalizeImageUrl).filter(Boolean))];
+  return [...new Set([...known,...legacy,...direct,...assets].map(normalizeImageUrl).filter(Boolean))];
 }
 function imageOf(s){return stationImageCandidates(s)[0]||''}
 
@@ -1525,6 +1565,38 @@ async function loadStation(slug){
   return out;
 }
 
+
+/* V53_LIVE_AUDIO */
+(function(){
+  const audio=$('audio'), play=$('playBtn');
+  if(!audio||!play)return;
+  let reconnectTimer=0, reconnectAttempts=0;
+
+  function setButton(){
+    play.textContent=audio.paused?'▶':'❚❚';
+    play.setAttribute('aria-label',audio.paused?'Stream starten':'Stream pausieren');
+  }
+  function scheduleReconnect(){
+    if(!state.autoMode || audio.paused) return;
+    clearTimeout(reconnectTimer);
+    const delay=Math.min(30000,Math.max(1500,1500*Math.pow(1.6,reconnectAttempts++)));
+    $('updated').textContent='Stream kurz unterbrochen · neuer Verbindungsversuch …';
+    reconnectTimer=setTimeout(async()=>{
+      try{
+        await audio.play();
+        reconnectAttempts=0;
+        $('updated').textContent='Stream wieder verbunden · '+new Date().toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+      }catch(e){scheduleReconnect();}
+    },delay);
+  }
+  audio.addEventListener('playing',()=>{reconnectAttempts=0;setButton();});
+  audio.addEventListener('pause',setButton);
+  audio.addEventListener('error',()=>{setButton();scheduleReconnect();});
+  audio.addEventListener('stalled',scheduleReconnect);
+  audio.addEventListener('waiting',()=>{if(!audio.paused)scheduleReconnect();});
+  window.RadioHubAudio={setButton,scheduleReconnect};
+})();
+
 async function refreshActive(){
   if(state.refreshing)return;
   state.refreshing=true;
@@ -1532,6 +1604,7 @@ async function refreshActive(){
   try{
     const data=await loadStation(state.active.slug);
     state.active={...state.active,...data};
+    window.RadioHubState.active=state.active;
     renderActive(state.active);
     renderHistory(normalizeList(state.active.last_songs),state.active.current_song);
     $('updated').textContent='Live-Daten: '+new Date().toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
@@ -1550,6 +1623,7 @@ async function activateStation(station){
 
   // Suchergebnisse werden erst hier – und nur hier – zum aktiven Sender.
   state.active={...station,slug};
+  window.RadioHubState.active=state.active;
   renderActive(state.active);
 
   const audio=$('audio');
@@ -1579,6 +1653,7 @@ async function activateStation(station){
   try{
     const data=await loadStation(slug);
     state.active={...state.active,...data,slug};
+    window.RadioHubState.active=state.active;
     renderActive(state.active);
     renderHistory(normalizeList(state.active.last_songs),state.active.current_song);
 
@@ -1602,6 +1677,7 @@ async function enrichSearchStations(items,token){
   const out=await Promise.all(jobs);
   if(token!==state.searchToken)return;
   renderResults(out);
+  $('resultsContent').classList.remove('search-loading');
 }
 
 function renderResults(items){
@@ -1622,7 +1698,7 @@ function renderResults(items){
       const fallback=esc(candidates.slice(1).join('|'));
       const payload=encodeURIComponent(JSON.stringify({slug:s.slug,...s}));
       return `<tr>
-        <td><img class="search-logo" src="${logo}" data-logo-candidates="${fallback}" referrerpolicy="no-referrer" loading="lazy" decoding="async" alt=""></td>
+        <td><img class="search-logo" src="${logo}" data-logo-candidates="${fallback}" referrerpolicy="no-referrer" loading="lazy" decoding="async" alt="Senderlogo"></td>
         <td><div class="search-name">${esc(s.name||s.slug)}</div><small class="search-meta">${esc(s.slug||'')}</small></td>
         <td><div class="search-claim">${esc(s.claim||s.city||'laut.fm')}</div></td>
         <td><button class="search-play" type="button" data-station="${payload}">▶ Hören</button></td>
@@ -1653,13 +1729,22 @@ function searchNormalize(v){
     .replace(/[^a-z0-9]+/gi,'');
 }
 function stationMatches(s,q){
-  const raw=[s.slug,s.name,s.city,s.country,s.claim,s.description,...(Array.isArray(s.genres)?s.genres.map(g=>typeof g==='object'?g.name:g):[])].filter(Boolean);
+  const raw=[
+    s.slug,s.name,s.city,s.country,s.claim,s.description,
+    ...(Array.isArray(s.genres)?s.genres.map(g=>typeof g==='object'?g.name:g):[])
+  ].filter(Boolean);
+
   const needle=searchNormalize(q);
   if(!needle)return true;
-  const haystack=raw.map(v=>searchNormalize(v)).join(' ');
-  if(haystack.includes(needle)) return true;
-  const words=String(q).trim().split(/\\s+/).map(searchNormalize).filter(Boolean);
-  return words.length>0 && words.every(word=>haystack.includes(word));
+
+  // Search directly in the configured master list. Punctuation, spaces,
+  // hyphens and German umlauts therefore never prevent a match.
+  const fields=raw.map(v=>searchNormalize(v)).filter(Boolean);
+  if(fields.some(v=>v.includes(needle)))return true;
+
+  // Also support multi-word searches such as "brian radio".
+  const words=String(q).trim().split(/\s+/).map(searchNormalize).filter(Boolean);
+  return words.length>0 && words.every(word=>fields.some(v=>v.includes(word)));
 }
 function searchScore(s,q){
   const needle=searchNormalize(q);
@@ -1694,7 +1779,12 @@ async function searchStations(q){
 
   if(token!==state.searchToken)return;
   if(!items.length){renderResults([]);return;}
-  $('resultsContent').textContent='Senderdaten werden geladen …';
+
+  // Show the local master-list result immediately. Live metadata is an
+  // enhancement and must never make a valid sender appear missing.
+  renderResults(items.slice(0,100));
+  $('resultCount').textContent=`${items.length} Treffer`;
+  $('resultsContent').classList.add('search-loading');
   await enrichSearchStations(items.slice(0,100),token);
 }
 
@@ -1732,11 +1822,25 @@ $('playBtn').addEventListener('click',async()=>{
 
 $('audio').addEventListener('play',()=>{$('playBtn').textContent='❚❚'});
 $('audio').addEventListener('pause',()=>{$('playBtn').textContent='▶'});
-$('audio').addEventListener('error',()=>{$('playBtn').textContent='▶'});
+$('audio').addEventListener('error',()=>{$('playBtn').textContent='▶'; if(window.RadioHubState)window.RadioHubState.streamErrorAt=Date.now();});
 
+window.RadioHubState.active=state.active;
 renderActive(fallback);
 
 $('updated').textContent='Live-Daten werden geladen …';
+
+// V54_LIVE_REFRESH: Live-Daten regelmäßig nachladen, ohne die Seite oder den
+// Stream neu zu laden. Fehler in einem Zyklus werden bewusst isoliert.
+let liveRefreshTimer=0;
+function scheduleLiveRefresh(){
+  clearTimeout(liveRefreshTimer);
+  liveRefreshTimer=setTimeout(async()=>{
+    try{ await refreshActive(); }
+    catch(e){ $('updated').textContent='Live-Daten werden automatisch erneut abgefragt.'; }
+    finally{ scheduleLiveRefresh(); }
+  },20000);
+}
+scheduleLiveRefresh();
 
 // Sicherheitsnetz: Falls eine Browser-/Netzwerkabfrage die Live-Daten verzögert,
 // bleibt die Seite trotzdem aktiv und versucht die Abfrage regelmäßig erneut.
@@ -1747,6 +1851,80 @@ $('updated').textContent='Live-Daten werden geladen …';
 refreshActive();
 setInterval(refreshActive,15000);
 
+
+/* V51_LOCAL_FEATURES */
+(function(){
+  const audio=document.getElementById('audio'), vol=document.getElementById('volumeRange'), mute=document.getElementById('muteBtn');
+  const fav=document.getElementById('favoriteBtn'), sleep=document.getElementById('sleepBtn'), auto=document.getElementById('autoModeBtn');
+  const status=document.getElementById('extrasStatus'), list=document.getElementById('favoritesList');
+  const key='radiohub_v51_settings', defaults={favorites:[],volume:0.85,muted:false,sleepUntil:0,autoMode:false};
+  let cfg={...defaults};
+  try{const saved=JSON.parse(localStorage.getItem(key)||'{}');if(saved&&typeof saved==='object')cfg={...defaults,...saved};}catch(e){}
+  cfg.favorites=Array.isArray(cfg.favorites)?[...new Set(cfg.favorites.map(String))]:[];
+  cfg.volume=Number.isFinite(Number(cfg.volume))?Math.min(1,Math.max(0,Number(cfg.volume))):defaults.volume;
+  cfg.muted=Boolean(cfg.muted); cfg.autoMode=Boolean(cfg.autoMode);
+  const save=()=>{try{localStorage.setItem(key,JSON.stringify(cfg));}catch(e){}};
+  const activeSlug=()=>window.RadioHubState?.active?.slug||'';
+  const stationBySlug=slug=>(window.RadioHubState?.stations||[]).find(s=>s.slug===slug)||(window.RadioHubState?.active?.slug===slug?window.RadioHubState.active:null);
+  function updateFavButton(){if(!fav)return;const on=cfg.favorites.includes(activeSlug());fav.textContent=on?'★ Favorit':'☆ Favorit';fav.setAttribute('aria-pressed',String(on));}
+  function renderFavorites(){
+    if(!list)return;
+    if(!cfg.favorites.length){list.className='favorites-empty';list.textContent='Noch keine Favoriten gespeichert.';return;}
+    list.className='favorites-list';
+    list.innerHTML=cfg.favorites.map(slug=>{const s=stationBySlug(slug)||{slug,name:slug};return `<button class="favorite-chip" type="button" data-favorite-slug="${esc(slug)}">★ <span>${esc(s.name||slug)}</span><small>Hören</small></button>`;}).join('');
+    list.querySelectorAll('[data-favorite-slug]').forEach(btn=>btn.addEventListener('click',async()=>{const slug=btn.dataset.favoriteSlug;const s=stationBySlug(slug)||{slug,name:slug,stream_url:`https://stream.laut.fm/${encodeURIComponent(slug)}`,page_url:`https://laut.fm/${encodeURIComponent(slug)}`};await activateStation(s);updateFavButton();renderFavorites();}));
+  }
+  function sync(){
+    if(vol){vol.value=String(cfg.volume);if(audio)audio.volume=cfg.volume;} if(audio)audio.muted=cfg.muted;
+    if(mute)mute.textContent=cfg.muted?'🔊':'🔇'; if(sleep)sleep.textContent=cfg.sleepUntil>0?'⏱ Sleep-Timer an':'⏱ Sleep-Timer'; if(auto){auto.textContent=cfg.autoMode?'🚗 Auto-Modus an':'🚗 Auto-Modus';auto.setAttribute('aria-pressed',String(cfg.autoMode));}
+    document.body.classList.toggle('auto-mode',cfg.autoMode);updateFavButton();renderFavorites();
+  }
+  if(fav)fav.addEventListener('click',()=>{const slug=activeSlug();if(!slug)return;if(cfg.favorites.includes(slug)){cfg.favorites=cfg.favorites.filter(x=>x!==slug);if(status)status.textContent='Sender aus deinen Favoriten entfernt.';}else{cfg.favorites=[...cfg.favorites,slug];if(status)status.textContent='Sender zu deinen Favoriten hinzugefügt.';}save();sync();});
+  if(vol)vol.addEventListener('input',()=>{cfg.volume=Number(vol.value);cfg.muted=false;if(audio){audio.volume=cfg.volume;audio.muted=false;}save();sync();});
+  if(mute)mute.addEventListener('click',()=>{cfg.muted=!cfg.muted;if(audio)audio.muted=cfg.muted;save();sync();});
+  if(sleep)sleep.addEventListener('click',()=>{const options=[0,15,30,45,60],remaining=cfg.sleepUntil>0?Math.max(0,Math.ceil((cfg.sleepUntil-Date.now())/60000)):0;const idx=options.findIndex(v=>v>remaining);const next=options[idx<0?0:idx];cfg.sleepUntil=next?Date.now()+next*60000:0;save();if(status)status.textContent=next?`Sleep-Timer: ${next} Minuten.`:'Sleep-Timer ausgeschaltet.';});
+  if(auto)auto.addEventListener('click',()=>{cfg.autoMode=!cfg.autoMode;save();sync();if(status)status.textContent=cfg.autoMode?'Auto-Modus aktiviert – Stream wird bei Unterbrechungen neu verbunden.':'Auto-Modus ausgeschaltet.';if(cfg.autoMode&&audio?.paused&&window.RadioHubState?.active)reconnect();});
+  setInterval(()=>{if(cfg.sleepUntil&&Date.now()>=cfg.sleepUntil){cfg.sleepUntil=0;save();if(audio)audio.pause();if(status)status.textContent='Sleep-Timer: Stream gestoppt.';}updateFavButton();},1000);
+  window.RadioHubState.stations=MY_STATIONS; sync();
+
+  // Auto-Modus: bei einem Streamfehler wird die Live-Verbindung automatisch
+  // mit kurzer Verzögerung neu aufgebaut. Das macht den Modus besonders
+  // praktisch für die Nutzung im Auto, ohne den normalen Modus zu verändern.
+  let reconnectTimer=0;
+  const reconnect=()=>{
+    if(!cfg.autoMode||!audio||!audio.paused)return;
+    clearTimeout(reconnectTimer);
+    reconnectTimer=setTimeout(async()=>{
+      try{
+        const stream=window.RadioHubState?.active?.stream_url||`https://stream.laut.fm/${encodeURIComponent(window.RadioHubState?.active?.slug||'niklas-fm')}`;
+        audio.pause(); audio.removeAttribute('src'); audio.load();
+        audio.src=stream; audio.dataset.streamUrl=stream; audio.load();
+        await audio.play();
+      }catch(e){ reconnect(); }
+    },2500);
+  };
+  audio?.addEventListener('error',reconnect);
+  audio?.addEventListener('stalled',reconnect);
+  audio?.addEventListener('waiting',()=>{ if(cfg.autoMode) reconnect(); });
+})();
 </script>
+
+<script>
+/* V55_FINAL_GUARD */
+(function(){
+  'use strict';
+  window.addEventListener('error', function(ev){
+    var box=document.getElementById('statusText') || document.getElementById('streamStatus');
+    if(box && ev && ev.message && /undefined|null|not a function/i.test(ev.message)){
+      box.textContent='Bereit – ein einzelner Fehler hat den RadioHub nicht gestoppt.';
+    }
+  });
+  window.addEventListener('unhandledrejection', function(){
+    var box=document.getElementById('statusText') || document.getElementById('streamStatus');
+    if(box) box.setAttribute('data-api-warning','1');
+  });
+})();
+</script>
+
 </body>
 </html>
