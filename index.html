@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>RadioHub · laut.fm · V55</title>
+<title>RadioHub · laut.fm · V57</title>
 <style>
 :root{
   --bg:#080b12;--panel:#111722;--panel2:#0c121b;--line:#293446;
@@ -288,6 +288,10 @@ footer{text-align:center;color:var(--muted);font-size:12px;margin-top:25px}
   .search-table th:first-child,.search-table td:first-child{width:52px}
 }
 
+
+.traffic-read-bottom{display:flex;justify-content:flex-start;margin-top:10px}
+@media(max-width:560px){.traffic-read-bottom{justify-content:stretch}.traffic-read-bottom .read-btn{width:100%}}
+
 </style>
 <!-- RadioHub V54: Gesamtcheck / Live-Refresh stabilisiert -->
 </head>
@@ -381,7 +385,6 @@ footer{text-align:center;color:var(--muted);font-size:12px;margin-top:25px}
           <div class="traffic-subtitle">Aktuelle Meldungen für den ausgewählten Abschnitt</div>
         </div>
         <div class="traffic-head-actions">
-          <button class="read-btn" id="trafficReadBtn" type="button" aria-pressed="false">🔊 Vorlesen</button>
           <span class="traffic-live">● LIVE-DATEN</span>
         </div>
       </div>
@@ -419,6 +422,9 @@ footer{text-align:center;color:var(--muted);font-size:12px;margin-top:25px}
       <div class="traffic-source">
         <span id="trafficUpdated">Aktuelle NRW-Verkehrsdaten werden automatisch aktualisiert.</span>
         <a class="traffic-link" href="https://www.autobahn.de/betrieb-verkehr/verkehrsmeldungen" target="_blank" rel="noopener">Offizielle Verkehrsmeldungen ↗</a>
+      </div>
+      <div class="traffic-read-bottom">
+        <button class="read-btn" id="trafficReadBtn" type="button" aria-pressed="false">🔊 Vorlesen</button>
       </div>
     </section>
 
@@ -1925,6 +1931,5 @@ setInterval(refreshActive,15000);
   });
 })();
 </script>
-
 </body>
 </html>
