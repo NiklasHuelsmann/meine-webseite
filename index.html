@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>RadioHub · laut.fm · V39</title>
+<title>RadioHub · laut.fm · V40</title>
 <style>
 :root{
   --bg:#080b12;--panel:#111722;--panel2:#0c121b;--line:#293446;
@@ -390,6 +390,18 @@ footer{text-align:center;color:var(--muted);font-size:12px;margin-top:25px}
 <script>
 const API='https://api.laut.fm';
 
+// Robuster Fallback für alle Bilder. In V39 war diese Konstante versehentlich
+// nicht definiert. Dadurch brach renderActive() sofort mit ReferenceError ab
+// und die darunter gestartete Live-Abfrage wurde nie ausgeführt.
+const placeholder='data:image/svg+xml;charset=UTF-8,'+encodeURIComponent(`
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640">
+  <defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#263248"/><stop offset="1" stop-color="#101722"/></linearGradient></defs>
+  <rect width="640" height="640" rx="72" fill="url(#g)"/>
+  <circle cx="320" cy="300" r="128" fill="#37d67a" opacity=".96"/>
+  <path d="M285 225l115 75-115 75z" fill="#07120b"/>
+  <path d="M185 455h270" stroke="#cbd3df" stroke-width="20" stroke-linecap="round" opacity=".8"/>
+</svg>`);
+
 const fallback={
   slug:'niklas-fm',
   name:'Niklas-FM',
@@ -397,7 +409,8 @@ const fallback={
   city:'Bochum-Dahlhausen',
   description:'Wir spielen die Songs, die du wirklich hören willst. Keine langen Unterbrechungen, einfach guter Sound für deinen Tag – egal ob im Auto, im Büro oder zu Hause. Dein täglicher Begleiter, direkt aus dem Herzen des Ruhrgebiets.',
   stream_url:'https://stream.laut.fm/niklas-fm',
-  page_url:'https://laut.fm/niklas-fm'
+  page_url:'https://laut.fm/niklas-fm',
+  image:'https://assets.laut.fm/8119c5f105483f4566521b4b9c75dc8c?t=_120x120'
 };
 
 // Nur diese Sender werden in der Suche berücksichtigt.
@@ -1642,7 +1655,7 @@ renderActive(fallback);
 
 $('updated').textContent='Live-Daten werden geladen …';
 
-// Sicherheitsnetz: Falls eine ältere Browser-Version die Live-Daten verzögert,
+// Sicherheitsnetz: Falls eine Browser-/Netzwerkabfrage die Live-Daten verzögert,
 // bleibt die Seite trotzdem aktiv und versucht die Abfrage regelmäßig erneut.
 
 // Direkt beim Laden echte laut.fm-Livedaten holen und danach regelmäßig
