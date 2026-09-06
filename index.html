@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>RadioHub · laut.fm · V40</title>
+<title>RadioHub · laut.fm · V41</title>
 <style>
 :root{
   --bg:#080b12;--panel:#111722;--panel2:#0c121b;--line:#293446;
@@ -135,14 +135,36 @@ h1{font-size:30px;line-height:1.05;margin:0 0 5px}
   .history-title,.history-artist{font-size:12px;line-height:1.3}
 }
 
-/* Search */
-.result{display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid #222b38}
-.result:last-child{border-bottom:0}
-.rlogo{width:54px;height:54px;border-radius:12px;object-fit:cover;background:#202938;flex:0 0 54px}
-.rmain{min-width:0;flex:1}.rmain strong{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.rmain small{display:block;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.rplay{padding:9px 12px;border-radius:10px;font-size:13px;flex:0 0 auto}
-.search-help{font-size:11px;color:var(--muted);margin-top:9px}
+/* Search – direkt unter dem Suchfeld, keine breite Außenbox */
+.search-area{width:min(760px,100%);margin-left:auto}
+.search{max-width:none;width:100%}
+.search input{min-width:0}
+.search-results{display:none;margin-top:8px;border:1px solid var(--line);border-radius:16px;background:#0d131d;overflow:hidden;box-shadow:0 16px 38px rgba(0,0,0,.24)}
+.search-results.show{display:block}
+.search-results-head{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 13px;background:#111925;border-bottom:1px solid var(--line);font-size:12px;color:var(--muted)}
+.search-table-wrap{overflow-x:auto}
+.search-table{width:100%;border-collapse:collapse;min-width:560px}
+.search-table th{padding:9px 12px;text-align:left;background:#080c12;color:#aeb9c8;font-size:11px;font-weight:800;white-space:nowrap}
+.search-table td{padding:9px 12px;border-top:1px solid #202a38;vertical-align:middle}
+.search-table tbody tr:hover{background:#131c29}
+.search-logo{width:42px;height:42px;border-radius:10px;object-fit:cover;background:#202938;border:1px solid var(--line);display:block}
+.search-name{font-weight:800;white-space:nowrap}
+.search-meta{display:block;color:var(--muted);font-size:11px;margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:270px}
+.search-claim{color:#cbd3df;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:230px}
+.search-play{padding:7px 11px;border-radius:9px;font-size:12px;white-space:nowrap}
+.search-empty{padding:15px;color:var(--muted);text-align:center;font-size:13px}
+.search-help{font-size:11px;color:var(--muted);margin-top:7px}
+@media(max-width:850px){
+  .search-area{width:100%;margin-left:0}
+}
+@media(max-width:560px){
+  .search-results{border-radius:13px}
+  .search-table{min-width:0}
+  .search-table th:nth-child(3),.search-table td:nth-child(3){display:none}
+  .search-table th,.search-table td{padding:8px}
+  .search-logo{width:38px;height:38px}
+  .search-meta{max-width:150px}
+}
 
 footer{text-align:center;color:var(--muted);font-size:12px;margin-top:25px}
 @media(max-width:850px){
@@ -254,15 +276,16 @@ footer{text-align:center;color:var(--muted);font-size:12px;margin-top:25px}
 <div class="wrap">
 <header>
   <div class="brand">Radio<span>Hub</span> <small style="font-size:12px;color:#98a4b5">· laut.fm</small></div>
-  <form class="search" id="searchForm">
-    <input id="searchInput" placeholder="laut.fm-Sender suchen …" autocomplete="off">
-    <button type="submit">Suchen</button>
-  </form>
-  <div id="results" class="search-popover" aria-live="polite">
-    <div class="search-popover-inner">
-      <div id="resultCount" class="muted" style="padding:4px 6px"></div>
-      <div id="resultsContent" class="empty">Suche nach einem deiner laut.fm-Sender.</div>
+  <div class="search-area">
+    <form class="search" id="searchForm">
+      <input id="searchInput" placeholder="Sender suchen …" autocomplete="off" spellcheck="false">
+      <button type="submit">Suchen</button>
+    </form>
+    <div id="results" class="search-results" aria-live="polite">
+      <div class="search-results-head"><span>Deine laut.fm-Sender</span><span id="resultCount"></span></div>
+      <div id="resultsContent" class="search-empty">Tippe einen Sendernamen ein.</div>
     </div>
+    <div class="search-help">Nur deine hinterlegten Sender · Treffer erscheinen automatisch beim Tippen</div>
   </div>
 </header>
 
@@ -431,7 +454,8 @@ const MY_STATIONS=[
   {slug:'celina-dj',name:'celina-dj',stream_url:'https://stream.laut.fm/celina-dj',page_url:'https://laut.fm/celina-dj'},
   {slug:'andre-dj',name:'andre-dj',stream_url:'https://stream.laut.fm/andre-dj',page_url:'https://laut.fm/andre-dj'},
   {slug:'nrw-fm',name:'nrw-fm',stream_url:'https://stream.laut.fm/nrw-fm',page_url:'https://laut.fm/nrw-fm'},
-  {slug:'niklasfm-radio',name:'niklasfm-radio',stream_url:'https://stream.laut.fm/niklasfm-radio',page_url:'https://laut.fm/niklasfm-radio'},
+  {slug:'niklasfm-radio',name:'Niklasfm.radio',claim:'you with music.',city:'Berlin',stream_url:'https://stream.laut.fm/niklasfm-radio',page_url:'https://laut.fm/niklasfm-radio'},
+  {slug:'obx-radio',name:'obx radio',stream_url:'https://stream.laut.fm/obx-radio',page_url:'https://laut.fm/obx-radio'},
   {slug:'ndw-radio',name:'ndw-radio',stream_url:'https://stream.laut.fm/ndw-radio',page_url:'https://laut.fm/ndw-radio'},
   {slug:'nrw-radios',name:'nrw-radios',stream_url:'https://stream.laut.fm/nrw-radios',page_url:'https://laut.fm/nrw-radios'},
   {slug:'ndfm',name:'ndfm',stream_url:'https://stream.laut.fm/ndfm',page_url:'https://laut.fm/ndfm'},
@@ -1544,44 +1568,54 @@ async function activateStation(station){
   $('updated').textContent='Sender gewechselt · Live-Daten werden geladen …';
 }
 
+async function enrichSearchStations(items,token){
+  const jobs=items.map(async s=>{
+    try{
+      const live=await getJSON(`${API}/station/${encodeURIComponent(s.slug)}`);
+      return {...s,...(live&&typeof live==='object'?live:{})};
+    }catch(e){return s;}
+  });
+  const out=await Promise.all(jobs);
+  if(token!==state.searchToken)return;
+  renderResults(out);
+}
+
 function renderResults(items){
+  const results=$('results'), content=$('resultsContent'), count=$('resultCount');
+  results.classList.add('show');
+  count.textContent=items.length ? `${items.length} Treffer` : '';
   if(!items.length){
-    $('results').classList.add('show');
-    $('resultsContent').className='empty';
-    $('resultsContent').textContent='Keine Sender gefunden.';
-    $('resultCount').textContent='';
+    content.className='search-empty';
+    content.textContent='Keine deiner Sender passt zu dieser Suche.';
     return;
   }
-  $('results').classList.add('show');
-  $('resultCount').textContent=items.length+' Treffer';
+  content.className='search-table-wrap';
+  content.innerHTML=`<table class="search-table">
+    <thead><tr><th>Logo</th><th>Sender</th><th>Claim / Ort</th><th></th></tr></thead>
+    <tbody>${items.map(s=>{
+      const candidates=stationImageCandidates(s);
+      const logo=esc(candidates[0]||placeholder);
+      const fallback=esc(candidates.slice(1).join('|'));
+      const payload=encodeURIComponent(JSON.stringify({slug:s.slug,...s}));
+      return `<tr>
+        <td><img class="search-logo" src="${logo}" data-logo-candidates="${fallback}" referrerpolicy="no-referrer" loading="lazy" decoding="async" alt=""></td>
+        <td><div class="search-name">${esc(s.name||s.slug)}</div><small class="search-meta">${esc(s.slug||'')}</small></td>
+        <td><div class="search-claim">${esc(s.claim||s.city||'laut.fm')}</div></td>
+        <td><button class="search-play" type="button" data-station="${payload}">▶ Hören</button></td>
+      </tr>`;
+    }).join('')}</tbody>
+  </table>`;
 
-  $('resultsContent').className='';
-  $('resultsContent').innerHTML=items.map(s=>{
-    const song=songText(s.current_song);
-    const payload=encodeURIComponent(JSON.stringify(s));
-    const logo=imageOf(s)||placeholder;
-    const candidates=stationImageCandidates(s);
-    const logoFallback=esc(candidates.slice(1).join('|'));
-    return `<div class="result">
-      <img class="rlogo" src="${esc(logo)}" data-logo-candidates="${logoFallback}" referrerpolicy="no-referrer" loading="eager" decoding="async" alt="">
-      <div class="rmain">
-        <strong>${esc(s.name||s.slug)}</strong>
-        <small>${esc(s.city||s.country||s.format||'laut.fm')}${song?' · '+esc(song.artist?song.artist+' – '+song.title:song.title):''}</small>
-      </div>
-      <button class="rplay" type="button" data-station="${payload}">▶</button>
-    </div>`;
-  }).join('');
-
-  $('resultsContent').querySelectorAll('.rlogo').forEach(img=>{
+  content.querySelectorAll('.search-logo').forEach(img=>{
     img.referrerPolicy='no-referrer';
     img.addEventListener('error',()=>{
       const list=(img.dataset.logoCandidates||'').split('|').filter(Boolean);
       const next=list.shift();
-      if(next){img.dataset.logoCandidates=list.join('|');img.src=next}
-      else{img.onerror=null;img.src=placeholder}
+      if(next){img.dataset.logoCandidates=list.join('|');img.src=next;}
+      else{img.onerror=null;img.src=placeholder;}
     });
   });
-  $('resultsContent').querySelectorAll('.rplay').forEach(b=>{
+  content.querySelectorAll('.search-play').forEach(b=>{
     b.addEventListener('click',()=>{
       try{activateStation(JSON.parse(decodeURIComponent(b.dataset.station)))}catch(e){}
     });
@@ -1592,34 +1626,48 @@ function stationMatches(s,q){
   const hay=[s.slug,s.name,s.city,s.country,s.claim,s.description,...(Array.isArray(s.genres)?s.genres.map(g=>typeof g==='object'?g.name:g):[])].filter(Boolean).join(' ').toLowerCase();
   return hay.includes(q.toLowerCase());
 }
-function searchStations(q){
+function searchScore(s,q){
+  const needle=q.toLowerCase();
+  const slug=String(s.slug||'').toLowerCase();
+  const name=String(s.name||'').toLowerCase();
+  if(slug===needle||name===needle)return 0;
+  if(slug.startsWith(needle)||name.startsWith(needle))return 1;
+  if(slug.includes(needle)||name.includes(needle))return 2;
+  if(String(s.claim||'').toLowerCase().includes(needle))return 3;
+  if(String(s.city||'').toLowerCase().includes(needle))return 4;
+  return 5;
+}
+async function searchStations(q){
   q=q.trim();
   const token=++state.searchToken;
   if(!q){
     $('results').classList.remove('show');
-    $('resultsContent').className='empty';
-    $('resultsContent').textContent='Suche nach einem deiner laut.fm-Sender.';
+    $('resultsContent').className='search-empty';
+    $('resultsContent').textContent='Tippe einen Sendernamen ein.';
     $('resultCount').textContent='';
     return;
   }
   $('results').classList.add('show');
-  $('resultsContent').className='empty';
-  $('resultsContent').textContent='Suche in deinen Sendern …';
+  $('resultsContent').className='search-empty';
+  $('resultsContent').textContent='Sender werden gesucht …';
   $('resultCount').textContent='';
 
-  const items=[];
-  for(const configured of MY_STATIONS){
-    if(token!==state.searchToken) return;
-    const slug=slugOf(configured);
-    if(slug && stationMatches(configured,q)) items.push({...configured,slug});
-  }
-  renderResults(items);
+  const items=MY_STATIONS
+    .filter(s=>stationMatches(s,q))
+    .map(s=>({...s,slug:slugOf(s)}))
+    .sort((a,b)=>searchScore(a,q)-searchScore(b,q) || String(a.name||a.slug).localeCompare(String(b.name||b.slug),'de'));
+
+  if(token!==state.searchToken)return;
+  if(!items.length){renderResults([]);return;}
+  $('resultsContent').textContent='Senderdaten werden geladen …';
+  await enrichSearchStations(items.slice(0,25),token);
 }
 
 $('searchForm').addEventListener('submit',e=>{
   e.preventDefault();
   searchStations($('searchInput').value);
 });
+$('searchInput').addEventListener('input',()=>searchStations($('searchInput').value));
 
 $('refreshBtn').addEventListener('click',refreshActive);
 
