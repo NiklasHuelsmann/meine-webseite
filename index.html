@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>RadioHub · laut.fm · V62</title>
+<title>RadioHub · laut.fm · V63</title>
 <style>
 :root{
   --bg:#080b12;--panel:#111722;--panel2:#0c121b;--line:#293446;
@@ -135,7 +135,9 @@ h1{font-size:30px;line-height:1.05;margin:0 0 5px}
   .history-title,.history-artist{font-size:12px;line-height:1.3}
 }
 
-/* Search – direkt unter dem Suchfeld, keine breite Außenbox */
+/* Search – Eingabe oben, Ergebnisse unten als eigene Senderliste.
+   Dadurch wächst der Header beim Suchen nicht mehr und die Seite springt
+   nicht nach oben. */
 .search-area{width:min(760px,100%);margin-left:auto}
 .search{max-width:none;width:100%}
 .search input{min-width:0}
@@ -154,6 +156,13 @@ h1{font-size:30px;line-height:1.05;margin:0 0 5px}
 .search-play{padding:7px 11px;border-radius:9px;font-size:12px;white-space:nowrap}
 .search-empty{padding:15px;color:var(--muted);text-align:center;font-size:13px}
 .search-help{font-size:11px;color:var(--muted);margin-top:7px}
+.station-search-card{margin-top:18px}
+.station-search-card .search-results{margin-top:0;box-shadow:none}
+.station-search-card .search-results.show{display:block}
+.station-search-card .section-title{margin-bottom:10px}
+@media(max-width:850px){
+  .station-search-card{margin-top:16px}
+}
 @media(max-width:850px){
   .search-area{width:100%;margin-left:0}
 }
@@ -323,10 +332,6 @@ aside .history-table{min-width:0}
       <input id="searchInput" autocomplete="off" spellcheck="false" aria-label="Sender suchen" placeholder="Sender suchen …" autocomplete="off" spellcheck="false">
       <button type="submit">Suchen</button>
     </form>
-    <div id="results" class="search-results" aria-live="polite">
-      <div class="search-results-head"><span>Deine laut.fm-Sender</span><span id="resultCount"></span></div>
-      <div id="resultsContent" class="search-empty">Tippe einen Sendernamen ein.</div>
-    </div>
     <div class="search-help">Nur deine hinterlegten Sender · Treffer erscheinen automatisch beim Tippen</div>
   </div>
 </header>
@@ -451,6 +456,14 @@ aside .history-table{min-width:0}
 </aside>
 </div>
 
+
+<section class="card station-search-card" id="stationSearchCard">
+  <div class="section-title">🔎 Suchergebnisse</div>
+  <div class="search-results" id="results" aria-live="polite">
+    <div class="search-results-head"><span>Deine laut.fm-Sender</span><span id="resultCount"></span></div>
+    <div id="resultsContent" class="search-empty">Tippe oben einen Sendernamen ein.</div>
+  </div>
+</section>
 
 <section class="card extras-card" id="extrasCard">
   <div class="section-title">RadioHub Extras</div>
@@ -1862,7 +1875,7 @@ renderActive(fallback);
 $('updated').textContent='Live-Daten werden geladen …';
 
 
-/* V62_SUCHLISTE_NIKLASHEULSMANN
+/* V63_SUCHLISTE_NIKLASHEULSMANN
    niklasheulsmann, niklashuelsmann und niklashuelsmann-radio sind drei
    unterschiedliche Slugs und werden in der Suche separat behandelt.
 */
