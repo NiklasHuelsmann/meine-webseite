@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>RadioHub · laut.fm · V60</title>
+<title>RadioHub · laut.fm · V62</title>
 <style>
 :root{
   --bg:#080b12;--panel:#111722;--panel2:#0c121b;--line:#293446;
@@ -502,6 +502,12 @@ const KNOWN_LOGOS={
 
 const MY_STATIONS=[
   fallback,
+  // Drei getrennte laut.fm-Stationen mit sehr ähnlichen Schreibweisen.
+  // Die Slugs bleiben exakt getrennt, damit die Suche keine Station unterschlägt
+  // oder zwei verschiedene Sender zu einem Treffer zusammenfasst.
+  {slug:'niklasheulsmann',name:'niklasheulsmann',stream_url:'https://stream.laut.fm/niklasheulsmann',page_url:'https://laut.fm/niklasheulsmann'},
+  {slug:'niklashuelsmann',name:'NiklasHuelsmann',claim:'Dein Mix, dein Sound.',city:'Witten',description:'Von aktuellen Hits bis zu den größten Klassikern: Bei uns gibt es die perfekte Mischung für jeden Moment. Ob entspannt zum Feierabend oder als Power-Mix für den Tag – wir liefern dir den Sound, der immer passt. Einschalten, wohlfühlen und genießen!',stream_url:'https://stream.laut.fm/niklashuelsmann',page_url:'https://laut.fm/niklashuelsmann'},
+  {slug:'niklashuelsmann-radio',name:'Niklashuelsmann-Radio',claim:'Hier spielt dein Leben.',city:'Witten',description:'Wir bringen frischen Wind in deine Playlist! Entdecke einen Mix, der Abwechslung großschreibt und dich immer perfekt begleitet. Egal ob zu Hause oder unterwegs: Wir sind dein Sender für alle Fälle. Einfach reinhören und den Vibe erleben!',stream_url:'https://stream.laut.fm/niklashuelsmann-radio',page_url:'https://laut.fm/niklashuelsmann-radio'},
   {slug:'niklasdj',name:'niklasdj',stream_url:'https://stream.laut.fm/niklasdj',page_url:'https://laut.fm/niklasdj'},
   {slug:'brian-dj',name:'brian-dj',stream_url:'https://stream.laut.fm/brian-dj',page_url:'https://laut.fm/brian-dj'},
   {slug:'brian4live',name:'brian4live',stream_url:'https://stream.laut.fm/brian4live',page_url:'https://laut.fm/brian4live'},
@@ -1856,6 +1862,11 @@ renderActive(fallback);
 $('updated').textContent='Live-Daten werden geladen …';
 
 
+/* V62_SUCHLISTE_NIKLASHEULSMANN
+   niklasheulsmann, niklashuelsmann und niklashuelsmann-radio sind drei
+   unterschiedliche Slugs und werden in der Suche separat behandelt.
+*/
+
 /* V59_LIVE_ON_AIR
    laut.fm provides a live-station listing. This is used only for the
    visual on-air state; the selected audio stream is never switched.
@@ -1904,10 +1915,10 @@ async function refreshLiveOnAir(){
   const slug=String(state?.active?.slug||'').toLowerCase();
   if(!slug)return;
   try{
-    const data=await getJSON(`${API}/stations?by=live&limit=500`);
+    const data=await getJSON(`${API}/stations/live`);
     if(token!==liveStatusToken)return;
-    const list=Array.isArray(data)?data:(data?.stations||data?.items||[]);
-    const found=list.find(x=>liveSlugOf(x)===slug);
+    const list=Array.isArray(data)?data:(data?.stations||data?.items||data?.results||[]);
+    const found=list.find(x=>liveSlugOf(x)===slug || liveSlugOf(x?.station)===slug);
     state.liveOnAir=!!found;
     state.liveInfo=found?liveInfoFor(found):{moderator:'',show:''};
     window.RadioHubState.liveOnAir=state.liveOnAir;
