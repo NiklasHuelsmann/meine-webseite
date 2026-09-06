@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>RadioHub · laut.fm · V57</title>
+<title>RadioHub · laut.fm · V58</title>
 <style>
 :root{
   --bg:#080b12;--panel:#111722;--panel2:#0c121b;--line:#293446;
@@ -292,6 +292,18 @@ footer{text-align:center;color:var(--muted);font-size:12px;margin-top:25px}
 .traffic-read-bottom{display:flex;justify-content:flex-start;margin-top:10px}
 @media(max-width:560px){.traffic-read-bottom{justify-content:stretch}.traffic-read-bottom .read-btn{width:100%}}
 
+
+/* V58: History lives in the right column below traffic and stays compact. */
+aside .history{margin-top:14px}
+aside .history-table-wrap{max-height:390px;overflow:auto}
+aside .history-table{min-width:0}
+@media(max-width:850px){
+  aside .history-table-wrap{max-height:360px}
+}
+@media(max-width:560px){
+  aside .history-table-wrap{max-height:340px}
+}
+
 </style>
 <!-- RadioHub V54: Gesamtcheck / Live-Refresh stabilisiert -->
 </head>
@@ -367,18 +379,10 @@ footer{text-align:center;color:var(--muted);font-size:12px;margin-top:25px}
     </div>
     <div class="updated" id="updated">Noch nicht aktualisiert</div>
   </section>
-
-    <section class="card history">
-    <div class="section-title">
-      <span>Zuletzt gelaufen – Musik</span>
-      <button class="secondary" id="refreshBtn" type="button">↻ Aktualisieren</button>
-    </div>
-    <div id="historyList" class="empty">Lade Verlauf …</div>
-  </section>
 </main>
 
 <aside>
-  <section class="card traffic-card">
+<section class="card traffic-card">
       <div class="traffic-head">
         <div>
           <h2>🚗 Verkehrsmeldungen</h2>
@@ -427,6 +431,14 @@ footer{text-align:center;color:var(--muted);font-size:12px;margin-top:25px}
         <button class="read-btn" id="trafficReadBtn" type="button" aria-pressed="false">🔊 Vorlesen</button>
       </div>
     </section>
+
+<section class="card history">
+    <div class="section-title">
+      <span>Zuletzt gelaufen – Musik</span>
+      <button class="secondary" id="refreshBtn" type="button">↻ Aktualisieren</button>
+    </div>
+    <div id="historyList" class="empty">Lade Verlauf …</div>
+  </section>
 
 
 </aside>
