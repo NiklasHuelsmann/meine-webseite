@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>RadioHub · laut.fm · V41</title>
+<title>RadioHub · laut.fm · V45</title>
 <style>
 :root{
   --bg:#080b12;--panel:#111722;--panel2:#0c121b;--line:#293446;
@@ -440,6 +440,7 @@ const fallback={
 // Weitere eigene laut.fm-Sender hier mit ihrem Slug ergänzen.
 const MY_STATIONS=[
   fallback,
+  {slug:'feierabend-radio',name:'feierabend radio',claim:'Schluss mit Stress. Dein perfekter Sound für jeden Feierabend.',stream_url:'https://stream.laut.fm/feierabend-radio',page_url:'https://laut.fm/feierabend-radio'},
   {slug:'niklasheulsmann',name:'niklasheulsmann',stream_url:'https://stream.laut.fm/niklasheulsmann',page_url:'https://laut.fm/niklasheulsmann'},
   {slug:'niklashuelsmann',name:'NiklasHuelsmann',claim:'Dein Mix, dein Sound.',city:'Witten',description:'Von aktuellen Hits bis zu den größten Klassikern: Bei uns gibt es die perfekte Mischung für jeden Moment. Ob entspannt zum Feierabend oder als Power-Mix für den Tag – wir liefern dir den Sound, der immer passt. Einschalten, wohlfühlen und genießen!',stream_url:'https://stream.laut.fm/niklashuelsmann',page_url:'https://laut.fm/niklashuelsmann'},
   {slug:'niklashuelsmann-radio',name:'niklashuelsmann-radio',stream_url:'https://stream.laut.fm/niklashuelsmann-radio',page_url:'https://laut.fm/niklashuelsmann-radio'},
@@ -512,7 +513,36 @@ const MY_STATIONS=[
   {slug:'simulator3',name:'simulator3',stream_url:'https://stream.laut.fm/simulator3',page_url:'https://laut.fm/simulator3'},
   {slug:'simulatoreins',name:'simulatoreins',stream_url:'https://stream.laut.fm/simulatoreins',page_url:'https://laut.fm/simulatoreins'},
   {slug:'brian-2',name:'brian-2',stream_url:'https://stream.laut.fm/brian-2',page_url:'https://laut.fm/brian-2'},
-  {slug:'kanal-x',name:'kanal-x',stream_url:'https://stream.laut.fm/kanal-x',page_url:'https://laut.fm/kanal-x'}
+  {slug:'kanal-x',name:'kanal-x',stream_url:'https://stream.laut.fm/kanal-x',page_url:'https://laut.fm/kanal-x'},
+  {slug:'beat58',name:'beat58',stream_url:'https://stream.laut.fm/beat58',page_url:'https://laut.fm/beat58'},
+  {slug:'beat57',name:'beat57',stream_url:'https://stream.laut.fm/beat57',page_url:'https://laut.fm/beat57'},
+  {slug:'rpm-fm',name:'rpm_fm',claim:'RPM-FM: Musik am Limit. Non-Stop Power.',stream_url:'https://stream.laut.fm/rpm-fm',page_url:'https://laut.fm/rpm-fm'},
+  {slug:'meinvibe-radio',name:'meinvibe.radio',claim:'meinvibe-radio: Dein Sound. Dein Gefühl. Dein Vibe.',stream_url:'https://stream.laut.fm/meinvibe-radio',page_url:'https://laut.fm/meinvibe-radio'},
+  {slug:'nh-radio',name:'nh radio',claim:'nh-radio:Modern.Klar.Kompakt.',stream_url:'https://stream.laut.fm/nh-radio',page_url:'https://laut.fm/nh-radio'},
+  {slug:'punkworld',name:'punkworld',claim:'punkworld:Laut. Direkt. Unangepasst.',stream_url:'https://stream.laut.fm/punkworld',page_url:'https://laut.fm/punkworld'},
+  {slug:'einfachfunk',name:'einfachfunk',claim:'einfachfunk: Weniger Reden. Mehr Radio.',stream_url:'https://stream.laut.fm/einfachfunk',page_url:'https://laut.fm/einfachfunk'},
+  {slug:'nachtflug-fm',name:'nachtflug fm',claim:'nachtflug-fm: Über den Lichtern der Stadt.',stream_url:'https://stream.laut.fm/nachtflug-fm',page_url:'https://laut.fm/nachtflug-fm'},
+  {slug:'studio',name:'studio',claim:'Studio: Wo Musik entsteht.',stream_url:'https://stream.laut.fm/studio',page_url:'https://laut.fm/studio'},
+  {slug:'live-studio',name:'live_studio',claim:'Nonstop Pop & Rock Dein live_studio.',stream_url:'https://stream.laut.fm/live-studio',page_url:'https://laut.fm/live-studio'},
+  {slug:'ocon-fm',name:'ocon fm',stream_url:'https://stream.laut.fm/ocon-fm',page_url:'https://laut.fm/ocon-fm'},
+  {slug:'origin-fm',name:'origin fm',stream_url:'https://stream.laut.fm/origin-fm',page_url:'https://laut.fm/origin-fm'},
+  {slug:'null',name:'null',claim:'Mehr Musik. Weniger Kompromisse.',stream_url:'https://stream.laut.fm/null',page_url:'https://laut.fm/null'},
+  {slug:'test-station-fm',name:'test-station fm',claim:'Test-Zentrale',description:'Test-station FM – Das Labor für neue Radio-Ideen.',stream_url:'https://stream.laut.fm/test-station-fm',page_url:'https://laut.fm/test-station-fm'},
+  {slug:'germany-fm',name:'germany fm',stream_url:'https://stream.laut.fm/germany-fm',page_url:'https://laut.fm/germany-fm'},
+  {slug:'nachtflug-radio',name:'nachtflug radio',stream_url:'https://stream.laut.fm/nachtflug-radio',page_url:'https://laut.fm/nachtflug-radio'},
+  {slug:'niklas-radio-2',name:'niklas radio 2',claim:'Die B-Seite deines Alltags.',stream_url:'https://stream.laut.fm/niklas-radio-2',page_url:'https://laut.fm/niklas-radio-2'},
+  {slug:'sound-wave-ruhr',name:'sound-wave-ruhr',stream_url:'https://stream.laut.fm/sound-wave-ruhr',page_url:'https://laut.fm/sound-wave-ruhr'},
+  {slug:'witchcraft-wizardry-fm',name:'witchcraft wizardry fm',stream_url:'https://stream.laut.fm/witchcraft-wizardry-fm',page_url:'https://laut.fm/witchcraft-wizardry-fm'},
+  {slug:'langewelle-fm',name:'langewelle fm',stream_url:'https://stream.laut.fm/langewelle-fm',page_url:'https://laut.fm/langewelle-fm'},
+  {slug:'felberabend-fm-1',name:'felberabend fm 1',stream_url:'https://stream.laut.fm/felberabend-fm-1',page_url:'https://laut.fm/felberabend-fm-1'},
+  {slug:'felberabend-radio',name:'felberabend radio',stream_url:'https://stream.laut.fm/felberabend-radio',page_url:'https://laut.fm/felberabend-radio'},
+  {slug:'studio-huelsmann',name:'studio huelsmann',stream_url:'https://stream.laut.fm/studio-huelsmann',page_url:'https://laut.fm/studio-huelsmann'},
+  {slug:'raveforce-fm',name:'raveforce fm',stream_url:'https://stream.laut.fm/raveforce-fm',page_url:'https://laut.fm/raveforce-fm'},
+  {slug:'freeplay-fm',name:'freeplay fm',stream_url:'https://stream.laut.fm/freeplay-fm',page_url:'https://laut.fm/freeplay-fm'},
+  {slug:'ruhr-beat',name:'ruhr beat',stream_url:'https://stream.laut.fm/ruhr-beat',page_url:'https://laut.fm/ruhr-beat'},
+  {slug:'witohorfari-wizardry-fm',name:'witohorfari wizardry fm',stream_url:'https://stream.laut.fm/witohorfari-wizardry-fm',page_url:'https://laut.fm/witohorfari-wizardry-fm'},
+  {slug:'cyberpunk-radio',name:'cyberpunk radio',stream_url:'https://stream.laut.fm/cyberpunk-radio',page_url:'https://laut.fm/cyberpunk-radio'},
+  {slug:'cyberpunk-fm',name:'cyberpunk fm',stream_url:'https://stream.laut.fm/cyberpunk-fm',page_url:'https://laut.fm/cyberpunk-fm'}
 ];
 
 const state={active:{...fallback},refreshing:false,searchToken:0,listenerValue:null,artCache:new Map(),artToken:0};
@@ -1622,19 +1652,30 @@ function renderResults(items){
   });
 }
 
+function searchNormalize(v){
+  return String(v??'').toLocaleLowerCase('de-DE')
+    .normalize('NFD').replace(/[\u0300-\u036f]/g,'')
+    .replace(/ß/g,'ss')
+    .replace(/[^a-z0-9]+/gi,'');
+}
 function stationMatches(s,q){
-  const hay=[s.slug,s.name,s.city,s.country,s.claim,s.description,...(Array.isArray(s.genres)?s.genres.map(g=>typeof g==='object'?g.name:g):[])].filter(Boolean).join(' ').toLowerCase();
-  return hay.includes(q.toLowerCase());
+  const raw=[s.slug,s.name,s.city,s.country,s.claim,s.description,...(Array.isArray(s.genres)?s.genres.map(g=>typeof g==='object'?g.name:g):[])].filter(Boolean);
+  const needle=searchNormalize(q);
+  if(!needle)return true;
+  const haystack=raw.map(v=>searchNormalize(v)).join(' ');
+  if(haystack.includes(needle)) return true;
+  const words=String(q).trim().split(/\\s+/).map(searchNormalize).filter(Boolean);
+  return words.length>0 && words.every(word=>haystack.includes(word));
 }
 function searchScore(s,q){
-  const needle=q.toLowerCase();
-  const slug=String(s.slug||'').toLowerCase();
-  const name=String(s.name||'').toLowerCase();
+  const needle=searchNormalize(q);
+  const slug=searchNormalize(s.slug);
+  const name=searchNormalize(s.name);
   if(slug===needle||name===needle)return 0;
   if(slug.startsWith(needle)||name.startsWith(needle))return 1;
   if(slug.includes(needle)||name.includes(needle))return 2;
-  if(String(s.claim||'').toLowerCase().includes(needle))return 3;
-  if(String(s.city||'').toLowerCase().includes(needle))return 4;
+  if(searchNormalize(s.claim).includes(needle))return 3;
+  if(searchNormalize(s.city).includes(needle))return 4;
   return 5;
 }
 async function searchStations(q){
@@ -1660,7 +1701,7 @@ async function searchStations(q){
   if(token!==state.searchToken)return;
   if(!items.length){renderResults([]);return;}
   $('resultsContent').textContent='Senderdaten werden geladen …';
-  await enrichSearchStations(items.slice(0,25),token);
+  await enrichSearchStations(items.slice(0,100),token);
 }
 
 $('searchForm').addEventListener('submit',e=>{
