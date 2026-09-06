@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>RadioHub · laut.fm · V63</title>
+<title>RadioHub · laut.fm · V64</title>
 <style>
 :root{
   --bg:#080b12;--panel:#111722;--panel2:#0c121b;--line:#293446;
@@ -138,10 +138,11 @@ h1{font-size:30px;line-height:1.05;margin:0 0 5px}
 /* Search – Eingabe oben, Ergebnisse unten als eigene Senderliste.
    Dadurch wächst der Header beim Suchen nicht mehr und die Seite springt
    nicht nach oben. */
-.search-area{width:min(760px,100%);margin-left:auto}
-.search{max-width:none;width:100%}
+.search-area{width:min(760px,100%);margin-left:auto;position:relative;z-index:80}
+.search{max-width:none;width:100%;position:relative}
 .search input{min-width:0}
-.search-results{display:none;margin-top:8px;border:1px solid var(--line);border-radius:16px;background:#0d131d;overflow:hidden;box-shadow:0 16px 38px rgba(0,0,0,.24)}
+/* Google-artiges Such-Dropdown: schwebt direkt unter dem Suchfeld und verschiebt nichts. */
+.search-results{display:none;position:absolute;z-index:1000;top:calc(100% + 8px);left:0;right:0;margin:0;border:1px solid var(--line);border-radius:16px;background:#0d131d;overflow:hidden;box-shadow:0 20px 48px rgba(0,0,0,.42);max-height:min(68vh,520px)}
 .search-results.show{display:block}
 .search-results-head{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 13px;background:#111925;border-bottom:1px solid var(--line);font-size:12px;color:var(--muted)}
 .search-table-wrap{overflow-x:auto}
@@ -156,18 +157,11 @@ h1{font-size:30px;line-height:1.05;margin:0 0 5px}
 .search-play{padding:7px 11px;border-radius:9px;font-size:12px;white-space:nowrap}
 .search-empty{padding:15px;color:var(--muted);text-align:center;font-size:13px}
 .search-help{font-size:11px;color:var(--muted);margin-top:7px}
-.station-search-card{margin-top:18px}
-.station-search-card .search-results{margin-top:0;box-shadow:none}
-.station-search-card .search-results.show{display:block}
-.station-search-card .section-title{margin-bottom:10px}
-@media(max-width:850px){
-  .station-search-card{margin-top:16px}
-}
 @media(max-width:850px){
   .search-area{width:100%;margin-left:0}
 }
 @media(max-width:560px){
-  .search-results{border-radius:13px}
+  .search-results{border-radius:13px;max-height:62vh}
   .search-table{min-width:0}
   .search-table th:nth-child(3),.search-table td:nth-child(3){display:none}
   .search-table th,.search-table td{padding:8px}
@@ -329,8 +323,12 @@ aside .history-table{min-width:0}
   <div class="brand">Radio<span>Hub</span> <small style="font-size:12px;color:#98a4b5">· laut.fm</small></div>
   <div class="search-area">
     <form class="search" id="searchForm">
-      <input id="searchInput" autocomplete="off" spellcheck="false" aria-label="Sender suchen" placeholder="Sender suchen …" autocomplete="off" spellcheck="false">
+      <input id="searchInput" autocomplete="off" spellcheck="false" aria-label="Sender suchen" placeholder="Sender suchen …">
       <button type="submit">Suchen</button>
+      <div class="search-results" id="results" aria-live="polite">
+        <div class="search-results-head"><span>Deine laut.fm-Sender</span><span id="resultCount"></span></div>
+        <div id="resultsContent" class="search-empty">Tippe oben einen Sendernamen ein.</div>
+      </div>
     </form>
     <div class="search-help">Nur deine hinterlegten Sender · Treffer erscheinen automatisch beim Tippen</div>
   </div>
@@ -456,14 +454,6 @@ aside .history-table{min-width:0}
 </aside>
 </div>
 
-
-<section class="card station-search-card" id="stationSearchCard">
-  <div class="section-title">🔎 Suchergebnisse</div>
-  <div class="search-results" id="results" aria-live="polite">
-    <div class="search-results-head"><span>Deine laut.fm-Sender</span><span id="resultCount"></span></div>
-    <div id="resultsContent" class="search-empty">Tippe oben einen Sendernamen ein.</div>
-  </div>
-</section>
 
 <section class="card extras-card" id="extrasCard">
   <div class="section-title">RadioHub Extras</div>
