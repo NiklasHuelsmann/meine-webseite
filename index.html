@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>RadioHub · laut.fm · V58</title>
+<title>RadioHub · laut.fm · V60</title>
 <style>
 :root{
   --bg:#080b12;--panel:#111722;--panel2:#0c121b;--line:#293446;
@@ -304,6 +304,13 @@ aside .history-table{min-width:0}
   aside .history-table-wrap{max-height:340px}
 }
 
+
+/* V59: Automatic laut.fm live/on-air state */
+.live.on-air{color:#ff4d67;animation:onairpulse 1.8s ease-in-out infinite}
+.live.on-air::before{filter:drop-shadow(0 0 5px rgba(255,77,103,.55))}
+@keyframes onairpulse{0%,100%{opacity:1}50%{opacity:.58}}
+.player-label.on-air-label{color:#ff4d67}
+
 </style>
 <!-- RadioHub V54: Gesamtcheck / Live-Refresh stabilisiert -->
 </head>
@@ -330,7 +337,7 @@ aside .history-table{min-width:0}
     <div class="hero">
       <img id="activeLogo" class="logo" alt="Senderlogo" referrerpolicy="no-referrer" decoding="async" loading="eager">
       <div style="min-width:0;flex:1">
-        <div class="live">● LIVE</div>
+        <div class="live" id="onAirStatus">● LIVE</div>
         <h1 id="activeName">Niklas-FM</h1>
         <div id="activeClaim" class="claim">Deine Musik,Dein Moment.</div>
         <div id="activeLocation" class="muted">Bochum-Dahlhausen</div>
@@ -345,7 +352,7 @@ aside .history-table{min-width:0}
     </p>
 
     <section class="now-card">
-      <div class="section-title"><span>Jetzt läuft</span><span class="live">● LIVE</span></div>
+      <div class="section-title"><span>Jetzt läuft</span><span class="live" id="nowLiveStatus">● LIVE</span></div>
       <div class="now-track">
         <img id="currentArt" class="now-art is-placeholder" alt="Albumcover" referrerpolicy="no-referrer" decoding="async">
         <div class="now-main">
@@ -1683,6 +1690,7 @@ async function activateStation(station){
     $('playBtn').textContent='▶';
   }
   $('updated').textContent='Sender gewechselt · Live-Daten werden geladen …';
+  refreshLiveOnAir();
 }
 
 async function enrichSearchStations(items,token){
@@ -1846,6 +1854,67 @@ window.RadioHubState.active=state.active;
 renderActive(fallback);
 
 $('updated').textContent='Live-Daten werden geladen …';
+
+
+/* V59_LIVE_ON_AIR
+   laut.fm provides a live-station listing. This is used only for the
+   visual on-air state; the selected audio stream is never switched.
+*/
+let liveStatusToken=0;
+function liveSlugOf(item){
+  return String(item?.slug || item?.name || item?.station?.slug || item?.station?.name || '').trim().toLowerCase();
+}
+function liveInfoFor(item){
+  const obj=item?.station || item || {};
+  const names=[
+    obj?.moderator?.name,obj?.dj?.name,obj?.current_dj?.name,
+    obj?.presenter?.name,obj?.host?.name,obj?.moderator,obj?.dj,
+    obj?.current_dj,obj?.presenter,obj?.host
+  ].filter(v=>typeof v==='string'&&v.trim());
+  const moderator=names[0]||'';
+  const shows=[
+    obj?.current_playlist?.name,obj?.current_program?.name,obj?.program?.name,
+    obj?.show?.name,item?.current_playlist?.name,item?.current_program?.name,
+    item?.program?.name,item?.show?.name
+  ].filter(v=>typeof v==='string'&&v.trim());
+  const show=shows.find(v=>!/^(auto.?dj|automation|rotation|playlist)$/i.test(v.trim()))||'';
+  return {moderator,show};
+}
+function setOnAirState(isLive,info){
+  const hero=$('onAirStatus'),now=$('nowLiveStatus'),label=document.querySelector('.player-label');
+  const sub=$('playerSubtitle'),status=$('stationStatus');
+  if(hero){hero.textContent=isLive?'🔴 LIVE ON AIR':'● LIVE';hero.classList.toggle('on-air',!!isLive);}
+  if(now){now.textContent=isLive?'🔴 LIVE ON AIR':'● LIVE';now.classList.toggle('on-air',!!isLive);}
+  if(label){label.textContent=isLive?'Live-Sendung':'Radio starten';label.classList.toggle('on-air-label',!!isLive);}
+  if(sub){
+    if(isLive){
+      const parts=[];
+      if(info?.show)parts.push('🎙️ '+info.show);
+      if(info?.moderator)parts.push('👤 '+info.moderator);
+      parts.push('gerade live on air');
+      sub.textContent=parts.join(' · ');
+    }else{
+      sub.textContent=(typeof audio!=='undefined'&&audio&&!audio.paused)?'Live-Stream läuft':'Klicken, um den Sender zu starten';
+    }
+  }
+  if(status)status.textContent=isLive?'live on air':'online';
+}
+async function refreshLiveOnAir(){
+  const token=++liveStatusToken;
+  const slug=String(state?.active?.slug||'').toLowerCase();
+  if(!slug)return;
+  try{
+    const data=await getJSON(`${API}/stations?by=live&limit=500`);
+    if(token!==liveStatusToken)return;
+    const list=Array.isArray(data)?data:(data?.stations||data?.items||[]);
+    const found=list.find(x=>liveSlugOf(x)===slug);
+    state.liveOnAir=!!found;
+    state.liveInfo=found?liveInfoFor(found):{moderator:'',show:''};
+    window.RadioHubState.liveOnAir=state.liveOnAir;
+    window.RadioHubState.liveInfo=state.liveInfo;
+    setOnAirState(state.liveOnAir,state.liveInfo);
+  }catch(e){}
+}
 
 // V54_LIVE_REFRESH: Live-Daten regelmäßig nachladen, ohne die Seite oder den
 // Stream neu zu laden. Fehler in einem Zyklus werden bewusst isoliert.
