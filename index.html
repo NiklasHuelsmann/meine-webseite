@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>RadioHub · laut.fm · V66</title>
+<title>RadioHub · laut.fm · V68</title>
 <style>
 :root{
   --bg:#080b12;--panel:#111722;--panel2:#0c121b;--line:#293446;
@@ -494,15 +494,13 @@ const fallback={
   description:'Wir spielen die Songs, die du wirklich hören willst. Keine langen Unterbrechungen, einfach guter Sound für deinen Tag – egal ob im Auto, im Büro oder zu Hause. Dein täglicher Begleiter, direkt aus dem Herzen des Ruhrgebiets.',
   stream_url:'https://stream.laut.fm/niklas-fm',
   page_url:'https://laut.fm/niklas-fm',
-  image:'https://assets.laut.fm/8119c5f105483f4566521b4b9c75dc8c?t=_120x120'
+  image:'https://assets.laut.fm/dbcef892b2c952db61aa1f8ab35ee1aa?t=_120x120'
 };
 
 // Nur diese Sender werden in der Suche berücksichtigt.
 // Weitere eigene laut.fm-Sender hier mit ihrem Slug ergänzen.
 // Fallback nur für den Fall, dass die API kein aktuelles Logo liefert.
-const KNOWN_LOGOS={
-  'niklas-fm':'https://assets.laut.fm/8119c5f105483f4566521b4b9c75dc8c?t=_120x120'
-};
+const KNOWN_LOGOS={};
 
 const MY_STATIONS=[
   fallback,
@@ -657,14 +655,37 @@ function expandLautAssetUrl(u){
   if(!u)return [];
   if(!/assets\.laut\.fm\//i.test(u))return [u];
   const base=u.replace(/\?[^#]*$/,'');
-  return [u,`${base}?t=640x640`,`${base}?t=120x120`,`${base}?t=90x90`,base];
+  return [
+    u,
+    `${base}?t=_640x640`,
+    `${base}?t=_120x120`,
+    `${base}?t=_80x80`,
+    `${base}?t=_90x90`,
+    base
+  ];
 }
+function lautFmStationLogoFields(s){
+  if(!s || typeof s!=='object') return [];
+  // laut.fm liefert das Senderlogo ausdrücklich in diesen Feldern.
+  // station_120x120 ist für die UI ideal; station_640x640/80x80 und
+  // station dienen als weitere Fallbacks. Die API-Felder haben Vorrang
+  // vor jedem alten, fest hinterlegten Logo.
+  const keys=['station_120x120','station_640x640','station_80x80','station'];
+  const out=[];
+  for(const key of keys){
+    const value=s[key];
+    if(typeof value==='string' && /https?:\/\/assets\.laut\.fm\//i.test(value)){
+      out.push(value);
+    }
+  }
+  return out;
+}
+
 function stationImageCandidates(s){
-  // Das Senderlogo kommt immer aus den Stationsdaten bzw. dem
-  // offiziellen laut.fm-Asset-Pfad – niemals aus current_song.artist.image.
+  // Das Senderlogo kommt aus den offiziellen laut.fm-Stationsfeldern.
+  // current_song/artist werden niemals als Senderlogo verwendet.
   const slug=slugOf(s);
-  // Das aktuelle Logo aus den laut.fm-Stationsdaten hat Vorrang.
-  // KNOWN_LOGOS und die alten user-Pfade sind nur noch Fallbacks.
+  const explicit=lautFmStationLogoFields(s).flatMap(expandLautAssetUrl);
   const direct=collectDirectImageUrls(s).flatMap(expandLautAssetUrl);
   const assets=collectLautAssetUrls(s).flatMap(expandLautAssetUrl);
   const known=KNOWN_LOGOS[slug]? [KNOWN_LOGOS[slug]] : [];
@@ -673,7 +694,7 @@ function stationImageCandidates(s){
     `https://assets.laut.fm/user/${encodeURIComponent(slug)}/user.jpg`,
     `https://assets.laut.fm/user/${encodeURIComponent(slug)}/user_640x640.png`
   ]:[];
-  return [...new Set([...direct,...assets,...known,...legacy].map(normalizeImageUrl).filter(Boolean))];
+  return [...new Set([...explicit,...direct,...assets,...known,...legacy].map(normalizeImageUrl).filter(Boolean))];
 }
 function imageOf(s){return stationImageCandidates(s)[0]||''}
 
@@ -1748,8 +1769,9 @@ function renderResults(items){
     <thead><tr><th>Logo</th><th>Sender</th><th>Claim / Ort</th><th></th></tr></thead>
     <tbody>${items.map(s=>{
       const candidates=stationImageCandidates(s);
-      const logo=esc(candidates[0]||placeholder);
-      const fallback=esc(candidates.slice(1).join('|'));
+      const logoRaw=candidates[0]||placeholder;
+      const logo=esc(logoRaw===placeholder?placeholder:logoUrlForBrowser(logoRaw));
+      const fallback=esc(candidates.slice(1).map(u=>logoUrlForBrowser(u)).join('|'));
       const payload=encodeURIComponent(JSON.stringify({slug:s.slug,...s}));
       return `<tr>
         <td><img class="search-logo" src="${logo}" data-logo-candidates="${fallback}" referrerpolicy="no-referrer" loading="lazy" decoding="async" alt="Senderlogo"></td>
