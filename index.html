@@ -499,6 +499,7 @@ const fallback={
 
 // Nur diese Sender werden in der Suche berücksichtigt.
 // Weitere eigene laut.fm-Sender hier mit ihrem Slug ergänzen.
+// Fallback nur für den Fall, dass die API kein aktuelles Logo liefert.
 const KNOWN_LOGOS={
   'niklas-fm':'https://assets.laut.fm/8119c5f105483f4566521b4b9c75dc8c?t=_120x120'
 };
@@ -662,17 +663,32 @@ function stationImageCandidates(s){
   // Das Senderlogo kommt immer aus den Stationsdaten bzw. dem
   // offiziellen laut.fm-Asset-Pfad – niemals aus current_song.artist.image.
   const slug=slugOf(s);
+  // Das aktuelle Logo aus den laut.fm-Stationsdaten hat Vorrang.
+  // KNOWN_LOGOS und die alten user-Pfade sind nur noch Fallbacks.
+  const direct=collectDirectImageUrls(s).flatMap(expandLautAssetUrl);
+  const assets=collectLautAssetUrls(s).flatMap(expandLautAssetUrl);
   const known=KNOWN_LOGOS[slug]? [KNOWN_LOGOS[slug]] : [];
   const legacy=slug?[
     `https://assets.laut.fm/user/${encodeURIComponent(slug)}/user_640x640.jpg`,
     `https://assets.laut.fm/user/${encodeURIComponent(slug)}/user.jpg`,
     `https://assets.laut.fm/user/${encodeURIComponent(slug)}/user_640x640.png`
   ]:[];
-  const direct=collectDirectImageUrls(s).flatMap(expandLautAssetUrl);
-  const assets=collectLautAssetUrls(s).flatMap(expandLautAssetUrl);
-  return [...new Set([...known,...legacy,...direct,...assets].map(normalizeImageUrl).filter(Boolean))];
+  return [...new Set([...direct,...assets,...known,...legacy].map(normalizeImageUrl).filter(Boolean))];
 }
 function imageOf(s){return stationImageCandidates(s)[0]||''}
+
+// laut.fm kann ein bestehendes Asset unter derselben URL durch ein neues Logo
+// ersetzen. Der kleine Zeitstempel umgeht den Browser-Cache, ohne das Logo
+// bei jedem 15-Sekunden-Refresh neu zu laden.
+function logoUrlForBrowser(url){
+  const normalized=normalizeImageUrl(url);
+  if(!normalized)return normalized;
+  const token=Math.floor(Date.now()/60000);
+  if(/[?&]rhlogo=/.test(normalized)){
+    return normalized.replace(/([?&]rhlogo=)\d+/, `$1${token}`);
+  }
+  return normalized+(normalized.includes('?')?'&':'?')+`rhlogo=${token}`;
+}
 
 function songImageCandidates(song){
   if(!song)return [];
@@ -699,18 +715,20 @@ function setImg(img,station){
   // Nicht bei jedem Live-Refresh das gleiche Bild erneut setzen:
   // genau das hat das sichtbare Senderlogo-Flackern verursacht.
   const current=normalizeImageUrl(img.currentSrc||img.src||'');
-  const wanted=normalizeImageUrl(candidates[0]||placeholder);
+  const wantedRaw=normalizeImageUrl(candidates[0]||placeholder);
+  const wanted=wantedRaw===placeholder?placeholder:logoUrlForBrowser(wantedRaw);
   if(img.dataset.loadedLogo===wanted || current===wanted)return;
 
   let i=0;
   const tryNext=()=>{
-    const url=candidates[i]||placeholder;
-    if(url===placeholder){
+    const rawUrl=candidates[i]||placeholder;
+    if(rawUrl===placeholder){
       img.onerror=null;
       img.src=placeholder;
       img.dataset.loadedLogo=placeholder;
       return;
     }
+    const url=logoUrlForBrowser(rawUrl);
 
     // Erst laden, dann austauschen – so bleibt das bisherige Logo sichtbar.
     const probe=new Image();
