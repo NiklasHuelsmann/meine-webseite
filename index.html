@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>RadioHub · laut.fm · V68</title>
+<title>RadioHub · laut.fm · V69</title>
 <style>
 :root{
   --bg:#080b12;--panel:#111722;--panel2:#0c121b;--line:#293446;
@@ -1703,42 +1703,36 @@ async function activateStation(station){
   const audio=$('audio');
   const stream=state.active.stream_url||`https://stream.laut.fm/${encodeURIComponent(slug)}`;
 
-  // WICHTIG bei Live-Radio:
-  // Ein pausierter <audio>-Stream kann beim erneuten Play an einer alten
-  // gepufferten Stelle weiterspielen. Deshalb wird die Verbindung hier
-  // bewusst komplett neu aufgebaut und nicht nur "fortgesetzt".
+  // Schnellstart: Der Stream wird sofort gestartet. Song, Hörer, Verlauf
+  // und Logo werden danach unabhängig im Hintergrund geladen.
   audio.pause();
-  audio.removeAttribute('src');
-  audio.load();
   audio.dataset.streamUrl='';
   audio.src=stream;
-  audio.dataset.streamUrl=stream;
-  audio.load();
 
-  // Direkt nach dem Benutzerklick starten, damit die Browser-Autoplay-Regel
-  // die Benutzeraktion nicht durch die API-Abfrage verliert.
   let playStarted=false;
   try{
     await audio.play();
     playStarted=true;
     $('playBtn').textContent='❚❚';
-  }catch(e){}
+    $('updated').textContent='Stream wird verbunden …';
+  }catch(e){
+    $('playBtn').textContent='▶';
+  }
 
-  try{
-    const data=await loadStation(slug);
+  loadStation(slug).then(data=>{
+    if(state.active?.slug!==slug)return;
     state.active={...state.active,...data,slug};
     window.RadioHubState.active=state.active;
     renderActive(state.active);
     renderHistory(normalizeList(state.active.last_songs),state.active.current_song);
-
-    // Falls der erste Play-Versuch wegen des Stream-Aufbaus zu früh war:
-    if(!playStarted){
-      try{await audio.play();$('playBtn').textContent='❚❚';}catch(e){}
+    if(audio.paused && !playStarted){
+      audio.play().then(()=>$('playBtn').textContent='❚❚').catch(()=>{});
     }
-  }catch(e){
-    $('playBtn').textContent='▶';
-  }
-  $('updated').textContent='Sender gewechselt · Live-Daten werden geladen …';
+    $('updated').textContent='Live-Daten: '+new Date().toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  }).catch(()=>{
+    if(state.active?.slug===slug)$('updated').textContent='Stream läuft · Live-Daten werden erneut abgefragt.';
+  });
+
   refreshLiveOnAir();
 }
 
@@ -2039,8 +2033,8 @@ setInterval(refreshActive,15000);
     reconnectTimer=setTimeout(async()=>{
       try{
         const stream=window.RadioHubState?.active?.stream_url||`https://stream.laut.fm/${encodeURIComponent(window.RadioHubState?.active?.slug||'niklas-fm')}`;
-        audio.pause(); audio.removeAttribute('src'); audio.load();
-        audio.src=stream; audio.dataset.streamUrl=stream; audio.load();
+        audio.pause();
+        audio.src=stream; audio.dataset.streamUrl=stream;
         await audio.play();
       }catch(e){ reconnect(); }
     },2500);
