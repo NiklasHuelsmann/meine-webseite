@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>RadioHub · laut.fm · V71</title>
+<title>RadioHub · laut.fm · V70</title>
 <style>
 :root{
   --bg:#080b12;--panel:#111722;--panel2:#0c121b;--line:#293446;
@@ -343,7 +343,7 @@ aside .history-table{min-width:0}
 .player-label.on-air-label{color:#ff4d67}
 
 </style>
-<!-- RadioHub V71: Suchauswahl startet Stream sofort – Player-Fix -->
+<!-- RadioHub V70: Feinschliff – Player, Favoriten, Status, Mobile und Kompaktmodus -->
 </head>
 <body>
 <div class="wrap">
@@ -1721,10 +1721,9 @@ async function refreshActive(){
   }
 }
 
-async function activateStation(station,options={}){
+async function activateStation(station){
   const slug=slugOf(station);
   if(!slug)return;
-  const autoStart=options.autoStart!==false;
 
   // Suchergebnisse werden erst hier – und nur hier – zum aktiven Sender.
   state.active={...station,slug};
@@ -1738,31 +1737,18 @@ async function activateStation(station,options={}){
   // Schnellstart: Der Stream wird sofort gestartet. Song, Hörer, Verlauf
   // und Logo werden danach unabhängig im Hintergrund geladen.
   audio.pause();
-  try{ audio.removeAttribute('src'); audio.load(); }catch(e){}
   audio.dataset.streamUrl='';
   audio.src=stream;
-
-  if(!autoStart){
-    $('playBtn').textContent='▶';
-    setStreamStatus('', 'Bereit zum Starten');
-  }
   setStreamStatus('connecting','Stream wird verbunden …');
 
   let playStarted=false;
-  if(autoStart){
-    try{
-      await audio.play();
-      playStarted=true;
-      $('playBtn').textContent='❚❚';
-      setStreamStatus('connecting','Stream wird verbunden …');
-      $('updated').textContent='Stream wird verbunden …';
-    }catch(e){
-      $('playBtn').textContent='▶';
-      setStreamStatus('error','Stream konnte nicht gestartet werden');
-    }
-  }else{
+  try{
+    await audio.play();
+    playStarted=true;
+    $('playBtn').textContent='❚❚';
+    $('updated').textContent='Stream wird verbunden …';
+  }catch(e){
     $('playBtn').textContent='▶';
-    setStreamStatus('', 'Bereit zum Start');
   }
 
   loadStation(slug).then(data=>{
@@ -1771,11 +1757,8 @@ async function activateStation(station,options={}){
     window.RadioHubState.active=state.active;
     renderActive(state.active);
     renderHistory(normalizeList(state.active.last_songs),state.active.current_song);
-    if(autoStart && audio.paused && !playStarted){
-      audio.play().then(()=>{
-        $('playBtn').textContent='❚❚';
-        setStreamStatus('playing','Stream läuft');
-      }).catch(()=>{});
+    if(audio.paused && !playStarted){
+      audio.play().then(()=>$('playBtn').textContent='❚❚').catch(()=>{});
     }
     $('updated').textContent='Live-Daten: '+new Date().toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
   }).catch(()=>{
@@ -1835,17 +1818,9 @@ function renderResults(items){
     });
   });
   content.querySelectorAll('.search-play').forEach(b=>{
-  b.addEventListener('click',()=>{
-    try{
-      const station=JSON.parse(decodeURIComponent(b.dataset.station));
-      $('results').classList.remove('show');
-      $('searchInput').value='';
-      // Sender wechseln und alten Stream vollständig stoppen.
-      // Start erfolgt anschließend ausschließlich über den normalen Play-Button.
-      activateStation(station,{autoStart:false});
-    }catch(e){}
-  });
-});
+    b.addEventListener('click',()=>{
+      try{activateStation(JSON.parse(decodeURIComponent(b.dataset.station)))}catch(e){}
+    });
   });
 }
 
