@@ -1738,8 +1738,14 @@ async function activateStation(station,options={}){
   // Schnellstart: Der Stream wird sofort gestartet. Song, Hörer, Verlauf
   // und Logo werden danach unabhängig im Hintergrund geladen.
   audio.pause();
+  try{ audio.removeAttribute('src'); audio.load(); }catch(e){}
   audio.dataset.streamUrl='';
   audio.src=stream;
+
+  if(!autoStart){
+    $('playBtn').textContent='▶';
+    setStreamStatus('', 'Bereit zum Starten');
+  }
   setStreamStatus('connecting','Stream wird verbunden …');
 
   let playStarted=false;
@@ -1829,15 +1835,17 @@ function renderResults(items){
     });
   });
   content.querySelectorAll('.search-play').forEach(b=>{
-    b.addEventListener('click',async()=>{
-      try{
-        const station=JSON.parse(decodeURIComponent(b.dataset.station));
-        $('results').classList.remove('show');
-        $('searchInput').value='';
-        // Ein Klick auf "Hören" = Sender wechseln + Stream sofort starten.
-        await activateStation(station,{autoStart:true});
-      }catch(e){}
-    });
+  b.addEventListener('click',()=>{
+    try{
+      const station=JSON.parse(decodeURIComponent(b.dataset.station));
+      $('results').classList.remove('show');
+      $('searchInput').value='';
+      // Sender wechseln und alten Stream vollständig stoppen.
+      // Start erfolgt anschließend ausschließlich über den normalen Play-Button.
+      activateStation(station,{autoStart:false});
+    }catch(e){}
+  });
+});
   });
 }
 
