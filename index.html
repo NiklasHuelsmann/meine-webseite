@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>RadioHub · laut.fm · V69</title>
+<title>RadioHub · laut.fm · V70</title>
 <style>
 :root{
   --bg:#080b12;--panel:#111722;--panel2:#0c121b;--line:#293446;
@@ -274,6 +274,34 @@ footer{text-align:center;color:var(--muted);font-size:12px;margin-top:25px}
 }
 
 
+
+/* V70: Player- und Komfortstatus */
+.player-status{
+  display:flex;align-items:center;gap:7px;margin-top:10px;
+  color:var(--muted);font-size:11px;min-height:17px
+}
+.status-dot{
+  width:7px;height:7px;border-radius:50%;background:#667386;display:inline-block;
+  flex:0 0 7px
+}
+.player-status.connecting .status-dot{background:#f2b84b;box-shadow:0 0 0 4px rgba(242,184,75,.10)}
+.player-status.playing{color:#9af2b7}
+.player-status.playing .status-dot{background:var(--good);box-shadow:0 0 0 4px rgba(55,214,122,.10)}
+.player-status.error{color:#ffb0b0}
+.player-status.error .status-dot{background:#ff6b7d;box-shadow:0 0 0 4px rgba(255,107,125,.10)}
+.extra-btn[aria-pressed="true"]{border-color:rgba(124,92,255,.65);background:rgba(124,92,255,.12)}
+body.compact-mode .traffic-table-wrap{height:300px;max-height:300px}
+body.compact-mode aside .history-table-wrap{max-height:270px}
+body.compact-mode .extras-card{padding-top:14px;padding-bottom:14px}
+body.compact-mode .desc{margin-top:8px}
+body.compact-mode .now-card{margin-top:12px}
+body.compact-mode .player{margin-top:12px;padding:13px}
+@media(max-width:560px){
+  .player-status{font-size:10px}
+  body.compact-mode .traffic-table-wrap{height:250px;max-height:250px}
+  body.compact-mode aside .history-table-wrap{max-height:250px}
+}
+
 /* V48 extras */
 .volume-control{display:flex;align-items:center;gap:8px;font-size:14px;color:var(--muted)}
 .volume-control input{width:110px}
@@ -315,7 +343,7 @@ aside .history-table{min-width:0}
 .player-label.on-air-label{color:#ff4d67}
 
 </style>
-<!-- RadioHub V54: Gesamtcheck / Live-Refresh stabilisiert -->
+<!-- RadioHub V70: Feinschliff – Player, Favoriten, Status, Mobile und Kompaktmodus -->
 </head>
 <body>
 <div class="wrap">
@@ -379,6 +407,7 @@ aside .history-table{min-width:0}
         <a id="lautLink" href="https://laut.fm/niklas-fm" target="_blank" rel="noopener">laut.fm öffnen</a>
         <a id="streamLink" href="https://stream.laut.fm/niklas-fm" target="_blank" rel="noopener">Stream direkt öffnen</a>
       </div>
+      <div class="player-status" id="streamStatus" aria-live="polite"><span class="status-dot"></span><span id="streamStatusText">Bereit zum Start</span></div>
       <div class="player-note">Der Browser-Audioplayer bleibt unsichtbar – du steuerst den Sender über den runden ▶-Knopf.</div>
       <audio id="audio" preload="none"></audio>
     </div>
@@ -461,6 +490,7 @@ aside .history-table{min-width:0}
     <button class="extra-btn" id="favoriteBtn" type="button">☆ Favorit</button>
     <button class="extra-btn" id="sleepBtn" type="button">⏱ Sleep-Timer</button>
     <button class="extra-btn" id="autoModeBtn" type="button">🚗 Auto-Modus</button>
+    <button class="extra-btn" id="compactModeBtn" type="button">▣ Kompaktmodus</button>
   </div>
   <div class="extras-status" id="extrasStatus">Favoriten und Einstellungen werden nur in diesem Browser gespeichert.</div>
   <div class="section-title" style="margin-top:18px;font-size:15px">⭐ Deine Favoriten</div>
@@ -1699,6 +1729,7 @@ async function activateStation(station){
   state.active={...station,slug};
   window.RadioHubState.active=state.active;
   renderActive(state.active);
+  setStreamStatus('', 'Bereit zum Start');
 
   const audio=$('audio');
   const stream=state.active.stream_url||`https://stream.laut.fm/${encodeURIComponent(slug)}`;
@@ -1708,6 +1739,7 @@ async function activateStation(station){
   audio.pause();
   audio.dataset.streamUrl='';
   audio.src=stream;
+  setStreamStatus('connecting','Stream wird verbunden …');
 
   let playStarted=false;
   try{
@@ -1863,36 +1895,61 @@ $('searchForm').addEventListener('submit',e=>{
   searchStations($('searchInput').value);
 });
 $('searchInput').addEventListener('input',()=>searchStations($('searchInput').value));
+$('searchInput').addEventListener('keydown',e=>{
+  if(e.key==='Escape'){
+    $('results').classList.remove('show');
+    $('searchInput').blur();
+  }
+});
+document.addEventListener('click',e=>{
+  const area=document.querySelector('.search-area');
+  if(area && !area.contains(e.target))$('results').classList.remove('show');
+});
 
 $('refreshBtn').addEventListener('click',refreshActive);
 
 $('playBtn').addEventListener('click',async()=>{
   const a=$('audio');
   if(a.paused){
-    // Nicht den alten Puffer fortsetzen: bei Live-Radio jedes Mal
-    // eine frische Stream-Verbindung aufbauen.
     const stream=state.active?.stream_url||`https://stream.laut.fm/${encodeURIComponent(slugOf(state.active)||fallback.slug)}`;
     a.pause();
-    a.removeAttribute('src');
-    a.load();
-    a.dataset.streamUrl='';
     a.src=stream;
     a.dataset.streamUrl=stream;
-    a.load();
+    setStreamStatus('connecting','Stream wird verbunden …');
     try{
       await a.play();
       $('playBtn').textContent='❚❚';
     }catch(e){
       $('playBtn').textContent='▶';
+      setStreamStatus('error','Stream konnte nicht gestartet werden');
     }
   }else{
     a.pause();
   }
 });
 
-$('audio').addEventListener('play',()=>{$('playBtn').textContent='❚❚'});
-$('audio').addEventListener('pause',()=>{$('playBtn').textContent='▶'});
-$('audio').addEventListener('error',()=>{$('playBtn').textContent='▶'; if(window.RadioHubState)window.RadioHubState.streamErrorAt=Date.now();});
+function setStreamStatus(kind,text){
+  const box=$('streamStatus'), label=$('streamStatusText');
+  if(!box||!label)return;
+  box.classList.remove('connecting','playing','error');
+  if(kind)box.classList.add(kind);
+  label.textContent=text;
+}
+$('audio').addEventListener('loadstart',()=>setStreamStatus('connecting','Stream wird verbunden …'));
+$('audio').addEventListener('waiting',()=>{if(!$('audio').paused)setStreamStatus('connecting','Stream puffert kurz …')});
+$('audio').addEventListener('playing',()=>{
+  $('playBtn').textContent='❚❚';
+  setStreamStatus('playing','Stream läuft');
+});
+$('audio').addEventListener('pause',()=>{
+  $('playBtn').textContent='▶';
+  if(!$('audio').error)setStreamStatus('', 'Stream pausiert');
+});
+$('audio').addEventListener('error',()=>{
+  $('playBtn').textContent='▶';
+  setStreamStatus('error','Stream momentan nicht erreichbar · neuer Versuch folgt');
+  if(window.RadioHubState)window.RadioHubState.streamErrorAt=Date.now();
+});
 
 window.RadioHubState.active=state.active;
 renderActive(fallback);
@@ -1965,22 +2022,6 @@ async function refreshLiveOnAir(){
   }catch(e){}
 }
 
-// V54_LIVE_REFRESH: Live-Daten regelmäßig nachladen, ohne die Seite oder den
-// Stream neu zu laden. Fehler in einem Zyklus werden bewusst isoliert.
-let liveRefreshTimer=0;
-function scheduleLiveRefresh(){
-  clearTimeout(liveRefreshTimer);
-  liveRefreshTimer=setTimeout(async()=>{
-    try{ await refreshActive(); }
-    catch(e){ $('updated').textContent='Live-Daten werden automatisch erneut abgefragt.'; }
-    finally{ scheduleLiveRefresh(); }
-  },20000);
-}
-scheduleLiveRefresh();
-
-// Sicherheitsnetz: Falls eine Browser-/Netzwerkabfrage die Live-Daten verzögert,
-// bleibt die Seite trotzdem aktiv und versucht die Abfrage regelmäßig erneut.
-
 // Direkt beim Laden echte laut.fm-Livedaten holen und danach regelmäßig
 // aktualisieren. Dadurch kommen Senderlogo, aktueller Song, Albumcover,
 // Hörerzahl und "Zuletzt gelaufen" automatisch nach.
@@ -1993,12 +2034,13 @@ setInterval(refreshActive,15000);
   const audio=document.getElementById('audio'), vol=document.getElementById('volumeRange'), mute=document.getElementById('muteBtn');
   const fav=document.getElementById('favoriteBtn'), sleep=document.getElementById('sleepBtn'), auto=document.getElementById('autoModeBtn');
   const status=document.getElementById('extrasStatus'), list=document.getElementById('favoritesList');
-  const key='radiohub_v51_settings', defaults={favorites:[],volume:0.85,muted:false,sleepUntil:0,autoMode:false};
+  const compact=document.getElementById('compactModeBtn');
+  const key='radiohub_v51_settings', defaults={favorites:[],volume:0.85,muted:false,sleepUntil:0,autoMode:false,compactMode:false};
   let cfg={...defaults};
   try{const saved=JSON.parse(localStorage.getItem(key)||'{}');if(saved&&typeof saved==='object')cfg={...defaults,...saved};}catch(e){}
   cfg.favorites=Array.isArray(cfg.favorites)?[...new Set(cfg.favorites.map(String))]:[];
   cfg.volume=Number.isFinite(Number(cfg.volume))?Math.min(1,Math.max(0,Number(cfg.volume))):defaults.volume;
-  cfg.muted=Boolean(cfg.muted); cfg.autoMode=Boolean(cfg.autoMode);
+  cfg.muted=Boolean(cfg.muted); cfg.autoMode=Boolean(cfg.autoMode); cfg.compactMode=Boolean(cfg.compactMode);
   const save=()=>{try{localStorage.setItem(key,JSON.stringify(cfg));}catch(e){}};
   const activeSlug=()=>window.RadioHubState?.active?.slug||'';
   const stationBySlug=slug=>(window.RadioHubState?.stations||[]).find(s=>s.slug===slug)||(window.RadioHubState?.active?.slug===slug?window.RadioHubState.active:null);
@@ -2007,19 +2049,31 @@ setInterval(refreshActive,15000);
     if(!list)return;
     if(!cfg.favorites.length){list.className='favorites-empty';list.textContent='Noch keine Favoriten gespeichert.';return;}
     list.className='favorites-list';
-    list.innerHTML=cfg.favorites.map(slug=>{const s=stationBySlug(slug)||{slug,name:slug};return `<button class="favorite-chip" type="button" data-favorite-slug="${esc(slug)}">★ <span>${esc(s.name||slug)}</span><small>Hören</small></button>`;}).join('');
+    const ordered=[activeSlug(),...cfg.favorites.filter(slug=>slug!==activeSlug())].filter(Boolean);
+    list.innerHTML=ordered.map(slug=>{const s=stationBySlug(slug)||{slug,name:slug};return `<button class="favorite-chip" type="button" data-favorite-slug="${esc(slug)}">★ <span>${esc(s.name||slug)}</span><small>Hören</small></button>`;}).join('');
     list.querySelectorAll('[data-favorite-slug]').forEach(btn=>btn.addEventListener('click',async()=>{const slug=btn.dataset.favoriteSlug;const s=stationBySlug(slug)||{slug,name:slug,stream_url:`https://stream.laut.fm/${encodeURIComponent(slug)}`,page_url:`https://laut.fm/${encodeURIComponent(slug)}`};await activateStation(s);updateFavButton();renderFavorites();}));
   }
   function sync(){
     if(vol){vol.value=String(cfg.volume);if(audio)audio.volume=cfg.volume;} if(audio)audio.muted=cfg.muted;
     if(mute)mute.textContent=cfg.muted?'🔊':'🔇'; if(sleep)sleep.textContent=cfg.sleepUntil>0?'⏱ Sleep-Timer an':'⏱ Sleep-Timer'; if(auto){auto.textContent=cfg.autoMode?'🚗 Auto-Modus an':'🚗 Auto-Modus';auto.setAttribute('aria-pressed',String(cfg.autoMode));}
-    document.body.classList.toggle('auto-mode',cfg.autoMode);updateFavButton();renderFavorites();
+    document.body.classList.toggle('auto-mode',cfg.autoMode);
+    document.body.classList.toggle('compact-mode',cfg.compactMode);
+    if(compact){
+      compact.textContent=cfg.compactMode?'▣ Normalmodus':'▣ Kompaktmodus';
+      compact.setAttribute('aria-pressed',String(cfg.compactMode));
+    }
+    updateFavButton();renderFavorites();
   }
   if(fav)fav.addEventListener('click',()=>{const slug=activeSlug();if(!slug)return;if(cfg.favorites.includes(slug)){cfg.favorites=cfg.favorites.filter(x=>x!==slug);if(status)status.textContent='Sender aus deinen Favoriten entfernt.';}else{cfg.favorites=[...cfg.favorites,slug];if(status)status.textContent='Sender zu deinen Favoriten hinzugefügt.';}save();sync();});
   if(vol)vol.addEventListener('input',()=>{cfg.volume=Number(vol.value);cfg.muted=false;if(audio){audio.volume=cfg.volume;audio.muted=false;}save();sync();});
   if(mute)mute.addEventListener('click',()=>{cfg.muted=!cfg.muted;if(audio)audio.muted=cfg.muted;save();sync();});
   if(sleep)sleep.addEventListener('click',()=>{const options=[0,15,30,45,60],remaining=cfg.sleepUntil>0?Math.max(0,Math.ceil((cfg.sleepUntil-Date.now())/60000)):0;const idx=options.findIndex(v=>v>remaining);const next=options[idx<0?0:idx];cfg.sleepUntil=next?Date.now()+next*60000:0;save();if(status)status.textContent=next?`Sleep-Timer: ${next} Minuten.`:'Sleep-Timer ausgeschaltet.';});
   if(auto)auto.addEventListener('click',()=>{cfg.autoMode=!cfg.autoMode;save();sync();if(status)status.textContent=cfg.autoMode?'Auto-Modus aktiviert – Stream wird bei Unterbrechungen neu verbunden.':'Auto-Modus ausgeschaltet.';if(cfg.autoMode&&audio?.paused&&window.RadioHubState?.active)reconnect();});
+  if(compact)compact.addEventListener('click',()=>{
+    cfg.compactMode=!cfg.compactMode;
+    save(); sync();
+    if(status)status.textContent=cfg.compactMode?'Kompaktmodus aktiviert.':'Normalmodus aktiviert.';
+  });
   setInterval(()=>{if(cfg.sleepUntil&&Date.now()>=cfg.sleepUntil){cfg.sleepUntil=0;save();if(audio)audio.pause();if(status)status.textContent='Sleep-Timer: Stream gestoppt.';}updateFavButton();},1000);
   window.RadioHubState.stations=MY_STATIONS; sync();
 
