@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>RadioHub · laut.fm · V70</title>
+<title>RadioHub · laut.fm · V73</title>
 <style>
 :root{
   --bg:#080b12;--panel:#111722;--panel2:#0c121b;--line:#293446;
@@ -642,7 +642,7 @@ const MY_STATIONS=[
   {slug:'twin-city-radio',name:'twin-city-radio',stream_url:'https://stream.laut.fm/twin-city-radio',page_url:'https://laut.fm/twin-city-radio'},
 ];
 
-const state={active:{...fallback},refreshing:false,searchToken:0,listenerValue:null,artCache:new Map(),artToken:0};
+const state={active:{...fallback},refreshing:false,searchToken:0,listenerValue:null,artCache:new Map(),artToken:0,suppressAutoReconnect:false};
 window.RadioHubState=state;
 
 const $=id=>document.getElementById(id);
@@ -1722,34 +1722,43 @@ async function refreshActive(){
   }
 }
 
-async function activateStation(station){
+async function activateStation(station,options={}){
   const slug=slugOf(station);
   if(!slug)return;
+
+  const autoStart=options.autoStart!==false;
 
   // Suchergebnisse werden erst hier – und nur hier – zum aktiven Sender.
   state.active={...station,slug};
   window.RadioHubState.active=state.active;
-  renderActive(state.active);
-  setStreamStatus('', 'Bereit zum Start');
 
   const audio=$('audio');
-  const stream=state.active.stream_url||`https://stream.laut.fm/${encodeURIComponent(slug)}`;
 
-  // Schnellstart: Der Stream wird sofort gestartet. Song, Hörer, Verlauf
-  // und Logo werden danach unabhängig im Hintergrund geladen.
+  // Alten Sender sofort anhalten. Wichtig: kein removeAttribute/load-Zyklus,
+  // damit die übrigen V70-Funktionen (Live-Daten, Logo, Verlauf, Verkehr)
+  // unangetastet bleiben.
   audio.pause();
+  state.suppressAutoReconnect=!autoStart;
+
+  const stream=state.active.stream_url||`https://stream.laut.fm/${encodeURIComponent(slug)}`;
   audio.dataset.streamUrl='';
   audio.src=stream;
-  setStreamStatus('connecting','Stream wird verbunden …');
+  audio.dataset.streamUrl=stream;
 
-  let playStarted=false;
-  try{
-    await audio.play();
-    playStarted=true;
-    $('playBtn').textContent='❚❚';
-    $('updated').textContent='Stream wird verbunden …';
-  }catch(e){
+  renderActive(state.active);
+
+  if(autoStart){
+    setStreamStatus('connecting','Stream wird verbunden …');
+    try{
+      await audio.play();
+      $('playBtn').textContent='❚❚';
+      $('updated').textContent='Stream wird verbunden …';
+    }catch(e){
+      $('playBtn').textContent='▶';
+    }
+  }else{
     $('playBtn').textContent='▶';
+    setStreamStatus('', 'Bereit zum Start');
   }
 
   loadStation(slug).then(data=>{
@@ -1758,9 +1767,11 @@ async function activateStation(station){
     window.RadioHubState.active=state.active;
     renderActive(state.active);
     renderHistory(normalizeList(state.active.last_songs),state.active.current_song);
-    if(audio.paused && !playStarted){
+
+    if(autoStart && audio.paused){
       audio.play().then(()=>$('playBtn').textContent='❚❚').catch(()=>{});
     }
+
     $('updated').textContent='Live-Daten: '+new Date().toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
   }).catch(()=>{
     if(state.active?.slug===slug)$('updated').textContent='Stream läuft · Live-Daten werden erneut abgefragt.';
@@ -1819,8 +1830,15 @@ function renderResults(items){
     });
   });
   content.querySelectorAll('.search-play').forEach(b=>{
-    b.addEventListener('click',()=>{
-      try{activateStation(JSON.parse(decodeURIComponent(b.dataset.station)))}catch(e){}
+    b.addEventListener('click',async()=>{
+      try{
+        const station=JSON.parse(decodeURIComponent(b.dataset.station));
+        $('results').classList.remove('show');
+        $('searchInput').value='';
+        // Sender auswählen = alter Stream stoppt. Der neue Sender ist
+        // sofort aktiv, startet aber erst beim nächsten Druck auf Play.
+        await activateStation(station,{autoStart:false});
+      }catch(e){}
     });
   });
 }
@@ -1911,6 +1929,7 @@ $('refreshBtn').addEventListener('click',refreshActive);
 
 $('playBtn').addEventListener('click',async()=>{
   const a=$('audio');
+  state.suppressAutoReconnect=false;
   if(a.paused){
     const stream=state.active?.stream_url||`https://stream.laut.fm/${encodeURIComponent(slugOf(state.active)||fallback.slug)}`;
     a.pause();
@@ -2083,7 +2102,7 @@ setInterval(refreshActive,15000);
   // praktisch für die Nutzung im Auto, ohne den normalen Modus zu verändern.
   let reconnectTimer=0;
   const reconnect=()=>{
-    if(!cfg.autoMode||!audio||!audio.paused)return;
+    if(!cfg.autoMode||!audio||!audio.paused||state.suppressAutoReconnect)return;
     clearTimeout(reconnectTimer);
     reconnectTimer=setTimeout(async()=>{
       try{
