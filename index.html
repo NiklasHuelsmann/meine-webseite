@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>RadioHub · laut.fm · V75</title>
+<title>RadioHub · laut.fm · V76</title>
 <style>
 :root{
   --bg:#080b12;--panel:#111722;--panel2:#0c121b;--line:#293446;
@@ -1162,16 +1162,37 @@ document.addEventListener('click',e=>{
 loadTraffic();
 setInterval(loadTraffic,60000);
 
-// Verkehrsmeldungen vorlesen – mit robusterem Verhalten auf Android/Firefox.
+// Verkehrsmeldungen vorlesen – stoppbar, mit Musik-Ducking.
 (function(){
   const btn=$('trafficReadBtn');
   if(!btn) return;
 
   const synth=window.speechSynthesis;
   const supported=!!(synth && 'SpeechSynthesisUtterance' in window);
+  const audio=$('audio');
+  let readTimer=0;
+  let readRun=0;
+  let restoreVolume=null;
+
+  function duckMusic(){
+    if(!audio) return;
+    restoreVolume=audio.volume;
+    // SpeechSynthesis ist pro Browser bei 1.0 bereits am Maximum.
+    // Deshalb wird der Radiostream beim Vorlesen deutlich abgesenkt.
+    audio.volume=Math.min(audio.volume,0.18);
+  }
+
+  function restoreMusic(){
+    if(!audio || restoreVolume===null) return;
+    audio.volume=restoreVolume;
+    restoreVolume=null;
+  }
 
   function stopReading(){
+    readRun++;
+    if(readTimer){clearTimeout(readTimer);readTimer=0;}
     try{synth?.cancel();}catch(e){}
+    restoreMusic();
     btn.classList.remove('active');
     btn.setAttribute('aria-pressed','false');
     btn.textContent='🔊 Vorlesen';
@@ -1209,8 +1230,6 @@ setInterval(loadTraffic,60000);
 
   function speakChunks(text){
     const clean=text.replace(/\s+/g,' ').trim();
-    // Kürzere Abschnitte sind auf mobilen Sprachdiensten robuster als
-    // eine einzige sehr lange SpeechSynthesisUtterance.
     const chunks=[];
     let rest=clean;
     while(rest.length>220){
@@ -1222,55 +1241,54 @@ setInterval(loadTraffic,60000);
     }
     if(rest)chunks.push(rest);
 
+    const myRun=++readRun;
     let index=0;
     const next=()=>{
+      if(myRun!==readRun) return;
       if(index>=chunks.length){stopReading();return;}
       const u=new SpeechSynthesisUtterance(chunks[index++]);
       const voice=pickGermanVoice();
       u.lang=voice?.lang || 'de-DE';
       if(voice)u.voice=voice;
-      u.rate=.92;
+      u.rate=.90;
       u.pitch=1;
       u.volume=1;
       u.onstart=()=>{
+        if(myRun!==readRun){try{synth.cancel();}catch(e){};return;}
         btn.classList.add('active');
         btn.setAttribute('aria-pressed','true');
         btn.textContent='⏹ Stoppen';
       };
       u.onend=()=>{
-        // Kurze Pause hilft Android/Firefox beim Wechsel zwischen mehreren
-        // Sprachteilen.
-        setTimeout(next,80);
+        if(myRun!==readRun) return;
+        readTimer=setTimeout(()=>{readTimer=0;next();},80);
       };
       u.onerror=()=>{
+        if(myRun!==readRun) return;
         stopReading();
         alert('Die Sprachausgabe konnte auf diesem Gerät gerade nicht gestartet werden. Wenn du Firefox auf Android verwendest, teste bitte auch Chrome – dort ist die mobile Sprachsynthese in der Regel zuverlässiger.');
       };
       synth.speak(u);
-      // Manche Android-WebViews/Browser starten erst nach resume().
       try{synth.resume();}catch(e){}
     };
 
-    stopReading();
-    setTimeout(next,60);
+    try{synth.cancel();}catch(e){}
+    duckMusic();
+    readTimer=setTimeout(()=>{readTimer=0;next();},60);
   }
 
   btn.addEventListener('click',()=>{
-    if(synth.speaking || synth.pending){
+    if(synth.speaking || synth.pending || btn.classList.contains('active')){
       stopReading();
       return;
     }
-    const text=getTrafficText();
-    // Erst direkt im Klick-Handler anstoßen; das erhält die Benutzeraktion
-    // für mobile Browser.
-    speakChunks(text);
+    speakChunks(getTrafficText());
   });
 
   if(synth.onvoiceschanged!==undefined){
-    synth.onvoiceschanged=()=>{ /* Stimmen werden beim nächsten Klick gewählt. */ };
+    synth.onvoiceschanged=()=>{};
   }
 })();
-
 
 function isNewsSong(song){
   const type=String(song?.type||song?.category||'').toLowerCase();
