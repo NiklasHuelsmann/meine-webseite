@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>RadioHub · laut.fm · V73</title>
+<title>RadioHub · laut.fm · V74 · V73</title>
 <style>
 :root{
   --bg:#080b12;--panel:#111722;--panel2:#0c121b;--line:#293446;
@@ -1682,7 +1682,7 @@ async function loadStation(slug){
     play.setAttribute('aria-label',audio.paused?'Stream starten':'Stream pausieren');
   }
   function scheduleReconnect(){
-    if(!state.autoMode || audio.paused) return;
+    if(!state.autoMode || audio.paused || state.suppressAutoReconnect) return;
     clearTimeout(reconnectTimer);
     const delay=Math.min(30000,Math.max(1500,1500*Math.pow(1.6,reconnectAttempts++)));
     $('updated').textContent='Stream kurz unterbrochen · neuer Verbindungsversuch …';
@@ -1698,7 +1698,7 @@ async function loadStation(slug){
   audio.addEventListener('pause',setButton);
   audio.addEventListener('error',()=>{setButton();scheduleReconnect();});
   audio.addEventListener('stalled',scheduleReconnect);
-  audio.addEventListener('waiting',()=>{if(!audio.paused)scheduleReconnect();});
+  audio.addEventListener('waiting',()=>{if(!audio.paused && !state.suppressAutoReconnect)scheduleReconnect();});
   window.RadioHubAudio={setButton,scheduleReconnect};
 })();
 
@@ -1945,6 +1945,8 @@ $('playBtn').addEventListener('click',async()=>{
     }
   }else{
     a.pause();
+    state.suppressAutoReconnect=true;
+    setStreamStatus('', 'Stream pausiert');
   }
 });
 
@@ -2115,7 +2117,7 @@ setInterval(refreshActive,15000);
   };
   audio?.addEventListener('error',reconnect);
   audio?.addEventListener('stalled',reconnect);
-  audio?.addEventListener('waiting',()=>{ if(cfg.autoMode) reconnect(); });
+  audio?.addEventListener('waiting',()=>{ if(cfg.autoMode && !state.suppressAutoReconnect) reconnect(); });
 })();
 </script>
 
