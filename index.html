@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>RadioHub · laut.fm · V74 · V73</title>
+<title>RadioHub · laut.fm · V75</title>
 <style>
 :root{
   --bg:#080b12;--panel:#111722;--panel2:#0c121b;--line:#293446;
@@ -2073,7 +2073,7 @@ setInterval(refreshActive,15000);
     list.className='favorites-list';
     const ordered=[activeSlug(),...cfg.favorites.filter(slug=>slug!==activeSlug())].filter(Boolean);
     list.innerHTML=ordered.map(slug=>{const s=stationBySlug(slug)||{slug,name:slug};return `<button class="favorite-chip" type="button" data-favorite-slug="${esc(slug)}">★ <span>${esc(s.name||slug)}</span><small>Hören</small></button>`;}).join('');
-    list.querySelectorAll('[data-favorite-slug]').forEach(btn=>btn.addEventListener('click',async()=>{const slug=btn.dataset.favoriteSlug;const s=stationBySlug(slug)||{slug,name:slug,stream_url:`https://stream.laut.fm/${encodeURIComponent(slug)}`,page_url:`https://laut.fm/${encodeURIComponent(slug)}`};await activateStation(s);updateFavButton();renderFavorites();}));
+    list.querySelectorAll('[data-favorite-slug]').forEach(btn=>btn.addEventListener('click',async()=>{const slug=btn.dataset.favoriteSlug;const s=stationBySlug(slug)||{slug,name:slug,stream_url:`https://stream.laut.fm/${encodeURIComponent(slug)}`,page_url:`https://laut.fm/${encodeURIComponent(slug)}`};await activateStation(s,{autoStart:false});updateFavButton();renderFavorites();}));
   }
   function sync(){
     if(vol){vol.value=String(cfg.volume);if(audio)audio.volume=cfg.volume;} if(audio)audio.muted=cfg.muted;
