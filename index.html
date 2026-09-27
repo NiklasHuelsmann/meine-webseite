@@ -673,8 +673,6 @@ function collectDirectImageUrls(obj){
 function collectLautAssetUrls(obj,out=[],depth=0){
   if(!obj||typeof obj!=='object'||depth>2)return out;
   for(const [key,value] of Object.entries(obj)){
-    // Nur echte Stationsfelder durchsuchen; current_song/artist dürfen niemals
-    // das Senderlogo überschreiben.
     if(key==='current_song'||key==='last_songs')continue;
     if(typeof value==='string' && /https?:\/\/assets\.laut\.fm\//i.test(value))out.push(value);
     else if(value&&typeof value==='object')collectLautAssetUrls(value,out,depth+1);
@@ -697,10 +695,6 @@ function expandLautAssetUrl(u){
 }
 function lautFmStationLogoFields(s){
   if(!s || typeof s!=='object') return [];
-  // laut.fm liefert das Senderlogo ausdrücklich in diesen Feldern.
-  // station_120x120 ist für die UI ideal; station_640x640/80x80 und
-  // station dienen als weitere Fallbacks. Die API-Felder haben Vorrang
-  // vor jedem alten, fest hinterlegten Logo.
   const keys=['station_120x120','station_640x640','station_80x80','station'];
   const out=[];
   for(const key of keys){
@@ -713,8 +707,6 @@ function lautFmStationLogoFields(s){
 }
 
 function stationImageCandidates(s){
-  // Das Senderlogo kommt aus den offiziellen laut.fm-Stationsfeldern.
-  // current_song/artist werden niemals als Senderlogo verwendet.
   const slug=slugOf(s);
   const explicit=lautFmStationLogoFields(s).flatMap(expandLautAssetUrl);
   const direct=collectDirectImageUrls(s).flatMap(expandLautAssetUrl);
@@ -729,9 +721,6 @@ function stationImageCandidates(s){
 }
 function imageOf(s){return stationImageCandidates(s)[0]||''}
 
-// laut.fm kann ein bestehendes Asset unter derselben URL durch ein neues Logo
-// ersetzen. Der kleine Zeitstempel umgeht den Browser-Cache, ohne das Logo
-// bei jedem 15-Sekunden-Refresh neu zu laden.
 function logoUrlForBrowser(url){
   const normalized=normalizeImageUrl(url);
   if(!normalized)return normalized;
@@ -764,8 +753,6 @@ function setImg(img,station){
   img.decoding='async';
   img.loading='eager';
 
-  // Nicht bei jedem Live-Refresh das gleiche Bild erneut setzen:
-  // genau das hat das sichtbare Senderlogo-Flackern verursacht.
   const current=normalizeImageUrl(img.currentSrc||img.src||'');
   const wantedRaw=normalizeImageUrl(candidates[0]||placeholder);
   const wanted=wantedRaw===placeholder?placeholder:logoUrlForBrowser(wantedRaw);
@@ -782,7 +769,6 @@ function setImg(img,station){
     }
     const url=logoUrlForBrowser(rawUrl);
 
-    // Erst laden, dann austauschen – so bleibt das bisherige Logo sichtbar.
     const probe=new Image();
     probe.decoding='async';
     probe.referrerPolicy='no-referrer';
@@ -817,7 +803,6 @@ function normalizeList(value){
   if(Array.isArray(value.items))return normalizeList(value.items);
   if(Array.isArray(value.results))return normalizeList(value.results);
 
-  // Einzelnen Song akzeptieren.
   if(typeof value==='object' && (value.title || value.name || value.artist)){
     return [value];
   }
@@ -859,20 +844,9 @@ function fmtTime(value){
   return '';
 }
 
-function sameSong(a,b){
-  const x=songText(a),y=songText(b);
-  if(!x||!y)return false;
-  return x.title.trim().toLowerCase()===y.title.trim().toLowerCase()
-      && x.artist.trim().toLowerCase()===y.artist.trim().toLowerCase();
-}
-
-
 const TRAFFIC_API='https://verkehr.autobahn.de/o/autobahn';
 
 const TRAFFIC_REGIONS={
-  // Ruhrgebiet bewusst enger als ganz NRW: nur die für den Ruhrraum
-  // relevanten Autobahnen. Die einzelnen Meldungen werden zusätzlich
-  // anhand ihrer Koordinaten/Abschnitte auf die Region eingegrenzt.
   ruhr:{
     label:'Ruhrgebiet',
     roads:['A1','A2','A3','A40','A42','A43','A44','A45','A46','A52','A445','A448','A516','A524','A535'],
@@ -953,13 +927,9 @@ function trafficInRegion(w,regionKey){
     return p.lon>=region.bbox.minLon && p.lon<=region.bbox.maxLon &&
            p.lat>=region.bbox.minLat && p.lat<=region.bbox.maxLat;
   }
-  // Fallback, wenn ein Datensatz keine Koordinaten liefert.
   return region.roads.includes(w.__road);
 }
 function trafficClassificationText(w){
-  // Für die Klassifizierung ausschließlich echte Meldungstexte verwenden.
-  // Nicht das komplette JSON: dort können Metadaten/Empfehlungen Begriffe
-  // enthalten, die mit der eigentlichen Meldung nichts zu tun haben.
   const parts=[];
   if(Array.isArray(w.description)) parts.push(...w.description.map(String));
   else if(w.description) parts.push(String(w.description));
@@ -970,8 +940,6 @@ function trafficClassificationText(w){
 }
 
 function trafficType(w,service){
-  // Sperrungen und Baustellen werden nur aus den dafür vorgesehenen
-  // Autobahn-API-Endpunkten bzw. display_type übernommen.
   if(service==='closure') return ['block','⛔ Sperrung'];
   if(service==='roadworks') return ['roadwork','🚧 Baustelle'];
 
@@ -981,13 +949,10 @@ function trafficType(w,service){
 
   const text=trafficClassificationText(w);
 
-  // Gleiches Prinzip beim Stau: nur bei einer expliziten Stauangabe.
   if(/\b(stau|stauende|stauerscheinung|stockender verkehr|stau im verkehr)\b/.test(text)){
     return ['jam','🚗 Stau'];
   }
 
-  // Eine allgemeine Warnung bleibt eine Warnung. Sie wird nicht
-  // automatisch in Unfall oder Stau umgewandelt.
   if(service==='warning') return ['warn','⚠ Warnung'];
   return ['info','ℹ Verkehr'];
 }
@@ -1105,8 +1070,6 @@ async function loadTraffic(){
       }
     }
 
-    // Nicht mehr 90+ Requests gleichzeitig: ein kleiner Pool ist deutlich
-    // robuster und verhindert, dass einzelne Kategorien wegen Rate-Limits fehlen.
     const results=await trafficPool(jobs,6);
     const entries=[];
     let successful=0;
@@ -1162,7 +1125,6 @@ document.addEventListener('click',e=>{
 loadTraffic();
 setInterval(loadTraffic,60000);
 
-// Verkehrsmeldungen vorlesen – mit robusterem Verhalten auf Android/Firefox.
 (function(){
   const btn=$('trafficReadBtn');
   if(!btn) return;
@@ -1179,7 +1141,7 @@ setInterval(loadTraffic,60000);
 
   if(!supported){
     btn.addEventListener('click',()=>{
-      alert('Vorlesen wird von diesem Browser nicht unterstützt. Bitte zum Vorlesen z.B. Chrome auf Android oder einen Browser mit aktivierter Sprachausgabe verwenden.');
+      alert('Vorlesen wird von diesem Browser nicht unterstützt.');
     });
     return;
   }
@@ -1209,8 +1171,6 @@ setInterval(loadTraffic,60000);
 
   function speakChunks(text){
     const clean=text.replace(/\s+/g,' ').trim();
-    // Kürzere Abschnitte sind auf mobilen Sprachdiensten robuster als
-    // eine einzige sehr lange SpeechSynthesisUtterance.
     const chunks=[];
     let rest=clean;
     while(rest.length>220){
@@ -1238,16 +1198,12 @@ setInterval(loadTraffic,60000);
         btn.textContent='⏹ Stoppen';
       };
       u.onend=()=>{
-        // Kurze Pause hilft Android/Firefox beim Wechsel zwischen mehreren
-        // Sprachteilen.
         setTimeout(next,80);
       };
       u.onerror=()=>{
         stopReading();
-        alert('Die Sprachausgabe konnte auf diesem Gerät gerade nicht gestartet werden. Wenn du Firefox auf Android verwendest, teste bitte auch Chrome – dort ist die mobile Sprachsynthese in der Regel zuverlässiger.');
       };
       synth.speak(u);
-      // Manche Android-WebViews/Browser starten erst nach resume().
       try{synth.resume();}catch(e){}
     };
 
@@ -1261,16 +1217,9 @@ setInterval(loadTraffic,60000);
       return;
     }
     const text=getTrafficText();
-    // Erst direkt im Klick-Handler anstoßen; das erhält die Benutzeraktion
-    // für mobile Browser.
     speakChunks(text);
   });
-
-  if(synth.onvoiceschanged!==undefined){
-    synth.onvoiceschanged=()=>{ /* Stimmen werden beim nächsten Klick gewählt. */ };
-  }
 })();
-
 
 function isNewsSong(song){
   const type=String(song?.type||song?.category||'').toLowerCase();
@@ -1323,8 +1272,6 @@ function setNewsArt(img){
 async function loadAlbumArt(song){
   const img=$('currentArt');
 
-  // Bei Nachrichten/Wetter/Verkehr niemals ein Musik-Albumcover anzeigen.
-  // Stattdessen wird ein neutrales Zeitungs-/Nachrichtenmotiv verwendet.
   if(isNewsSong(song)){
     state.artToken++;
     setNewsArt(img);
@@ -1337,8 +1284,6 @@ async function loadAlbumArt(song){
   const title=String(song?.title||'').trim();
   const songKey=(artist+'|'+title).toLowerCase();
 
-  // Bei demselben Song nichts neu laden und vor allem nicht kurz auf
-  // das Radio-Placeholder zurückspringen. Das verhindert Cover-Flackern.
   if(songKey && img.dataset.songKey===songKey &&
      (img.dataset.coverUrl || img.dataset.coverLoading==='1')) return;
 
@@ -1412,8 +1357,6 @@ async function loadAlbumArt(song){
   }catch(e){
     if(token===state.artToken){
       img.dataset.coverLoading='';
-      // Kein sichtbares Zurückspringen zum Placeholder, wenn bereits ein
-      // Cover vorhanden ist.
       if(!img.dataset.coverUrl){
         img.src=placeholder;
         img.dataset.coverUrl=placeholder;
@@ -1427,8 +1370,7 @@ function renderActive(s){
   $('activeName').textContent=s.name||state.active.name;
   $('activeClaim').textContent=s.claim||s.tagline||s.slogan||'';
   $('activeClaim').style.display=$('activeClaim').textContent?'block':'none';
-  $('activeLocation').textContent=s.city||s.location||s.country||'';
-  $('activeDesc').textContent=s.description||s.desc||'';
+  $('activeLocation').textContent=s.city\vert{}\vert{}s.location\vert{}\vert{}s.country\vert{}\vert{}'';$('activeDesc').textContent=s.description||s.desc||'';
   $('activeDesc').style.display=$('activeDesc').textContent?'block':'none';
 
   setImg($('activeLogo'),s);
@@ -1474,8 +1416,6 @@ function isMusicHistoryItem(song){
   ];
   if(blockedTypes.some(t=>type===t || type.includes(t))) return false;
 
-  // Wenn laut.fm einen Info-/Nachrichten-Eintrag nur über den Titel meldet,
-  // soll er ebenfalls nicht in der Musik-Historie landen.
   const text=`${song.title||''} ${song.artist?.name||song.artist||''}`.toLowerCase();
   const blockedText=[
     'nachrichten & wetter',
@@ -1622,9 +1562,6 @@ async function getJSON(url){
 async function loadStation(slug){
   const out={slug};
 
-  // Die vier für RadioHub wichtigen laut.fm-Endpunkte getrennt laden.
-  // Promise.allSettled sorgt dafür, dass z.B. ein Cover-/Listener-Problem
-  // nicht die übrigen Live-Daten blockiert.
   const [station,current,last,listeners]=await Promise.allSettled([
     getJSON(`${API}/station/${encodeURIComponent(slug)}`),
     getJSON(`${API}/station/${encodeURIComponent(slug)}/current_song`),
@@ -1656,8 +1593,6 @@ async function loadStation(slug){
     }
   }
 
-  // Falls /listeners einmal nichts Brauchbares liefert, den Wert aus
-  // den Stationsdaten verwenden.
   if(!Number.isFinite(Number(out.listeners)) && station.status==='fulfilled'){
     const n=Number(station.value?.listeners);
     if(Number.isFinite(n)&&n>=0){
@@ -1668,8 +1603,6 @@ async function loadStation(slug){
   return out;
 }
 
-
-/* V53_LIVE_AUDIO */
 (function(){
   const audio=$('audio'), play=$('playBtn');
   if(!audio||!play)return;
@@ -1712,7 +1645,6 @@ async function refreshActive(){
     renderHistory(normalizeList(state.active.last_songs),state.active.current_song);
     $('updated').textContent='Live-Daten: '+new Date().toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
   }catch(e){
-    // Hörer bleiben absichtlich bei 0, wenn die Abfrage gerade nichts liefert.
     $('updated').textContent='Live-Daten werden automatisch erneut abgefragt.';
   }finally{
     state.refreshing=false;
@@ -1726,15 +1658,11 @@ async function activateStation(station,options={}){
 
   const autoStart=options.autoStart!==false;
 
-  // Suchergebnisse werden erst hier – und nur hier – zum aktiven Sender.
   state.active={...station,slug};
   window.RadioHubState.active=state.active;
 
   const audio=$('audio');
 
-  // Alten Sender sofort anhalten. Wichtig: kein removeAttribute/load-Zyklus,
-  // damit die übrigen V70-Funktionen (Live-Daten, Logo, Verlauf, Verkehr)
-  // unangetastet bleiben.
   audio.pause();
   state.suppressAutoReconnect=!autoStart;
 
@@ -1831,7 +1759,7 @@ function renderResults(items){
       try{
         const station=JSON.parse(decodeURIComponent(b.dataset.station));
         $('results').classList.remove('show');$('searchInput').value='';
-        // Sender auswählen = alter Stream stoppt absolut, autoStart ist explizit false
+        // HIER ANGEPASST: autoStart explizit auf false gesetzt (kein automatischer Start beim Klick)
         await activateStation(station,{autoStart:false});
       }catch(e){}
     });
@@ -1853,12 +1781,9 @@ function stationMatches(s,q){
   const needle=searchNormalize(q);
   if(!needle)return true;
 
-  // Search directly in the configured master list. Punctuation, spaces,
-  // hyphens and German umlauts therefore never prevent a match.
   const fields=raw.map(v=>searchNormalize(v)).filter(Boolean);
   if(fields.some(v=>v.includes(needle)))return true;
 
-  // Also support multi-word searches such as "brian radio".
   const words=String(q).trim().split(/\s+/).map(searchNormalize).filter(Boolean);
   return words.length>0 && words.every(word=>fields.some(v=>v.includes(word)));
 }
@@ -1893,8 +1818,6 @@ async function searchStations(q){
   if(token!==state.searchToken)return;
   if(!items.length){renderResults([]);return;}
 
-  // Show the local master-list result immediately. Live metadata is an
-  // enhancement and must never make a valid sender appear missing.
   renderResults(items.slice(0,100));
   $('resultCount').textContent=`${items.length} Treffer`;
   $('resultsContent').classList.add('search-loading');
@@ -1963,16 +1886,6 @@ renderActive(fallback);
 
 $('updated').textContent='Live-Daten werden geladen …';
 
-
-/* V63_SUCHLISTE_NIKLASHEULSMANN
-   niklasheulsmann, niklashuelsmann und niklashuelsmann-radio sind drei
-   unterschiedliche Slugs und werden in der Suche separat behandelt.
-*/
-
-/* V59_LIVE_ON_AIR
-   laut.fm provides a live-station listing. This is used only for the
-   visual on-air state; the selected audio stream is never switched.
-*/
 let liveStatusToken=0;
 function liveSlugOf(item){
   return String(item?.slug || item?.name || item?.station?.slug || item?.station?.name || '').trim().toLowerCase();
@@ -2029,14 +1942,9 @@ async function refreshLiveOnAir(){
   }catch(e){}
 }
 
-// Direkt beim Laden echte laut.fm-Livedaten holen und danach regelmäßig
-// aktualisieren. Dadurch kommen Senderlogo, aktueller Song, Albumcover,
-// Hörerzahl und "Zuletzt gelaufen" automatisch nach.
 refreshActive();
 setInterval(refreshActive,15000);
 
-
-/* V51_LOCAL_FEATURES */
 (function(){
   const audio=document.getElementById('audio'), vol=document.getElementById('volumeRange'), mute=document.getElementById('muteBtn');
   const fav=document.getElementById('favoriteBtn'), sleep=document.getElementById('sleepBtn'), auto=document.getElementById('autoModeBtn');
@@ -2091,9 +1999,6 @@ setInterval(refreshActive,15000);
   setInterval(()=>{if(cfg.sleepUntil&&Date.now()>=cfg.sleepUntil){cfg.sleepUntil=0;save();if(audio)audio.pause();if(status)status.textContent='Sleep-Timer: Stream gestoppt.';}updateFavButton();},1000);
   window.RadioHubState.stations=MY_STATIONS; sync();
 
-  // Auto-Modus: bei einem Streamfehler wird die Live-Verbindung automatisch
-  // mit kurzer Verzögerung neu aufgebaut. Das macht den Modus besonders
-  // praktisch für die Nutzung im Auto, ohne den normalen Modus zu verändern.
   let reconnectTimer=0;
   const reconnect=()=>{
     if(!cfg.autoMode||!audio||!audio.paused||state.suppressAutoReconnect)return;
@@ -2114,7 +2019,6 @@ setInterval(refreshActive,15000);
 </script>
 
 <script>
-/* V55_FINAL_GUARD */
 (function(){
   'use strict';
   window.addEventListener('error', function(ev){
