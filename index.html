@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>RadioHub · laut.fm · V77 – nur NRW-Meldungen</title>
+<title>RadioHub · laut.fm · V78 – NRW-Verkehr fix</title>
 <style>
 :root{
   --bg:#080b12;--panel:#111722;--panel2:#0c121b;--line:#293446;
@@ -1021,6 +1021,7 @@ function trafficSort(a,b){
 }
 
 function isNRWTrafficItem(item){
+  const road=String(item?.__road||item?.road||item?.route||'').trim().toUpperCase();
   const text = [
     item?.title, item?.description, item?.text, item?.subtitle,
     item?.road, item?.route, item?.region, item?.state, item?.bundesland
@@ -1029,12 +1030,16 @@ function isNRWTrafficItem(item){
   const nonNRW = /\b(bayern|berlin|brandenburg|bremen|hamburg|hessen|mecklenburg[- ]vorpommern|niedersachsen|rheinland[- ]pfalz|saarland|sachsen|sachsen[- ]anhalt|schleswig[- ]holstein|thüringen|baden[- ]württemberg)\b/i;
   if(nonNRW.test(text)) return false;
 
-  const nrw = /\b(nordrhein[- ]westfalen|nrw|ruhrgebiet|rheinland|westfalen|a1|a2|a3|a4|a31|a33|a40|a42|a43|a44|a45|a46|a52|a57|a59|a61|a516|a524|a535|a540)\b/i;
+  // The Autobahn API records are requested only for NRW motorways.
+  // Prefer the internal request road because a warning's text often
+  // contains no state/region name at all.
+  if(/^A\d{1,3}$/.test(road)) return true;
+
+  const nrw = /\b(nordrhein[- ]westfalen|nrw|ruhrgebiet|rheinland|westfalen)\b/i;
   return nrw.test(text);
 }
 
 function renderTraffic(){
-  if(Array.isArray(items)) items=items.filter(isNRWTrafficItem);
   const rows=$('trafficRows');
   const region=TRAFFIC_REGIONS[trafficRegion];
   const visible=trafficData
@@ -1135,7 +1140,7 @@ async function loadTraffic(){
     if(successful===0) throw Error('Keine Verkehrsdienste erreichbar');
 
     const seen=new Set();
-    trafficData=entries.filter(w=>{
+    trafficData=entries.filter(isNRWTrafficItem).filter(w=>{
       const id=String(w.identifier||w.id||'');
       const key=(w.__service||'')+'|'+(id || (w.__road+'|'+trafficDirection(w)+'|'+trafficLocation(w)+'|'+trafficDetailText(w)));
       if(seen.has(key)) return false;
