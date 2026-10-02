@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>RadioHub · laut.fm · V76</title>
+<title>RadioHub · laut.fm · V77 – nur NRW-Meldungen</title>
 <style>
 :root{
   --bg:#080b12;--panel:#111722;--panel2:#0c121b;--line:#293446;
@@ -1019,7 +1019,22 @@ function trafficSort(a,b){
   const rank={block:0,jam:1,warn:2,roadwork:3,info:4};
   return (rank[trafficType(a,a.__service)[0]]??9)-(rank[trafficType(b,b.__service)[0]]??9);
 }
+
+function isNRWTrafficItem(item){
+  const text = [
+    item?.title, item?.description, item?.text, item?.subtitle,
+    item?.road, item?.route, item?.region, item?.state, item?.bundesland
+  ].filter(Boolean).join(' ').toLowerCase();
+
+  const nonNRW = /\b(bayern|berlin|brandenburg|bremen|hamburg|hessen|mecklenburg[- ]vorpommern|niedersachsen|rheinland[- ]pfalz|saarland|sachsen|sachsen[- ]anhalt|schleswig[- ]holstein|thüringen|baden[- ]württemberg)\b/i;
+  if(nonNRW.test(text)) return false;
+
+  const nrw = /\b(nordrhein[- ]westfalen|nrw|ruhrgebiet|rheinland|westfalen|a1|a2|a3|a4|a31|a33|a40|a42|a43|a44|a45|a46|a52|a57|a59|a61|a516|a524|a535|a540)\b/i;
+  return nrw.test(text);
+}
+
 function renderTraffic(){
+  if(Array.isArray(items)) items=items.filter(isNRWTrafficItem);
   const rows=$('trafficRows');
   const region=TRAFFIC_REGIONS[trafficRegion];
   const visible=trafficData
