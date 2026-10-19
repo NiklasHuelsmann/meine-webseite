@@ -338,6 +338,7 @@ aside .history-table{min-width:0}
 
 /* V59: Automatic laut.fm live/on-air state */
 .live.on-air{color:#ff4d67;animation:onairpulse 1.8s ease-in-out infinite}
+#stationStatus{color:#9af2b7} #stationStatus.status-offline{color:#ff9c9c} #stationStatus.status-unknown{color:#ffd38a}
 .live.on-air::before{filter:drop-shadow(0 0 5px rgba(255,77,103,.55))}
 @keyframes onairpulse{0%,100%{opacity:1}50%{opacity:.58}}
 .player-label.on-air-label{color:#ff4d67}
@@ -1672,6 +1673,7 @@ async function loadStation(slug){
     getJSON(`${API}/station/${encodeURIComponent(slug)}/listeners`)
   ]);
 
+  out._stationApiOk = station.status==='fulfilled' && !!station.value;
   if(station.status==='fulfilled'&&station.value){
     Object.assign(out,station.value);
   }
@@ -1740,6 +1742,29 @@ async function loadStation(slug){
   window.RadioHubAudio={setButton,scheduleReconnect};
 })();
 
+// Stationsverfügbarkeit getrennt vom Live-DJ-Status anzeigen.
+ // Die laut.fm-Stations-API bestätigt, ob die Station erreichbar/aktiv ist;
+ // ein API-Fehler allein wird nicht als Offline ausgegeben.
+function setStationAvailability(data, slug){
+  if(state.active?.slug !== slug) return;
+  const el=$('stationStatus');
+  if(!el) return;
+  el.classList.remove('status-offline','status-unknown');
+  if(data && data._stationApiOk && data.active === false){
+    el.textContent='offline';
+    el.classList.add('status-offline');
+    state.stationAvailability='offline';
+  }else if(data && data._stationApiOk){
+    el.textContent=state.liveOnAir?'live on air':'online';
+    state.stationAvailability='online';
+  }else{
+    el.textContent='unbekannt';
+    el.classList.add('status-unknown');
+    state.stationAvailability='unknown';
+  }
+  window.RadioHubState.stationAvailability=state.stationAvailability;
+}
+
 async function refreshActive(){
   if(state.refreshing)return;
   state.refreshing=true;
@@ -1748,10 +1773,12 @@ async function refreshActive(){
     const data=await loadStation(state.active.slug);
     state.active={...state.active,...data};
     window.RadioHubState.active=state.active;
+    setStationAvailability(data, state.active.slug);
     renderActive(state.active);
     renderHistory(normalizeList(state.active.last_songs),state.active.current_song);
     $('updated').textContent='Live-Daten: '+new Date().toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
   }catch(e){
+    setStationAvailability(null, state.active.slug);
     // Hörer bleiben absichtlich bei 0, wenn die Abfrage gerade nichts liefert.
     $('updated').textContent='Live-Daten werden automatisch erneut abgefragt.';
   }finally{
@@ -1803,6 +1830,7 @@ async function activateStation(station,options={}){
     if(state.active?.slug!==slug)return;
     state.active={...state.active,...data,slug};
     window.RadioHubState.active=state.active;
+    setStationAvailability(data, slug);
     renderActive(state.active);
     renderHistory(normalizeList(state.active.last_songs),state.active.current_song);
 
@@ -2063,7 +2091,7 @@ function setOnAirState(isLive,info){
       sub.textContent=(typeof audio!=='undefined'&&audio&&!audio.paused)?'Live-Stream läuft':'Klicken, um den Sender zu starten';
     }
   }
-  if(status)status.textContent=isLive?'live on air':'online';
+  if(status && state.stationAvailability!=='offline' && state.stationAvailability!=='unknown')status.textContent=isLive?'live on air':'online';
 }
 async function refreshLiveOnAir(){
   const token=++liveStatusToken;
